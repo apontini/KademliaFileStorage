@@ -5,15 +5,18 @@ import java.util.Random;
 
 public class Kademlia
 {
-    private boolean instance = false;
-    private int bitID = 8;
+    private static boolean instance = false;
+    final private int BITID = 8;
+    final private int K = 20;
     BigInteger nodeID = null;
 
-    public Kademlia() {
+    public Kademlia()
+    {
+        if(instance) return;
         boolean exists = true;
         do
         {
-            nodeID = new BigInteger(bitID, new Random());
+            nodeID = new BigInteger(BITID, new Random());
             //Controllare se esiste
             exists = false;
         }
