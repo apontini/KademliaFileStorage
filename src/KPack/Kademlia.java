@@ -28,4 +28,24 @@ public class Kademlia
     {
         return nodeID;
     }
+
+    public void ping(KadNode node)
+    {
+
+    }
+
+    public void findValue()
+    {
+
+    }
+
+    public void findNode()
+    {
+
+    }
+
+    public void store()
+    {
+
+    }
 }
