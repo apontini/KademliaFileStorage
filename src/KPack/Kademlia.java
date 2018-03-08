@@ -6,13 +6,13 @@ import java.util.Random;
 public class Kademlia
 {
     private static boolean instance = false;
-    final private int BITID = 8;
-    final private int K = 20;
+    private final static int BITID = 8;
+    private final static int K = 20;
     BigInteger nodeID = null;
 
     public Kademlia()
     {
-        if(instance) return;
+        if(instance) return; //TODO
         boolean exists = true;
         do
         {
@@ -47,5 +47,13 @@ public class Kademlia
     public void store()
     {
 
+    }
+
+    public static int getBITID() {
+        return BITID;
+    }
+
+    public static int getK() {
+        return K;
     }
 }

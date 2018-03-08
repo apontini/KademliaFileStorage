@@ -2,7 +2,6 @@ package KPack.Tree;
 
 import KPack.KadNode;
 
-import javax.xml.stream.events.NotationDeclaration;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -13,24 +12,12 @@ public class Bucket extends Node
     private Node parent;
     private int dimensioneMax;
     private List<KadNode> listaNodi;
+    private int bucketNum; //TODO
 
     public Bucket(int dim)
     {
         listaNodi = new LinkedList<KadNode>();
         dimensioneMax = dim;
-    }
-
-    public Node getParent()
-    {
-        return parent;
-    }
-
-    public void setParent(Node parent) throws NotAValidParentException
-    {
-        if(!(parent instanceof Bucket))
-            this.parent = parent;
-        else
-            throw new NotAValidParentException();
     }
 
     public boolean add(KadNode kn)
