@@ -35,7 +35,7 @@ public class Kademlia implements KademliaInterf
 
     public BigInteger getNodeID()
     {
-        return null;
+        return nodeID;
     }
 
     public boolean ping(KadNode node)
@@ -51,6 +51,11 @@ public class Kademlia implements KademliaInterf
     public List<KadNode> findNode(BigInteger nodeID)
     {
         return null;
+    }
+
+    public List<KadFile> getFileList()
+    {
+        return fileList;
     }
 
     public void store(KadNode node, KadFile file) //gestire eccezioni

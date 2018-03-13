@@ -9,6 +9,8 @@ public interface KademliaInterf
 {
     BigInteger getNodeID();
 
+    List<KadFile> getFileList();
+
     boolean ping(KadNode node);
 
     Object findValue(BigInteger fileID);
