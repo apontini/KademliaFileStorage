@@ -10,7 +10,7 @@ public class RoutingTree
 
     public RoutingTree(int bucketsDim)
     {
-        if(instance) return; //TODO
+        if(instance) return;
         if(bucketsDim<=0) throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
         root = new Bucket(bucketsDim);
     }
@@ -25,7 +25,7 @@ public class RoutingTree
         //preghiamo gli dei del java e li ringraziamo per la loro benevolenza per la classe BigInteger
 
         Node curNode = root;
-        int i = Kademlia.getK()-1;
+        int i = Kademlia.K-1;
 
         while(!(curNode instanceof Bucket))
         {
