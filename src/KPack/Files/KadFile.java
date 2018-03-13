@@ -10,9 +10,12 @@ public class KadFile implements KadFileInterf
     private String fileName;
     private String path;
 
-    public KadFile()
+    public KadFile(BigInteger fileID, boolean redundant, String fileName, String path)
     {
-
+        this.fileID = fileID;
+        this.redundant = redundant;
+        this.fileName = fileName;
+        this.path = path;
     }
 
     public BigInteger getFileID() {
