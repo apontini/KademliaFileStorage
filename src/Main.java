@@ -7,5 +7,6 @@ public class Main
         System.out.println("HELLO WORLDDDDD");
         Kademlia a = new Kademlia();
         System.out.println(a.getNodeID());
+        System.out.println("prova");
     }
 }
