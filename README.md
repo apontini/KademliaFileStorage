@@ -4,7 +4,7 @@ Kademlia File Storage is a project created for the Distributed Systems course fo
 It uses p2p system *Kademlia* to distribute file to other peers for storage purpose.
 **Project is still on the works**
 
-######How to use it
+###### How to use it
 As you can see on the `Main.java` you can simply join a network by creating an instance of the `Kademlia` as follows:
 ```
 Kademlia myNode = new Kademlia();
