@@ -3,21 +3,33 @@ package KPack.Tree;
 import KPack.KadNode;
 import KPack.Kademlia;
 
+import java.math.BigInteger;
+import java.util.List;
+
 public class RoutingTree
 {
     private Node root;
     private static boolean instance = false;
+    private Kademlia thisNode = null;
+    private int bucketsDim;
 
-    public RoutingTree(int bucketsDim)
+    public RoutingTree(Kademlia thisNode)
     {
         if(instance) return;
+        bucketsDim = Kademlia.K;
         if(bucketsDim<=0) throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
-        root = new Bucket(bucketsDim);
+        root = new Bucket(thisNode, true);
+        this.thisNode = thisNode;
     }
 
     public void add(KadNode nodo)
     {
-        //TODO
+        Bucket tempBuck = findNodesBucket(nodo);
+        if(!findNodesBucket(nodo).add(nodo))
+        {
+            TreeNode temp = new TreeNode();
+            //TODO
+        }
     }
 
     public Bucket findNodesBucket(KadNode node)

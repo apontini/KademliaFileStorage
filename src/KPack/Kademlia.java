@@ -1,6 +1,7 @@
 package KPack;
 
 import KPack.Files.KadFile;
+import KPack.Tree.RoutingTree;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -11,9 +12,10 @@ public class Kademlia implements KademliaInterf
 {
     private static boolean instance = false;
     public final static int BITID = 8;
-    public final static int K = 20;
-    BigInteger nodeID = null;
+    public final static int K = 4;
+    private BigInteger nodeID;
     private List<KadFile> fileList;
+    private RoutingTree routingTree;
 
     public Kademlia()
     {
@@ -30,6 +32,9 @@ public class Kademlia implements KademliaInterf
             exists = false;
         }
         while(exists);
+
+        routingTree = new RoutingTree(this);
+
         instance = true;
     }
 

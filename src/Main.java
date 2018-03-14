@@ -7,7 +7,7 @@ public class Main
 {
     public static void main(String[] args)
     {
-        System.out.println("HELLO WORLDDDDD");
+        System.out.println("Cerco un ID valido..");
         Kademlia myNode = new Kademlia();
         System.out.println(myNode.getNodeID());
         boolean keep = true;
