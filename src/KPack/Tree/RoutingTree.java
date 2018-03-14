@@ -4,6 +4,7 @@ import KPack.KadNode;
 import KPack.Kademlia;
 
 import java.math.BigInteger;
+import java.util.Iterator;
 import java.util.List;
 
 public class RoutingTree
@@ -24,11 +25,39 @@ public class RoutingTree
 
     public void add(KadNode nodo)
     {
-        Bucket tempBuck = findNodesBucket(nodo);
-        if(!findNodesBucket(nodo).add(nodo))
+        Bucket tempBuck;
+        if(!(tempBuck = findNodesBucket(nodo)).add(nodo))
         {
             TreeNode temp = new TreeNode();
-            //TODO
+            Bucket bucketSx = new Bucket(thisNode, instance);   //SISTEMARE IL FLAG
+            Bucket bucketDx = new Bucket(thisNode, instance);   //SISTEMARE IL FLAG
+            
+            temp.setLeft(bucketSx);
+            temp.setRight(bucketDx);
+            bucketSx.setParent(temp);
+            bucketDx.setParent(temp);
+            
+            Node tempBuckParent = tempBuck.getParent();
+            if(tempBuckParent==null)  //il genitore di tempBuck è null, quindi è tempBuck è la radice
+                root=temp;
+            else
+            {
+                temp.setParent(tempBuckParent);
+                TreeNode tempBuckParentCast=(TreeNode)tempBuckParent;
+                //temp diventa nodo destro o sinistro di tempBuckParent?
+                if(tempBuckParentCast.getLeft().equals(tempBuck))
+                    tempBuckParentCast.setLeft(temp);
+                else
+                    tempBuckParentCast.setRight(temp);
+            }
+            
+            Iterator<KadNode> kadNodeIterator = tempBuck.getListIterator(); 
+            while(kadNodeIterator.hasNext())
+            {
+                add(kadNodeIterator.next());
+            }
+            
+            add(nodo);
         }
     }
 
