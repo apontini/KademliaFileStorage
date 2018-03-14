@@ -9,11 +9,8 @@ public abstract class Node
         return parent;
     }
 
-    public void setParent(Node parent) throws NotAValidParentException
+    public void setParent(Node parent)
     {
-        if(!(parent instanceof Bucket))
             this.parent = parent;
-        else
-            throw new NotAValidParentException();
     }
 }

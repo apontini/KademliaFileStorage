@@ -29,8 +29,8 @@ public class RoutingTree
         if(!(tempBuck = findNodesBucket(nodo)).add(nodo))
         {
             TreeNode temp = new TreeNode();
-            Bucket bucketSx = new Bucket(thisNode, instance);   //SISTEMARE IL FLAG
-            Bucket bucketDx = new Bucket(thisNode, instance);   //SISTEMARE IL FLAG
+            Bucket bucketSx = new Bucket(thisNode, false);   
+            Bucket bucketDx = new Bucket(thisNode, false);
             
             temp.setLeft(bucketSx);
             temp.setRight(bucketDx);
@@ -38,7 +38,7 @@ public class RoutingTree
             bucketDx.setParent(temp);
             
             Node tempBuckParent = tempBuck.getParent();
-            if(tempBuckParent==null)  //il genitore di tempBuck è null, quindi è tempBuck è la radice
+            if(tempBuckParent==null)  //il genitore di tempBuck è null, quindi tempBuck è la radice
                 root=temp;
             else
             {
@@ -57,6 +57,7 @@ public class RoutingTree
                 add(kadNodeIterator.next());
             }
             
+            tempBuck.clearBucket();
             add(nodo);
         }
     }
