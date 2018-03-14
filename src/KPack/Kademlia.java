@@ -4,9 +4,12 @@ import KPack.Files.KadFile;
 import KPack.Tree.RoutingTree;
 
 import java.math.BigInteger;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf
 {
@@ -63,6 +66,19 @@ public class Kademlia implements KademliaInterf
         return fileList;
     }
 
+    public KadNode getKadNode()
+    {
+        try
+        {
+            return new KadNode("mio ip", (short)3, nodeID);  //SISTEMARE
+        }
+        catch (UnknownHostException ex)
+        {
+            ex.printStackTrace();
+            return null;
+        }
+    }
+    
     public void store(KadNode node, KadFile file) //gestire eccezioni
     {
 
