@@ -58,7 +58,7 @@ public class RoutingTree
             }
             
             //aggiorno il flag splittable
-            findNodesBucket(thisNode.getKadNode()).setSplittable(true);
+            findNodesBucket(thisNode.getMyNode()).setSplittable(true);
 
             //chiamo ricorsivamente il metodo add
             add(nodo);
