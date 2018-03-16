@@ -11,9 +11,17 @@ public class KadNode
     private short UDPport;
     private BigInteger nodeID;
 
-    public KadNode(String ipString, short port, BigInteger ID) throws UnknownHostException
+    public KadNode(String ipString, short port, BigInteger ID)
     {
-        ip = InetAddress.getByName(ipString);
+        try
+        {
+            ip = InetAddress.getByName(ipString);
+        }
+        catch (UnknownHostException uoe)
+        {
+            uoe.printStackTrace();
+        }
+
         UDPport = port;
         nodeID = ID;
     }
@@ -22,7 +30,7 @@ public class KadNode
         return ip;
     }
 
-    public short getUDPport() {
+    public short getUDPPort() {
         return UDPport;
     }
 

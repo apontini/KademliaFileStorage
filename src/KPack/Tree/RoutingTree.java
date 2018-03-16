@@ -59,9 +59,7 @@ public class RoutingTree
             
             //aggiorno il flag splittable
             findNodesBucket(thisNode.getKadNode()).setSplittable(true);
-            
-            //elimino gli elementi nel vecchio bucket
-            tempBuck.clearBucket();
+
             //chiamo ricorsivamente il metodo add
             add(nodo);
         }

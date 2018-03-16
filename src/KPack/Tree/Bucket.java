@@ -62,9 +62,4 @@ public class Bucket extends Node
     public void setSplittable(boolean splittable) {
         this.splittable = splittable;
     }
-    
-    public void clearBucket()
-    {
-        listaNodi.clear();
-    }
 }

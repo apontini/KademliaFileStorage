@@ -4,6 +4,7 @@ import KPack.Files.KadFile;
 import KPack.Tree.RoutingTree;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,12 +20,16 @@ public class Kademlia implements KademliaInterf
     private BigInteger nodeID;
     private List<KadFile> fileList;
     private RoutingTree routingTree;
+    private KadNode thisNode;
+    private short UDOPort = 1337;
 
     public Kademlia()
     {
-        if(instance) return;
+        if(instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
 
         fileList = new ArrayList<>();
+
+        String myIP = null; //TODO
 
         boolean exists = true;
         do
@@ -35,6 +40,8 @@ public class Kademlia implements KademliaInterf
             exists = false;
         }
         while(exists);
+
+        thisNode = new KadNode(myIP, UDOPort, nodeID);
 
         routingTree = new RoutingTree(this);
 
@@ -66,17 +73,9 @@ public class Kademlia implements KademliaInterf
         return fileList;
     }
 
-    public KadNode getKadNode()
+    public KadNode getMyNode()
     {
-        try
-        {
-            return new KadNode("mio ip", (short)3, nodeID);  //SISTEMARE
-        }
-        catch (UnknownHostException ex)
-        {
-            ex.printStackTrace();
-            return null;
-        }
+        return thisNode;
     }
     
     public void store(KadNode node, KadFile file) //gestire eccezioni

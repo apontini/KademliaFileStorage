@@ -18,4 +18,6 @@ public interface KademliaInterf
     List<KadNode> findNode(BigInteger nodeID);
 
     void store(KadNode node, KadFile file); //gestire eccezioni
+
+    KadNode getMyNode();
 }
