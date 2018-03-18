@@ -7,11 +7,11 @@ import java.net.InetAddress;
 
 public class FindValueRequest implements Serializable
 {
+    private final short idCommand=4;
     private BigInteger fileID;
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
-    private final short idCommand=4;
 
     public FindValueRequest(BigInteger targetID, KadNode kn)
     {

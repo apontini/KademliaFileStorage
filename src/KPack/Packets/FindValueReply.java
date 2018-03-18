@@ -5,7 +5,6 @@ import KPack.KadNode;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.net.InetAddress;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -17,15 +16,14 @@ public class FindValueReply implements Serializable
     private BigInteger fileID;
     private String content;
     private String path;
-    private InetAddress ipKadNode;
-    private short UDPport;
-    private BigInteger nodeID;
+    private List<KadNode> lkn;
 
     public FindValueReply(BigInteger targetID, List<KadNode> lkn, KadFileInterf kf) throws FileNotFoundException {
         this.fileID = targetID;
         this.fileID = kf.getFileID();
         this.fileName = kf.getFileName();
         this.path = kf.getPath();
+        this.lkn=lkn;
 
         FileReader fr = new FileReader(path);;
         BufferedReader br = new BufferedReader(fr);
@@ -45,20 +43,16 @@ public class FindValueReply implements Serializable
         return idCommand;
     }
 
-    public InetAddress getIpKadNode() {
-        return ipKadNode;
-    }
-
-    public short getUDPport() {
-        return UDPport;
-    }
-
-    public BigInteger getNodeID() {
-        return nodeID;
-    }
-
     public BigInteger getFileID() {
         return fileID;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public List<KadNode> getLkn() {
+        return lkn;
     }
 }
 

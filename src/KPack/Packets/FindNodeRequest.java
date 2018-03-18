@@ -8,11 +8,11 @@ import java.net.InetAddress;
 
 public class FindNodeRequest implements Serializable
 {
+    private final short idCommand=3;
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
     private BigInteger targetID;
-    private final short idCommand=3;
 
     public FindNodeRequest (BigInteger targetID,KadNode kn)
     {

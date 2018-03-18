@@ -8,12 +8,12 @@ import java.net.InetAddress;
 
 public class DeleteRequest implements Serializable
 {
+    private final short idCommand=5;
     private BigInteger fileID;
     private String fileName;
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
-    private final short idCommand=5;
 
     public DeleteRequest(KadFileInterf kf, KadNode kn)
     {

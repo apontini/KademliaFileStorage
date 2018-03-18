@@ -7,10 +7,10 @@ import java.net.InetAddress;
 
 public class PingRequest implements Serializable
 {
+    private final short idCommand=1;
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
-    private final short idCommand=1;
 
     public PingRequest(KadNode kn)
     {

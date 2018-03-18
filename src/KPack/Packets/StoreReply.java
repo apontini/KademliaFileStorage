@@ -11,12 +11,18 @@ public class StoreReply implements Serializable
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
+    private BigInteger idFileStore;
 
-    public StoreReply(KadNode kn)
+    public StoreReply(BigInteger idFileStore, KadNode kn)
     {
+        this.idFileStore=idFileStore;
         this.ipKadNode=kn.getIp();
         this.UDPport=kn.getUDPPort();
         this.nodeID=kn.getNodeID();
+    }
+
+    public BigInteger getIdFile() {
+        return idFileStore;
     }
 
     public short getIdCommand() {

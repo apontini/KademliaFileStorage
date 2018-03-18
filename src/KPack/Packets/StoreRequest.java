@@ -14,6 +14,7 @@ import java.util.logging.Logger;
 
 public class StoreRequest implements Serializable
 {
+    private final short idCommand=2;
     private BigInteger fileID;
     private String fileName;
     private String path;
@@ -21,7 +22,6 @@ public class StoreRequest implements Serializable
     private InetAddress ipKadNode;
     private short UDPport;
     private BigInteger nodeID;
-    private final short idCommand=2;
 
     public StoreRequest(KadFileInterf kf, KadNode kn) throws FileNotFoundException
     {
