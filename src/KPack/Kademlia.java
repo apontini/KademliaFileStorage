@@ -4,17 +4,11 @@ import KPack.Files.KadFile;
 import KPack.Packets.PingReply;
 import KPack.Packets.PingRequest;
 import KPack.Tree.RoutingTree;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+
+import java.io.*;
 
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -64,7 +58,7 @@ public class Kademlia implements KademliaInterf {
         new Thread(new ListenerThread()).start();
     }
 
-    private String getIP()   //per il momento restituisce l'ip locale.
+ /* private String getIP()   //per il momento restituisce l'ip locale.
     {
         try
         {
@@ -76,6 +70,29 @@ public class Kademlia implements KademliaInterf {
             /////////////// DA GESTIRE
         }
         return null;
+    }
+*/
+
+    private String getIP()
+    {
+        String publicIP = null;
+        try {
+            URL urlForIP = new URL("https://api.ipify.org/");
+            BufferedReader in = new BufferedReader(new InputStreamReader(urlForIP.openStream()));
+
+            publicIP = in.readLine(); //IP as a String
+            System.out.println(publicIP);
+        }
+        catch (MalformedURLException mue)
+        {
+            mue.printStackTrace();
+            /////////////// DA GESTIRE
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+        return publicIP;
     }
 
     public BigInteger getNodeID()
