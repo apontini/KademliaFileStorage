@@ -26,7 +26,7 @@ public class RoutingTree
     public void add(KadNode nodo)
     {
         Bucket tempBuck;
-        if(!(tempBuck = findNodesBucket(nodo)).add(nodo))
+        if(!((tempBuck = findNodesBucket(nodo)).add(nodo)))
         {
             TreeNode temp = new TreeNode();
             Bucket bucketSx = new Bucket(thisNode, false);   
@@ -36,31 +36,39 @@ public class RoutingTree
             temp.setRight(bucketDx);
             bucketSx.setParent(temp);
             bucketDx.setParent(temp);
+
+            for(int i=0; i<tempBuck.size(); i++)
+            {
+                BigInteger tempNodeID = tempBuck.get(i).getNodeID();
+                if(tempNodeID.testBit(thisNode.BITID-tempBuck.getDepth()))
+                    ((Bucket)temp.getLeft()).add(tempBuck.get(i));
+                else
+                    ((Bucket)temp.getRight()).add(tempBuck.get(i));
+            }
             
+            //aggiorno il flag splittable
+            if(thisNode.getNodeID().testBit(thisNode.BITID-tempBuck.getDepth()))
+                ((Bucket)temp.getLeft()).setSplittable(true);
+            else
+                ((Bucket)temp.getRight()).setSplittable(true);
+
             Node tempBuckParent = tempBuck.getParent();
+            //SOLO ORA vado a modificare il nodo che dev'essere splittato
             if(tempBuckParent==null)  //il genitore di tempBuck è null, quindi tempBuck è la radice
                 root=temp;
             else
             {
-                temp.setParent(tempBuckParent);
+                temp.setParent(tempBuckParent); //Prima il nodo che sto costruendo
                 TreeNode tempBuckParentCast=(TreeNode)tempBuckParent;
+                //Ora il nodo originale che devo sostituire
                 //temp diventa nodo destro o sinistro di tempBuckParent?
                 if(tempBuckParentCast.getLeft().equals(tempBuck))
                     tempBuckParentCast.setLeft(temp);
                 else
                     tempBuckParentCast.setRight(temp);
             }
-            
-            Iterator<KadNode> kadNodeIterator = tempBuck.getListIterator(); 
-            while(kadNodeIterator.hasNext())
-            {
-                add(kadNodeIterator.next());
-            }
-            
-            //aggiorno il flag splittable
-            findNodesBucket(thisNode.getMyNode()).setSplittable(true);
 
-            //chiamo ricorsivamente il metodo add
+            //chiamo ricorsivamente il metodo add per aggiungere il nodo e splittare di nuovo se neccesario
             add(nodo);
         }
     }
