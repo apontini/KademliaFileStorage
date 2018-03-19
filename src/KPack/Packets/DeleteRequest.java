@@ -4,40 +4,18 @@ import KPack.Files.KadFileInterf;
 import KPack.KadNode;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.net.InetAddress;
 
 public class DeleteRequest implements Serializable
 {
-    private final short idCommand=5;
+    private final KadNode kn;
     private BigInteger fileID;
     private String fileName;
-    private InetAddress ipKadNode;
-    private short UDPport;
-    private BigInteger nodeID;
 
     public DeleteRequest(KadFileInterf kf, KadNode kn)
     {
         this.fileID = kf.getFileID();
         this.fileName = kf.getFileName();
-        this.ipKadNode=kn.getIp();
-        this.UDPport=kn.getUDPPort();
-        this.nodeID=kn.getNodeID();
-    }
-
-    public short getIdCommand() {
-        return idCommand;
-    }
-
-    public InetAddress getIpKadNode() {
-        return ipKadNode;
-    }
-
-    public short getUDPport() {
-        return UDPport;
-    }
-
-    public BigInteger getNodeID() {
-        return nodeID;
+        this.kn=kn;
     }
 
     public BigInteger getFileID() {
@@ -46,6 +24,10 @@ public class DeleteRequest implements Serializable
 
     public String getFileName() {
         return fileName;
+    }
+
+    public KadNode getKadNode() {
+        return kn;
     }
 }
 

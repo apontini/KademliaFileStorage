@@ -8,7 +8,6 @@ import java.util.List;
 
 public class FindNodeReply implements Serializable
 {
-    private final short idCommand=8;
     private BigInteger targetID;
     private List<KadNode> lkn;
 
@@ -18,11 +17,7 @@ public class FindNodeReply implements Serializable
        this.lkn=lkn;
     }
 
-    public short getIdCommand() {
-        return idCommand;
-    }
-
-    public List<KadNode> getLkn() {
+    public List<KadNode> getListKadNode() {
         return lkn;
     }
 

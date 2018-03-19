@@ -3,56 +3,62 @@ package KPack.Packets;
 import KPack.Files.KadFileInterf;
 import KPack.KadNode;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class FindValueReply implements Serializable
 {
-    private final short idCommand=9;
     private final String fileName;
     private BigInteger fileID;
-    private String content;
-    private String path;
+    private byte[] content;
     private List<KadNode> lkn;
+    private KadNode kn;
 
-    public FindValueReply(BigInteger targetID, List<KadNode> lkn, KadFileInterf kf) throws FileNotFoundException {
-        this.fileID = targetID;
-        this.fileID = kf.getFileID();
-        this.fileName = kf.getFileName();
-        this.path = kf.getPath();
+    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf,KadNode kn)
+    {
+        this.fileID=fileID;
+        this.kn=kn;
         this.lkn=lkn;
-
-        FileReader fr = new FileReader(path);;
-        BufferedReader br = new BufferedReader(fr);
-        content="";
-        try {
-            while(br.ready())
-            {
-                content+= br.readLine();
-                content+="\n";
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(StoreRequest.class.getName()).log(Level.SEVERE, null, ex);
+        if(kf==null) {
+            content=null;
+            fileName=null;
         }
-    }
+        else {
+            this.fileName = kf.getFileName();
 
-    public short getIdCommand() {
-        return idCommand;
+            Path path= Paths.get(kf.getPath());
+            try {
+                content= Files.readAllBytes(path);
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public BigInteger getFileID() {
         return fileID;
     }
 
-    public String getContent() {
+    public byte[] getContent() {
         return content;
     }
 
-    public List<KadNode> getLkn() {
+    public String getFileName() {
+        return fileName;
+    }
+
+    public List<KadNode> getListKadNode() {
         return lkn;
+    }
+
+    public KadNode getKadNode() {
+        return kn;
     }
 }
 
