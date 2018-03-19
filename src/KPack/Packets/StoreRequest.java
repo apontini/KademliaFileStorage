@@ -2,64 +2,36 @@ package KPack.Packets;
 
 import KPack.Files.KadFileInterf;
 import KPack.KadNode;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.net.InetAddress;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class StoreRequest implements Serializable
 {
-    private final short idCommand=2;
     private BigInteger fileID;
     private String fileName;
-    private String path;
-    private String content;
-    private InetAddress ipKadNode;
-    private short UDPport;
-    private BigInteger nodeID;
+    private KadNode kn;
+    private byte[] content;
 
-    public StoreRequest(KadFileInterf kf, KadNode kn) throws FileNotFoundException
+    public StoreRequest(KadFileInterf kf, KadNode kn)
     {
         this.fileID = kf.getFileID();
         this.fileName = kf.getFileName();
-        this.path = kf.getPath();
-        this.ipKadNode=kn.getIp();
-        this.UDPport=kn.getUDPPort();
-        this.nodeID=kn.getNodeID();
 
-        FileReader fr = new FileReader(path);;
-        BufferedReader br = new BufferedReader(fr);
-        content="";
+        Path path= Paths.get(kf.getPath());
         try {
-            while(br.ready())
-            {
-                content+= br.readLine();
-                content+="\n";
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(StoreRequest.class.getName()).log(Level.SEVERE, null, ex);
+            content= Files.readAllBytes(path);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public short getIdCommand() {
-        return idCommand;
-    }
-
-    public InetAddress getIpKadNode() {
-        return ipKadNode;
-    }
-
-    public short getUDPport() {
-        return UDPport;
-    }
-
-    public BigInteger getNodeID() {
-        return nodeID;
+    public KadNode getKadNode(){
+        return kn;
     }
 
     public BigInteger getFileID() {
@@ -70,7 +42,7 @@ public class StoreRequest implements Serializable
         return fileName;
     }
 
-    public String getContent(){
+    public byte[] getContent(){
         return content;
     }
 }

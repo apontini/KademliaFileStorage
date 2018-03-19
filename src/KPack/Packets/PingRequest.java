@@ -2,37 +2,18 @@ package KPack.Packets;
 
 import KPack.KadNode;
 import java.io.Serializable;
-import java.math.BigInteger;
-import java.net.InetAddress;
 
 public class PingRequest implements Serializable
 {
-    private final short idCommand=1;
-    private InetAddress ipKadNode;
-    private short UDPport;
-    private BigInteger nodeID;
+    private KadNode kn;
 
     public PingRequest(KadNode kn)
     {
-        this.ipKadNode=kn.getIp();
-        this.UDPport=kn.getUDPPort();
-        this.nodeID=kn.getNodeID();
+       this.kn=kn;
     }
 
-    public short getIdCommand() {
-        return idCommand;
-    }
-
-    public InetAddress getIpKadNode() {
-        return ipKadNode;
-    }
-
-    public short getUDPport() {
-        return UDPport;
-    }
-
-    public BigInteger getNodeID() {
-        return nodeID;
+    public KadNode getKadNode() {
+        return kn;
     }
 }
 
