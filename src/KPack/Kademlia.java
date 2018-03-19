@@ -1,6 +1,8 @@
 package KPack;
 
 import KPack.Files.KadFile;
+import KPack.Packets.PingReply;
+import KPack.Packets.PingRequest;
 import KPack.Tree.RoutingTree;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +30,9 @@ public class Kademlia implements KademliaInterf {
     private KadNode thisNode;
     private short UDOPort = 1337;
 
+    private List<KadNode> pendentPing;
+    private final long pingTimeout=60000; //1 minuto
+
     public Kademlia()
     {
         if (instance)
@@ -54,6 +59,8 @@ public class Kademlia implements KademliaInterf {
 
         instance = true;
 
+        pendentPing = new ArrayList<>();
+
         new Thread(new ListenerThread()).start();
     }
 
@@ -78,7 +85,49 @@ public class Kademlia implements KademliaInterf {
 
     public boolean ping(KadNode node)
     {
-        return false;
+        PingRequest pr = new PingRequest(thisNode);
+
+        try
+        {
+            Socket s = new Socket(node.getIp(), node.getUDPPort());
+
+            synchronized (pendentPing)
+            {
+                pendentPing.add(node);
+            }
+
+            OutputStream os = s.getOutputStream();
+            ObjectOutputStream outputStream = new ObjectOutputStream(os);
+            outputStream.writeObject(pr);
+
+            s.close();
+            
+            try 
+            {
+                wait(pingTimeout);
+            }
+            catch (InterruptedException ex)
+            {
+                ex.printStackTrace();
+            }
+            
+            synchronized (pendentPing)
+            {
+                if(pendentPing.contains(node))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
+        catch (IOException ex)
+        {
+            ex.printStackTrace();
+            return false;
+        }
     }
 
     public Object findValue(BigInteger fileID)
@@ -137,17 +186,42 @@ public class Kademlia implements KademliaInterf {
                     InputStream is = connection.getInputStream();
                     ObjectInputStream inStream = new ObjectInputStream(is);
 
-                    System.out.println(inStream.readObject());
-                    
-                    //Elaboro la risposta
-                    
-                    
-                    
-                    //Mando la risposta
-                    OutputStream os = connection.getOutputStream();
-                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                    outputStream.writeObject(os);
+                    Object received = inStream.readObject();
 
+                    //Elaboro la risposta
+                    if (received instanceof PingReply)
+                    {
+                        PingReply pr = (PingReply) received;
+                        System.out.println("Received PingReply from: " + pr.toString());
+                        //KadNode kn=pr.getKadNode();
+                        KadNode kn=new KadNode(pr.getIpKadNode().getHostAddress(), pr.getUDPport(), pr.getNodeID());
+                        
+                        synchronized(pendentPing)
+                        {
+                            if(pendentPing.contains(kn));
+                            {
+                                pendentPing.remove(kn);
+                                notifyAll();
+                            }
+                        }
+                    }
+
+                    if (received instanceof PingRequest)
+                    {
+                        PingRequest pr = (PingRequest) received;
+                        System.out.println("Received PingRequest from: " + pr.toString());
+                        
+                        PingReply reply=new PingReply(thisNode);
+                        
+                        connection = new Socket(pr.getIpKadNode(),pr.getUDPport());
+                        OutputStream os = connection.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(reply);
+                        
+                        os.close();                       
+                    }
+
+                    
                     connection.close();
                 }
                 catch (IOException ex)
