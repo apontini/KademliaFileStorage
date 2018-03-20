@@ -6,7 +6,7 @@ public class KadFile implements KadFileInterf
 {
     //deve mantenere singolo file
     private BigInteger fileID;
-    private boolean redundant;
+    private boolean redundant; //Se il file è mio o mi è stato dato grazie al protocollo della rete Kademlia
     private String fileName;
     private String path;
 

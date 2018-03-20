@@ -1,8 +1,7 @@
 package KPack;
 
 import KPack.Files.KadFile;
-import KPack.Packets.PingReply;
-import KPack.Packets.PingRequest;
+import KPack.Packets.*;
 import KPack.Tree.RoutingTree;
 
 import java.io.*;
@@ -18,6 +17,7 @@ public class Kademlia implements KademliaInterf {
     private static boolean instance = false;
     public final static int BITID = 8;
     public final static int K = 4;
+    public final static int ALPHA = 2;
     private BigInteger nodeID;
     private List<KadFile> fileList;
     private RoutingTree routingTree;
@@ -28,6 +28,7 @@ public class Kademlia implements KademliaInterf {
 
     public Kademlia()
     {
+        System.out.println(System.getProperty("user.dir"));
         if (instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
         fileList = new ArrayList<>();
         String myIP = getIP().getHostAddress().toString();
@@ -44,16 +45,17 @@ public class Kademlia implements KademliaInterf {
 
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
+        routingTree.add(thisNode); //Mi aggiungo
         instance = true;
 
         new Thread(new ListenerThread()).start();
     }
-
+    /*
     public InetAddress getIP()   //per il momento restituisce l'ip locale.
     {
         try
         {
-            return InetAddress.getByName("192.168.61.134");//InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
+            return InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
         }
         catch (UnknownHostException ex)
         {
@@ -62,8 +64,9 @@ public class Kademlia implements KademliaInterf {
         }
         return null;
     }
+    */
 
-    /*public InetAddress getIP()
+    public InetAddress getIP()
     {
         String publicIP = null;
         try {
@@ -91,7 +94,7 @@ public class Kademlia implements KademliaInterf {
             //DA GESTIRE
             return null;
         }
-    }*/
+    }
 
     public BigInteger getNodeID()
     {
@@ -129,7 +132,6 @@ public class Kademlia implements KademliaInterf {
                             s.close();
                             return true;
                         }
-
                     }
                     s.setSoTimeout(((int)(pingTimeout-(System.currentTimeMillis()-timeInit))));
                 }
@@ -137,7 +139,6 @@ public class Kademlia implements KademliaInterf {
                 {
                     e.printStackTrace();
                 }
-
             }
         }
         catch(SocketTimeoutException soe)
@@ -148,6 +149,10 @@ public class Kademlia implements KademliaInterf {
         catch(ConnectException soe)
         {
             System.out.println("Non c'è risposta");
+            return false;
+        }
+        catch (EOFException e)
+        {
             return false;
         }
         catch (IOException ex)
@@ -235,8 +240,23 @@ public class Kademlia implements KademliaInterf {
                         }
                     }
                     */
+                    if(received instanceof FindNodeRequest)
+                    {
 
-                    if (received instanceof PingRequest)
+                    }
+                    else if(received instanceof FindValueRequest)
+                    {
+
+                    }
+                    else if (received instanceof StoreRequest)
+                    {
+
+                    }
+                    else if(received instanceof DeleteRequest)
+                    {
+
+                    }
+                    else if (received instanceof PingRequest)
                     {
                         PingRequest pr = (PingRequest) received;
                         if(!(pr.getDestKadNode().equals(thisNode)))
