@@ -129,6 +129,7 @@ public class Kademlia implements KademliaInterf {
                             s.close();
                             return true;
                         }
+
                     }
                     s.setSoTimeout(((int)(pingTimeout-(System.currentTimeMillis()-timeInit))));
                 }
@@ -136,12 +137,18 @@ public class Kademlia implements KademliaInterf {
                 {
                     e.printStackTrace();
                 }
-                catch(SocketTimeoutException soe)
-                {
-                    System.out.println("Timeout");
-                    return false;
-                }
+
             }
+        }
+        catch(SocketTimeoutException soe)
+        {
+            System.out.println("Timeout");
+            return false;
+        }
+        catch(ConnectException soe)
+        {
+            System.out.println("Non c'è risposta");
+            return false;
         }
         catch (IOException ex)
         {
@@ -232,9 +239,14 @@ public class Kademlia implements KademliaInterf {
                     if (received instanceof PingRequest)
                     {
                         PingRequest pr = (PingRequest) received;
+                        if(!(pr.getDestKadNode().equals(thisNode)))
+                        {
+                            connection.close();
+                            continue;
+                        }
                         KadNode sourceKadNode = pr.getSourceKadNode();
 
-                        System.out.println("Received PingRequest from: " + pr.toString());
+                        System.out.println("Received PingRequest from: " + pr.getSourceKadNode().toString());
 
                         PingReply reply = new PingReply(thisNode, sourceKadNode);
 
