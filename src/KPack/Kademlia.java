@@ -24,7 +24,6 @@ public class Kademlia implements KademliaInterf {
     private KadNode thisNode;
     public short UDPPort = 1337;
 
-    private List<KadNode> pendentPing;
     private final long pingTimeout = 15000;
 
     public Kademlia()
@@ -46,7 +45,6 @@ public class Kademlia implements KademliaInterf {
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
         instance = true;
-        pendentPing = new ArrayList<>();
 
         new Thread(new ListenerThread()).start();
     }
@@ -102,41 +100,49 @@ public class Kademlia implements KademliaInterf {
 
     public boolean ping(KadNode node)
     {
-        PingRequest pr = new PingRequest(thisNode);
+        PingRequest pr = new PingRequest(thisNode,node);
 
         try
         {
             Socket s = new Socket(node.getIp(), node.getUDPPort());
 
-            synchronized (pendentPing)
-            {
-                pendentPing.add(node);
-            }
-
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
             outputStream.writeObject(pr);
 
-            s.close();
+            InputStream is = s.getInputStream();
+            ObjectInputStream inputStream = new ObjectInputStream(is);
 
-            try
+            long timeInit = System.currentTimeMillis();
+            boolean state = true;
+            Object preply = null;
+            while(true)
             {
-                wait(pingTimeout);
-            }
-            catch (InterruptedException ex)
-            {
-                ex.printStackTrace();
-            }
-
-            synchronized (pendentPing)
-            {
-                if (pendentPing.contains(node))
+                try
                 {
-                    return true;
+                    preply = inputStream.readObject();
+                    if(preply instanceof PingReply)
+                    {
+
+                        if(((PingReply)preply).getSourceKadNode().equals(pr.getDestKadNode()))
+                            return true;
+                    }
+                    else
+                    {
+                        if(System.currentTimeMillis()-timeInit > pingTimeout)
+                        {
+                            return false;
+                        }
+                    }
+
                 }
-                else
+                catch(ClassNotFoundException e)
                 {
-                    return false;
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    s.close();
                 }
             }
         }
@@ -190,12 +196,14 @@ public class Kademlia implements KademliaInterf {
                 ////////// DA GESTIRE
             }
 
+            Socket connection;
             while (true)
             {
-                Socket connection;
+
                 try
                 {
                     System.out.println("Waiting for connection");
+
                     connection = listener.accept();
                     System.out.println("Connection received from " + connection.getInetAddress().getHostAddress());
 
@@ -206,6 +214,7 @@ public class Kademlia implements KademliaInterf {
                     Object received = inStream.readObject();
 
                     //Elaboro la risposta
+                    /*
                     if (received instanceof PingReply)
                     {
                         PingReply pr = (PingReply) received;
@@ -221,17 +230,18 @@ public class Kademlia implements KademliaInterf {
                             }
                         }
                     }
+                    */
 
                     if (received instanceof PingRequest)
                     {
                         PingRequest pr = (PingRequest) received;
-                        KadNode transmitterKadNode = pr.getKadNode();
+                        KadNode sourceKadNode = pr.getSourceKadNode();
 
                         System.out.println("Received PingRequest from: " + pr.toString());
 
-                        PingReply reply = new PingReply(thisNode);
+                        PingReply reply = new PingReply(thisNode, sourceKadNode);
 
-                        connection = new Socket(transmitterKadNode.getIp(), transmitterKadNode.getUDPPort());
+                        connection = new Socket(sourceKadNode.getIp(), sourceKadNode.getUDPPort());
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(reply);

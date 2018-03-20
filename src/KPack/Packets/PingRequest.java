@@ -5,15 +5,22 @@ import java.io.Serializable;
 
 public class PingRequest implements Serializable
 {
-    private KadNode kn;
+    private KadNode source;
+    private KadNode dest;
 
-    public PingRequest(KadNode kn)
+    public PingRequest(KadNode source, KadNode dest)
     {
-       this.kn=kn;
+       this.source=source;
+       this.dest = dest;
     }
 
-    public KadNode getKadNode() {
-        return kn;
+    public KadNode getSourceKadNode() {
+        return source;
+    }
+
+    public KadNode getDestKadNode()
+    {
+        return dest;
     }
 }
 
