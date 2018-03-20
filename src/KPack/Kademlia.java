@@ -24,7 +24,7 @@ public class Kademlia implements KademliaInterf {
     private KadNode thisNode;
     public short UDPPort = 1337;
 
-    private final long pingTimeout = 15000;
+    private final int pingTimeout = 15000;
 
     public Kademlia()
     {
@@ -53,7 +53,7 @@ public class Kademlia implements KademliaInterf {
     {
         try
         {
-            return InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
+            return InetAddress.getByName("192.168.61.134");//InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
         }
         catch (UnknownHostException ex)
         {
@@ -101,10 +101,10 @@ public class Kademlia implements KademliaInterf {
     public boolean ping(KadNode node)
     {
         PingRequest pr = new PingRequest(thisNode,node);
-
         try
         {
             Socket s = new Socket(node.getIp(), node.getUDPPort());
+            s.setSoTimeout(pingTimeout);
 
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -123,18 +123,10 @@ public class Kademlia implements KademliaInterf {
                     preply = inputStream.readObject();
                     if(preply instanceof PingReply)
                     {
-
                         if(((PingReply)preply).getSourceKadNode().equals(pr.getDestKadNode()))
                             return true;
                     }
-                    else
-                    {
-                        if(System.currentTimeMillis()-timeInit > pingTimeout)
-                        {
-                            return false;
-                        }
-                    }
-
+                    s.setSoTimeout(((int)(System.currentTimeMillis()-timeInit)));
                 }
                 catch(ClassNotFoundException e)
                 {
@@ -241,7 +233,6 @@ public class Kademlia implements KademliaInterf {
 
                         PingReply reply = new PingReply(thisNode, sourceKadNode);
 
-                        connection = new Socket(sourceKadNode.getIp(), sourceKadNode.getUDPPort());
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(reply);
