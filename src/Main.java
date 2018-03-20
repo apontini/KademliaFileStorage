@@ -1,6 +1,8 @@
 import KPack.Files.KadFile;
+import KPack.KadNode;
 import KPack.Kademlia;
 
+import java.math.BigInteger;
 import java.util.Scanner;
 
 public class Main
@@ -51,6 +53,16 @@ public class Main
                     break;
                 case "ip":
                     System.out.println(myNode.getIP().getHostAddress());
+                    break;
+                case "ping":
+                    if(split.length > 1)
+                    {
+                        myNode.ping(new KadNode(split[1],myNode.UDPPort, new BigInteger("123")));
+                    }
+                    else
+                    {
+                        System.out.println("Please define an IP address");
+                    }
                     break;
                 default:
                     System.out.println("Say what?");

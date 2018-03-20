@@ -1,11 +1,12 @@
 package KPack;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
-public class KadNode
+public class KadNode implements Serializable
 {
     private InetAddress ip;
     private short UDPport;
@@ -44,5 +45,15 @@ public class KadNode
         if (o == null || getClass() != o.getClass()) return false;
         KadNode kadNode = (KadNode) o;
         return Objects.equals(nodeID, kadNode.nodeID); //dubbio
+    }
+
+    @Override
+    public String toString()
+    {
+        return "KadNode{" +
+                "ip=" + ip +
+                ", UDPport=" + UDPport +
+                ", nodeID=" + nodeID +
+                '}';
     }
 }

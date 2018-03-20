@@ -22,7 +22,7 @@ public class Kademlia implements KademliaInterf {
     private List<KadFile> fileList;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    private short UDPPort = 1337;
+    public short UDPPort = 1337;
 
     private List<KadNode> pendentPing;
     private final long pingTimeout = 15000;
