@@ -16,6 +16,7 @@ public class Main
 
         while(keep)
         {
+            System.out.print("KadNode@ " + myNode.getNodeID() + "-: ");
             in = reader.nextLine();
             String[] split = in.split(" ");
             switch(split[0])
@@ -47,6 +48,9 @@ public class Main
                             System.out.println(i.getFileName() + " ID: " + i.getFileID());
                         }
                     }
+                    break;
+                case "ip":
+                    System.out.println(myNode.getIP().getHostAddress());
                     break;
                 default:
                     System.out.println("Say what?");

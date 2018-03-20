@@ -22,20 +22,16 @@ public class Kademlia implements KademliaInterf {
     private List<KadFile> fileList;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    private short UDOPort = 1337;
+    private short UDPPort = 1337;
 
     private List<KadNode> pendentPing;
-    private final long pingTimeout = 60000; //1 minuto
+    private final long pingTimeout = 15000;
 
     public Kademlia()
     {
-        if (instance)
-        {
-            return; //Aggiungere un'eccezione tipo AlreadyInstanced
-        }
+        if (instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
         fileList = new ArrayList<>();
-
-        String myIP = getIP(); //TODO
+        String myIP = getIP().getHostAddress().toString();
 
         boolean exists = true;
         do
@@ -47,22 +43,19 @@ public class Kademlia implements KademliaInterf {
         }
         while (exists);
 
-        thisNode = new KadNode(myIP, UDOPort, nodeID);
-
+        thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
-
         instance = true;
-
         pendentPing = new ArrayList<>();
 
         new Thread(new ListenerThread()).start();
     }
 
- /* private String getIP()   //per il momento restituisce l'ip locale.
+    public InetAddress getIP()   //per il momento restituisce l'ip locale.
     {
         try
         {
-            return InetAddress.getLocalHost().getHostAddress().toString();
+            return InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
         }
         catch (UnknownHostException ex)
         {
@@ -71,9 +64,8 @@ public class Kademlia implements KademliaInterf {
         }
         return null;
     }
-*/
 
-    private String getIP()
+    /*public InetAddress getIP()
     {
         String publicIP = null;
         try {
@@ -81,7 +73,6 @@ public class Kademlia implements KademliaInterf {
             BufferedReader in = new BufferedReader(new InputStreamReader(urlForIP.openStream()));
 
             publicIP = in.readLine(); //IP as a String
-            System.out.println(publicIP);
         }
         catch (MalformedURLException mue)
         {
@@ -92,8 +83,17 @@ public class Kademlia implements KademliaInterf {
         {
             ioe.printStackTrace();
         }
-        return publicIP;
-    }
+        try
+        {
+            return InetAddress.getByName(publicIP);
+        }
+        catch(UnknownHostException e)
+        {
+            e.printStackTrace();
+            //DA GESTIRE
+            return null;
+        }
+    }*/
 
     public BigInteger getNodeID()
     {
@@ -181,8 +181,8 @@ public class Kademlia implements KademliaInterf {
         {
             try
             {
-                listener = new ServerSocket(UDOPort);
-                System.out.println("Thread Server avviato\n" + "IP: " + getIP() + "\nPorta: " + UDOPort);
+                listener = new ServerSocket(UDPPort);
+                System.out.println("Thread Server avviato\n" + "IP: " + getIP() + "\nPorta: " + UDPPort);
             }
             catch (IOException ex)
             {
