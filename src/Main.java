@@ -55,13 +55,17 @@ public class Main
                     System.out.println(myNode.getIP().getHostAddress());
                     break;
                 case "ping":
-                    if(split.length > 1)
+                    //Funzione di test
+                    if(split.length > 2)
                     {
-                        myNode.ping(new KadNode(split[1],myNode.UDPPort, new BigInteger("123")));
+                        if(myNode.ping(new KadNode(split[1],myNode.UDPPort,new BigInteger(split[2]))))
+                        {
+                            System.out.println("VIVO");
+                        }
                     }
                     else
                     {
-                        System.out.println("Please define an IP address");
+                        System.out.println("Please define an IP address and ID");
                     }
                     break;
                 default:

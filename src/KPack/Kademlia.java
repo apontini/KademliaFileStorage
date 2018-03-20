@@ -109,32 +109,37 @@ public class Kademlia implements KademliaInterf {
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
             outputStream.writeObject(pr);
+            outputStream.flush();
 
             InputStream is = s.getInputStream();
             ObjectInputStream inputStream = new ObjectInputStream(is);
 
             long timeInit = System.currentTimeMillis();
             boolean state = true;
-            Object preply = null;
             while(true)
             {
                 try
                 {
-                    preply = inputStream.readObject();
+                    Object preply = inputStream.readObject();
                     if(preply instanceof PingReply)
                     {
                         if(((PingReply)preply).getSourceKadNode().equals(pr.getDestKadNode()))
+                        {
+                            is.close();
+                            s.close();
                             return true;
+                        }
                     }
-                    s.setSoTimeout(((int)(System.currentTimeMillis()-timeInit)));
+                    s.setSoTimeout(((int)(pingTimeout-(System.currentTimeMillis()-timeInit))));
                 }
                 catch(ClassNotFoundException e)
                 {
                     e.printStackTrace();
                 }
-                finally
+                catch(SocketTimeoutException soe)
                 {
-                    s.close();
+                    System.out.println("Timeout");
+                    return false;
                 }
             }
         }
@@ -236,6 +241,7 @@ public class Kademlia implements KademliaInterf {
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(reply);
+                        outputStream.flush();
 
                         os.close();
                     }
