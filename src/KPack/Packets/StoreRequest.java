@@ -13,13 +13,16 @@ public class StoreRequest implements Serializable
 {
     private BigInteger fileID;
     private String fileName;
-    private KadNode kn;
+    private KadNode source;
+    private KadNode dest;
     private byte[] content;
 
-    public StoreRequest(KadFileInterf kf, KadNode kn)
+    public StoreRequest(KadFileInterf kf, KadNode source, KadNode dest)
     {
         this.fileID = kf.getFileID();
         this.fileName = kf.getFileName();
+        this.source = source;
+        this.dest = dest;
 
         Path path= Paths.get(kf.getPath());
         try {
@@ -30,9 +33,11 @@ public class StoreRequest implements Serializable
         }
     }
 
-    public KadNode getKadNode(){
-        return kn;
+    public KadNode getSourceKadNode(){
+        return source;
     }
+
+    public KadNode getDestKadNode() { return dest;}
 
     public BigInteger getFileID() {
         return fileID;

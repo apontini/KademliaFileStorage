@@ -11,7 +11,6 @@ public class Main
     {
         System.out.println("Cerco un ID valido..");
         Kademlia myNode = new Kademlia();
-        System.out.println(myNode.getNodeID());
         boolean keep = true;
         String in = null;
         Scanner reader = new Scanner(System.in);

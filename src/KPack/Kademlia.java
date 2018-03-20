@@ -18,6 +18,7 @@ public class Kademlia implements KademliaInterf {
     public final static int BITID = 8;
     public final static int K = 4;
     public final static int ALPHA = 2;
+    public final static String FILESPATH = "./storedFiles/";
     private BigInteger nodeID;
     private List<KadFile> fileList;
     private RoutingTree routingTree;
@@ -28,9 +29,54 @@ public class Kademlia implements KademliaInterf {
 
     public Kademlia()
     {
-        System.out.println(System.getProperty("user.dir"));
         if (instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
+        instance = true;
+
+        //Gestione File
+
+        File temp = new File(FILESPATH);
+        if(!(temp.exists())) temp.mkdir();
+
+        File localFiles = new File(FILESPATH + "index");
         fileList = new ArrayList<>();
+
+        if(localFiles.exists())
+        {
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(FILESPATH + "index");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                while(true)
+                {
+                    fileList = ((ArrayList<KadFile>)ois.readObject());
+                }
+            }
+            catch (EOFException | FileNotFoundException | ClassNotFoundException e)
+            {
+                //Aspettate o impossibili
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace();
+            }
+            finally
+            {
+                try { if (fis != null) fis.close(); }
+                catch (IOException ioe) {} //Ignorata
+            }
+        }
+        else
+        {
+            try
+            {
+                localFiles.createNewFile();
+            }
+            catch (IOException ioe)
+            {
+                ioe.printStackTrace();
+            }
+        }
+
         String myIP = getIP().getHostAddress().toString();
 
         boolean exists = true;
@@ -46,7 +92,7 @@ public class Kademlia implements KademliaInterf {
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
-        instance = true;
+
 
         new Thread(new ListenerThread()).start();
     }
@@ -250,6 +296,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     else if (received instanceof StoreRequest)
                     {
+                        StoreRequest rq = (StoreRequest) received;
 
                     }
                     else if(received instanceof DeleteRequest)

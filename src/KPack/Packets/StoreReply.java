@@ -6,20 +6,24 @@ import java.math.BigInteger;
 
 public class StoreReply implements Serializable
 {
-    private final KadNode kn;
+    private final KadNode source;
+    private final KadNode dest;
     private BigInteger idFileStore;
 
-    public StoreReply(BigInteger idFileStore, KadNode kn)
+    public StoreReply(BigInteger idFileStore, KadNode source, KadNode dest)
     {
         this.idFileStore=idFileStore;
-        this.kn=kn;
+        this.source = source;
+        this.dest = dest;
     }
 
     public BigInteger getIdFileStore() {
         return idFileStore;
     }
 
-    public KadNode getKadNode() {
-        return kn;
+    public KadNode getSourceKadNode() {
+        return source;
     }
+
+    public KadNode getDestKadNode() { return dest;}
 }
