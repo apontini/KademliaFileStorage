@@ -30,9 +30,9 @@ public class RoutingTree {
         add(thisNode.getMyNode());
 
         new TreeUI(this);
-        for(int i=0;i<5;i++)
+        for (int i = 0; i < 20; i++)
         {
-            add(new KadNode("0.0.0.0", (short)0, new BigInteger(Integer.toString((int)(Math.random()*120)))));
+            add(new KadNode("0.0.0.0", (short) 0, new BigInteger(Integer.toString((int) (Math.random() * 256)))));
             new TreeUI(this);
         }
     }
@@ -51,26 +51,6 @@ public class RoutingTree {
             bucketSx.setParent(temp);
             bucketDx.setParent(temp);
 
-            for (int i = 0; i < tempBuck.size(); i++)
-            {
-                BigInteger tempNodeID = tempBuck.get(i).getNodeID();
-                if (tempNodeID.testBit(thisNode.BITID - tempBuck.getDepth()-1))
-                {
-                    ((Bucket) temp.getLeft()).add(tempBuck.get(i));
-                }
-                else
-                {
-                    ((Bucket) temp.getRight()).add(tempBuck.get(i));
-                }
-            }
-
-            //aggiorno il flag splittable
-            findNodesBucket(thisNode.getMyNode()).setSplittable(true);
-
-            /*if(thisNode.getNodeID().testBit(thisNode.BITID-tempBuck.getDepth()))
-                ((Bucket)temp.getLeft()).setSplittable(false);
-            else
-                ((Bucket)temp.getRight()).setSplittable(false);*/
             Node tempBuckParent = tempBuck.getParent();
             //SOLO ORA vado a modificare il nodo che dev'essere splittato
             if (tempBuckParent == null)  //il genitore di tempBuck è null, quindi tempBuck è la radice
@@ -91,6 +71,30 @@ public class RoutingTree {
                 {
                     tempBuckParentCast.setRight(temp);
                 }
+            }
+            
+            for (int i = 0; i < tempBuck.size(); i++)
+            {
+                BigInteger tempNodeID = tempBuck.get(i).getNodeID();
+                if (tempNodeID.testBit(thisNode.BITID - tempBuck.getDepth() - 1))
+                {
+                    ((Bucket) temp.getLeft()).add(tempBuck.get(i));
+                }
+                else
+                {
+                    ((Bucket) temp.getRight()).add(tempBuck.get(i));
+                }
+            }
+            //aggiorno il flag splittable
+            //findNodesBucket(thisNode.getMyNode()).setSplittable(true);
+
+            if (thisNode.getNodeID().testBit(thisNode.BITID - tempBuck.getDepth() - 1))
+            {
+                ((Bucket) temp.getLeft()).setSplittable(true);
+            }
+            else
+            {
+                ((Bucket) temp.getRight()).setSplittable(true);
             }
 
             //chiamo ricorsivamente il metodo add per aggiungere il nodo e splittare di nuovo se neccesario
