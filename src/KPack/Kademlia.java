@@ -187,9 +187,16 @@ public class Kademlia implements KademliaInterf {
             if(bucket.equals(node.getRight()))
             {
                 Bucket b=(Bucket)node.getLeft();
+                lkn.addAll((Collection<? extends KadNode>) b.getList());
             }
-
-
+            else
+            {
+                if(routingTree.getRoot().equals(node))
+                    break;
+                TreeNode no=(TreeNode)node.getParent();
+                Bucket b=(Bucket)node.getLeft();
+                lkn.addAll((Collection<? extends KadNode>) b.getList());
+            }
         }
         lkn.sort((o1, o2) ->
                 distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
