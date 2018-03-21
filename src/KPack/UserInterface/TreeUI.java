@@ -1,27 +1,37 @@
 package KPack.UserInterface;
 
+import KPack.KadNode;
+import KPack.Tree.Bucket;
+import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
+import KPack.Tree.TreeNode;
+import java.math.BigInteger;
+import java.util.Iterator;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 public class TreeUI extends javax.swing.JFrame {
-    
+
     private JTree tree;
     private RoutingTree routingTree;
-    
+
     public TreeUI(RoutingTree rt)
     {
-        routingTree=rt;
+        routingTree = rt;
         
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        DefaultMutableTreeNode vegetableNode = new DefaultMutableTreeNode("Vegetables");
-        DefaultMutableTreeNode fruitNode = new DefaultMutableTreeNode("Fruits");
-        root.add(vegetableNode);
-        root.add(fruitNode);
-         
-        tree = new JTree(root);
+        for(int i=0;i<5;i++)
+        {
+            rt.add(new KadNode("1.1.1.1",(short) 0, new BigInteger(((int)(Math.random()*100))+""))); //for testing tree
+        }
+
+        Node rootNode = routingTree.getRoot();
+        DefaultMutableTreeNode rootTree = new DefaultMutableTreeNode("");
+
+        recursiveTree(rootNode, rootTree);
+
+        tree = new JTree(rootTree);
         add(tree);
-               
+
         this.pack();
         this.setVisible(true);
     }
@@ -48,14 +58,31 @@ public class TreeUI extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    public static void main(String args[])
+    private void recursiveTree(Node n, DefaultMutableTreeNode dmt)
     {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run()
+        if (n instanceof Bucket)
+        {
+            Bucket b = (Bucket) n;
+            Iterator<KadNode> ikn = b.getList();
+            while (ikn.hasNext())
             {
-                new TreeUI(null);
+                KadNode kn = ikn.next();
+                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(kn.getNodeID());
+                dmt.add(treeNode);
             }
-        });
+        }
+        else
+        {
+            TreeNode tn = (TreeNode) n;
+            DefaultMutableTreeNode sx = new DefaultMutableTreeNode("1");
+            DefaultMutableTreeNode dx = new DefaultMutableTreeNode("0");
+            dmt.add(sx);
+            dmt.add(dx);
+
+            recursiveTree(tn.getLeft(), sx);
+            recursiveTree(tn.getRight(), dx);
+
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
