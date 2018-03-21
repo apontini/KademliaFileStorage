@@ -4,7 +4,9 @@ import KPack.Files.KadFile;
 import KPack.Files.KadFileList;
 import KPack.Packets.*;
 import KPack.Tree.Bucket;
+import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
+import KPack.Tree.TreeNode;
 
 import java.io.*;
 
@@ -32,50 +34,7 @@ public class Kademlia implements KademliaInterf {
         if (instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
         instance = true;
 
-        //Gestione File
-
-        File temp = new File(FILESPATH);
-        if(!(temp.exists())) temp.mkdir();
-
-        File localFiles = new File(FILESPATH + "index");
-        fileList = new KadFileList();
-
-        if(localFiles.exists())
-        {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(FILESPATH + "index");
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                while(true)
-                {
-                    fileList = ((KadFileList)ois.readObject());
-                }
-            }
-            catch (EOFException | FileNotFoundException | ClassNotFoundException e)
-            {
-                //Aspettate o impossibili
-            }
-            catch(IOException ioe)
-            {
-                ioe.printStackTrace();
-            }
-            finally
-            {
-                try { if (fis != null) fis.close(); }
-                catch (IOException ioe) {} //Ignorata
-            }
-        }
-        else
-        {
-            try
-            {
-                localFiles.createNewFile();
-            }
-            catch (IOException ioe)
-            {
-                ioe.printStackTrace();
-            }
-        }
+        fileList = new KadFileList(this);
 
         String myIP = getIP().getHostAddress().toString();
 
@@ -222,14 +181,26 @@ public class Kademlia implements KademliaInterf {
         {
             lkn.add(ikn.next());
         }
+        while(lkn.size()<K)
+        {
+            TreeNode node= (TreeNode) bucket.getParent();
+            if(bucket.equals(node.getRight()))
+            {
+                Bucket b=(Bucket)node.getLeft();
+            }
+
+
+        }
         lkn.sort((o1, o2) ->
-                distanza(o1, new KadNode(null, (short) 0,targetID)).compareTo(distanza(o2,new KadNode(null, (short) 0,targetID))));
+                distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
         List<KadNode> alphaNode=lkn.subList(0,ALPHA-1);
         List<KadNode> list=new ArrayList<>();
         alphaNode.forEach((o1)->list.addAll(findNode(o1.getNodeID())));
-        if(list.subList(0,ALPHA-1).containsAll(alphaNode))
-            return list.subList(0,K-1);
-        return null;
+        while(!(list.subList(0,ALPHA-1).containsAll(alphaNode)))
+        {
+            list.subList(0,ALPHA-1).forEach((o1)->list.addAll(findNode(o1.getNodeID())));
+        }
+        return list.subList(0,K-1);
     }
 
     public KadFileList getFileList()
