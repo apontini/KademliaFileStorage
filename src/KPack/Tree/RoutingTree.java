@@ -20,9 +20,7 @@ public class RoutingTree
         if(bucketsDim<=0) throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
-        
-        this.add(thisNode.getMyNode());
-        
+
         new TreeUI(this);
     }
 
