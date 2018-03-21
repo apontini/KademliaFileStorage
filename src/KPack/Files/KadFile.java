@@ -1,8 +1,9 @@
 package KPack.Files;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
-public class KadFile implements KadFileInterf
+public class KadFile implements KadFileInterf, Serializable
 {
     //deve mantenere singolo file
     private BigInteger fileID;
