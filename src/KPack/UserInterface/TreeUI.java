@@ -31,6 +31,7 @@ public class TreeUI extends javax.swing.JFrame {
         add(tree);
 
         this.setPreferredSize(new Dimension(500,500));
+        this.setSize(new Dimension(500,500));
         this.pack();
         this.setVisible(true);
     }
