@@ -1,5 +1,8 @@
 package KPack.Files;
 
+import KPack.Kademlia;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
@@ -12,18 +15,19 @@ public class KadFileList
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
+    private Kademlia thisNode;
 
-
-    public KadFileList()
+    public KadFileList(Kademlia thisNode)
     {
-        fileList = new ArrayList<KadFile>();
+        fileList = loadListFromFile();
+        this.thisNode = thisNode;
     }
 
     public void add(KadFile file)
     {
         writeLock.lock();
         fileList.add(file);
-        //Aggiornare il file index
+        indexRefresh();
         writeLock.unlock();
     }
 
@@ -31,7 +35,7 @@ public class KadFileList
     {
         writeLock.lock();
         fileList.remove(file);
-        //Aggiornare il file index
+        indexRefresh();
         writeLock.unlock();
     }
 
@@ -61,7 +65,7 @@ public class KadFileList
         }
     }
 
-    public int size() //e se size cambia mentre sto ciclando un for per esempio?
+    public int size() //e se size cambia mentre sto ciclando un for per esempio? Prendo il lock dell'oggetto KadFileList?
     {
         readLock.lock();
         try
@@ -76,6 +80,73 @@ public class KadFileList
 
     private void indexRefresh()
     {
-        
+        try
+        {
+            File temp = new File(thisNode.FILESPATH);
+            if(!(temp.exists())) temp.mkdir();
+            File localFiles = new File(thisNode.FILESPATH + "index");
+            if(!(localFiles.exists())) localFiles.createNewFile();
+
+            FileOutputStream fout = new FileOutputStream(thisNode.FILESPATH + "index");
+            ObjectOutputStream oos = new ObjectOutputStream(fout);
+            oos.writeObject(fileList);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    private ArrayList<KadFile> loadListFromFile()
+    {
+
+        ArrayList<KadFile> ret = new ArrayList<>();
+
+        File temp = new File(thisNode.FILESPATH);
+        if(!(temp.exists())) temp.mkdir();
+
+        File localFiles = new File(thisNode.FILESPATH + "index");
+
+        if(localFiles.exists())
+        {
+            FileInputStream fis = null;
+            try
+            {
+                fis = new FileInputStream(thisNode.FILESPATH + "index");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                ret = new ArrayList<>();
+                while(true)
+                {
+                    ret = ((ArrayList<KadFile>)ois.readObject());
+                }
+            }
+            catch (EOFException | FileNotFoundException | ClassNotFoundException e)
+            {
+                //Aspettate o impossibili
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace();
+            }
+            finally
+            {
+                try { if (fis != null) fis.close();}
+                catch (IOException ioe) {} //Ignorata
+                finally { return ret; }
+            }
+        }
+
+        try
+        {
+            localFiles.createNewFile();
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+        finally
+        {
+            return ret;
+        }
     }
 }
