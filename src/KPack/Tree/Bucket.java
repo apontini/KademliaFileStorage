@@ -140,4 +140,15 @@ public class Bucket extends Node {
     {
         return listaNodi.iterator();
     }
+
+    public String toString()
+    {
+        String bu = "{\n";
+        for (KadNode k : listaNodi)
+        {
+            bu += k.toString() + "\n";
+        }
+        bu += "}";
+        return bu;
+    }
 }

@@ -1,10 +1,12 @@
 package KPack.UserInterface;
 
 import KPack.KadNode;
+import KPack.Kademlia;
 import KPack.Tree.Bucket;
 import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
+import java.awt.Dimension;
 import java.math.BigInteger;
 import java.util.Iterator;
 import javax.swing.JTree;
@@ -19,11 +21,7 @@ public class TreeUI extends javax.swing.JFrame {
     {
         routingTree = rt;
         
-        for(int i=0;i<5;i++)
-        {
-            rt.add(new KadNode("1.1.1.1",(short) 0, new BigInteger(((int)(Math.random()*100))+""))); //for testing tree
-        }
-
+        
         Node rootNode = routingTree.getRoot();
         DefaultMutableTreeNode rootTree = new DefaultMutableTreeNode("");
 
@@ -32,6 +30,7 @@ public class TreeUI extends javax.swing.JFrame {
         tree = new JTree(rootTree);
         add(tree);
 
+        this.setPreferredSize(new Dimension(500,500));
         this.pack();
         this.setVisible(true);
     }
@@ -63,11 +62,12 @@ public class TreeUI extends javax.swing.JFrame {
         if (n instanceof Bucket)
         {
             Bucket b = (Bucket) n;
+            System.out.println(b.toString());
             Iterator<KadNode> ikn = b.getList();
             while (ikn.hasNext())
             {
                 KadNode kn = ikn.next();
-                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(kn.getNodeID());
+                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(intToBinary(kn.getNodeID()));
                 dmt.add(treeNode);
             }
         }
@@ -85,6 +85,15 @@ public class TreeUI extends javax.swing.JFrame {
         }
     }
 
+    private String intToBinary(BigInteger n)
+    {
+        String num="";
+        for(int i=0;i<Kademlia.BITID;i++)
+        {
+            num=(n.testBit(i)?1:0)+num;
+        }
+        return num;
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
 }
