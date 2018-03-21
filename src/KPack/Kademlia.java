@@ -2,15 +2,14 @@ package KPack;
 
 import KPack.Files.KadFile;
 import KPack.Packets.*;
+import KPack.Tree.Bucket;
 import KPack.Tree.RoutingTree;
 
 import java.io.*;
 
 import java.math.BigInteger;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Kademlia implements KademliaInterf {
 
@@ -213,8 +212,23 @@ public class Kademlia implements KademliaInterf {
         return null;
     }
 
-    public List<KadNode> findNode(BigInteger nodeID)
+    public List<KadNode> findNode(BigInteger targetID)  //Working in progress
     {
+        int alpha=3;
+        Bucket bucket=routingTree.findNodesBucket(thisNode);
+        List<KadNode> lkn=new ArrayList<>();
+        Iterator<KadNode> ikn=bucket.getList();
+        while(ikn.hasNext())
+        {
+            lkn.add(ikn.next());
+        }
+        lkn.sort((o1, o2) ->
+                distanza(o1, new KadNode(null, (short) 0,targetID)).compareTo(distanza(o2,new KadNode(null, (short) 0,targetID))));
+        List<KadNode> alphaNode=lkn.subList(0,alpha-1);
+        List<KadNode> list=new ArrayList<>();
+        alphaNode.forEach((o1)->list.addAll(findNode(o1.getNodeID())));
+        if(list.subList(0,alpha-1).containsAll(alphaNode))
+            return list.subList(0,K-1);
         return null;
     }
 
@@ -339,5 +353,10 @@ public class Kademlia implements KademliaInterf {
                 }
             }
         }
+    }
+
+    public static BigInteger distanza(KadNode o1,KadNode o2)
+    {
+        return o1.getNodeID().xor(o2.getNodeID());
     }
 }
