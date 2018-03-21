@@ -26,12 +26,15 @@ public class Main
                     //Cerca di ottenere un file di cui conosce l'esistenza, se è possibile
                     if(split.length > 1)
                     {
-                        for (KadFile i: myNode.getFileList())
+                        synchronized(myNode.getFileList())
                         {
-                            if(i.getFileName().equals(split[1]))
+                            for (KadFile i : myNode.getFileList())
                             {
-                                myNode.findValue(i.getFileID());
-                                break;
+                                if (i.getFileName().equals(split[1]))
+                                {
+                                    myNode.findValue(i.getFileID());
+                                    break;
+                                }
                             }
                         }
                     }
@@ -42,11 +45,14 @@ public class Main
                     break;
                 case "ls":
                     //Lista tutti i file di cui conosco l'esistenza
-                    for (KadFile i: myNode.getFileList())
+                    synchronized(myNode.getFileList())
                     {
-                        if(!(i.isRedundant()))
+                        for (KadFile i : myNode.getFileList())
                         {
-                            System.out.println(i.getFileName() + " ID: " + i.getFileID());
+                            if (!(i.isRedundant()))
+                            {
+                                System.out.println(i.getFileName() + " ID: " + i.getFileID());
+                            }
                         }
                     }
                     break;

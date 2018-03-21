@@ -4,17 +4,12 @@ import KPack.Kademlia;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class KadFileList
+public class KadFileList implements Iterable<KadFile>
 {
     private List<KadFile> fileList;
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final Lock readLock = readWriteLock.readLock();
-    private final Lock writeLock = readWriteLock.writeLock();
     private Kademlia thisNode;
 
     public KadFileList(Kademlia thisNode)
@@ -23,59 +18,36 @@ public class KadFileList
         this.thisNode = thisNode;
     }
 
-    public void add(KadFile file)
+    synchronized public void add(KadFile file)
     {
-        writeLock.lock();
         fileList.add(file);
         indexRefresh();
-        writeLock.unlock();
     }
 
-    public void remove(KadFile file)
+    synchronized public void remove(KadFile file)
     {
-        writeLock.lock();
         fileList.remove(file);
         indexRefresh();
-        writeLock.unlock();
     }
 
-    public KadFile get(int i)
+    synchronized public KadFile get(int i)
     {
-        readLock.lock();
-        try
-        {
-            return fileList.get(i);
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return fileList.get(i);
     }
 
-    public int indexOf(KadFile file)
+    synchronized public int indexOf(KadFile file)
     {
-        readLock.lock();
-        try
-        {
-            return fileList.indexOf(file);
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return fileList.indexOf(file);
     }
 
-    public int size() //e se size cambia mentre sto ciclando un for per esempio? Prendo il lock dell'oggetto KadFileList?
+    public Iterator<KadFile> iterator()
     {
-        readLock.lock();
-        try
-        {
-            return fileList.size();
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return fileList.listIterator();
+    }
+
+    synchronized public int size() //e se size cambia mentre sto ciclando un for per esempio? Prendo il lock dell'oggetto KadFileList?
+    {
+        return fileList.size();
     }
 
     private void indexRefresh()
