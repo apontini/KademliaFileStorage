@@ -11,24 +11,18 @@ public class TreeUI extends javax.swing.JFrame {
     
     public TreeUI(RoutingTree rt)
     {
-        initComponents();
+        routingTree=rt;
         
-        //create the root node
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-        //create the child nodes
         DefaultMutableTreeNode vegetableNode = new DefaultMutableTreeNode("Vegetables");
         DefaultMutableTreeNode fruitNode = new DefaultMutableTreeNode("Fruits");
-        //add the child nodes to the root node
         root.add(vegetableNode);
         root.add(fruitNode);
          
-        //create the tree by passing in the root node
         tree = new JTree(root);
-        routingTree=rt;
         add(tree);
                
         this.pack();
-        
         this.setVisible(true);
     }
 

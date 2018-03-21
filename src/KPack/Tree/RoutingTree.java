@@ -2,10 +2,9 @@ package KPack.Tree;
 
 import KPack.KadNode;
 import KPack.Kademlia;
+import KPack.UserInterface.TreeUI;
 
 import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.List;
 
 public class RoutingTree
 {
@@ -21,6 +20,7 @@ public class RoutingTree
         if(bucketsDim<=0) throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
+        new TreeUI(this);
     }
 
     public void add(KadNode nodo)
