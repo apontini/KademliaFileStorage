@@ -10,8 +10,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class Bucket extends Node
-{
+public class Bucket extends Node {
+
     //SOLO foglia
     private Node parent;
     private int dimensioneMax;
@@ -38,11 +38,16 @@ public class Bucket extends Node
             if (listaNodi.size() == dimensioneMax)
             {
                 if (splittable)
+                {
                     return false; //ci pensa l'albero
-                else {
+                }
+                else
+                {
                     //pingu i nodi, tutti quelli nella lista
-                    for (KadNode node : listaNodi) {
-                        if (!thisKadNode.ping(node)) {
+                    for (KadNode node : listaNodi)
+                    {
+                        if (!thisKadNode.ping(node))
+                        {
                             listaNodi.remove(node);
                             listaNodi.add(kn);
                             return true;
@@ -130,7 +135,7 @@ public class Bucket extends Node
             writeLock.unlock();
         }
     }
-    
+
     public Iterator<KadNode> getList()
     {
         return listaNodi.iterator();
