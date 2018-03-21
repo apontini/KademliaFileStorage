@@ -187,7 +187,11 @@ public class Kademlia implements KademliaInterf {
             if(bucket.equals(node.getRight()))
             {
                 Bucket b=(Bucket)node.getLeft();
-                lkn.addAll((Collection<? extends KadNode>) b.getList());
+                ikn=b.getList();
+                while(ikn.hasNext())
+                {
+                    lkn.add(ikn.next());
+                }
             }
             else
             {
@@ -195,7 +199,11 @@ public class Kademlia implements KademliaInterf {
                     break;
                 TreeNode no=(TreeNode)node.getParent();
                 Bucket b=(Bucket)node.getLeft();
-                lkn.addAll((Collection<? extends KadNode>) b.getList());
+                ikn=b.getList();
+                while(ikn.hasNext())
+                {
+                    lkn.add(ikn.next());
+                }
             }
         }
         lkn.sort((o1, o2) ->

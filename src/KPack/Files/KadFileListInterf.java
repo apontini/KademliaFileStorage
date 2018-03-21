@@ -1,5 +1,7 @@
 package KPack.Files;
 
+import java.util.Iterator;
+
 public interface KadFileListInterf
 {
     void add(KadFile file);
@@ -11,4 +13,6 @@ public interface KadFileListInterf
     int contains(KadFile file);
 
     int size();
+
+    Iterator<KadFile> getListIterator();
 }
