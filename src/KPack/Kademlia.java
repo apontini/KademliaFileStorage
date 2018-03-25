@@ -37,13 +37,17 @@ public class Kademlia implements KademliaInterf {
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
         fixedNodes.put(BigInteger.ONE,"79.6.223.119");   //aggiungo ID,IP alla mappa
+        //fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        //fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        //fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
         boolean exists = true;
         do
         {
             nodeID = new BigInteger(BITID, new Random());
-                        //Controllare se esiste
+            if(!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
+                exists = false;
+            //Controllare se esiste
             //TODO
-            exists = false;
         }
         while (exists);
 
