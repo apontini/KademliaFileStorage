@@ -7,17 +7,23 @@ import java.math.BigInteger;
 
 public class FindNodeRequest implements Serializable
 {
-    private final KadNode kn;
+    private KadNode sourceKN;
+    private KadNode destKN;
     private BigInteger targetID;
 
-    public FindNodeRequest (BigInteger targetID,KadNode kn)
+    public FindNodeRequest (BigInteger targetID,KadNode sourceKN,KadNode destKN)
     {
         this.targetID=targetID;
-        this.kn=kn;
+        this.sourceKN=sourceKN;
+        this.destKN=destKN;
     }
 
-    public KadNode getKadNode() {
-        return kn;
+    public KadNode getSourceKadNode() {
+        return sourceKN;
+    }
+
+    public KadNode getDestKadNode() {
+        return destKN;
     }
 
     public BigInteger getTargetID() {

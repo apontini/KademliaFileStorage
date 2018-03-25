@@ -4,6 +4,7 @@ import KPack.Files.KadFile;
 import KPack.Files.KadFileList;
 import KPack.Packets.*;
 import KPack.Tree.Bucket;
+import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import KPack.Exceptions.*;
@@ -171,50 +172,205 @@ public class Kademlia implements KademliaInterf {
         return null;
     }
 
-    public List<KadNode> findNode(BigInteger targetID)  //Working in progress
+    public List<KadNode> findNode(BigInteger targetID)
     {
-        Bucket bucket=routingTree.findNodesBucket(thisNode);
-        List<KadNode> lkn=new ArrayList<>();
-        Iterator<KadNode> ikn=bucket.getList();
-        while(ikn.hasNext())
+        Bucket bucket=routingTree.findNodesBucket(new KadNode("",(short)0,targetID));
+        BigInteger currentID=targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
+        int depth=((Node)bucket).getDepth();
+        List<KadNode> lkn=new ArrayList<>();                //lista dei K nodi conosciuti più vicini al target
+        Iterator<KadNode> it=bucket.getList();
+        while(it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a targetID che conosco)
         {
-            lkn.add(ikn.next());
+            lkn.add(it.next());
         }
-        while(lkn.size()<K)
+        TreeNode node=(TreeNode)bucket.getParent();
+        int count=depth;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
+        while(count>0 && lkn.size()<K)                      //ricerco altri nodi vicini al targetID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
         {
-            TreeNode node= (TreeNode) bucket.getParent();
-            if(bucket.equals(node.getRight()))
+            //sono ad un certo TreeNode node dell'albero, se seguo il targetID, partendo da node, e vado nello stesso ramo che raggiungo seguendo il currentID (partendo da node),
+            // allora vuol dire che il sottoalbero relativo a quel ramo l'ho già visitato e passo a visitare il sottoalbero fratello. Altrimenti vuol dire che ho già
+            // visitato entrambi i sottoalberi (sinistro e destro) di node e mi sposto più in su al nodo padre di node.
+            //Sfrutto il fatto che due ID sono tanto più distanti quanto più verso sinistra è il primo bit diverso. 10111 è più distante da 11111 piuttosto che da 10000
+            if(!(targetID.testBit((BITID-count)-1) && currentID.testBit((BITID-count)-1) ||
+                    (!(targetID.testBit((BITID-count)-1)) && !(currentID.testBit((BITID-count)-1)))))
             {
-                Bucket b=(Bucket)node.getLeft();
-                ikn=b.getList();
-                while(ikn.hasNext())
-                {
-                    lkn.add(ikn.next());
-                }
+                //qui ho già visitato entrambi i sottoalberi
+                node=(TreeNode)node.getParent();
+                count--;
             }
             else
             {
-                if(routingTree.getRoot().equals(node))
-                    break;
-                TreeNode no=(TreeNode)node.getParent();
-                Bucket b=(Bucket)node.getLeft();
-                ikn=b.getList();
-                while(ikn.hasNext())
+                //qui il sottoalbero fratello non l'ho ancora visitato
+                Node n;
+                if(targetID.testBit((BITID-count)-1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
+                    n=node.getRight();
+                else
+                    n=node.getLeft();
+                //aggiorno currentID perchè il bit alla profondità del nodo fratello è diverso da quello del targetID, questo mi permette, quando risalgo,
+                //di ricordarmi se ho già visitato o meno quel sottoalbero
+                currentID=currentID.flipBit((BITID-count)-1);
+                if(n instanceof Bucket)
                 {
-                    lkn.add(ikn.next());
+                    it=((Bucket) n).getList();
+                    while(it.hasNext())
+                        lkn.add(it.next());
+                    node=(TreeNode) node.getParent();
+                    count--;
+                }
+                else
+                {
+                    //seguo il percorso del targetID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
+                    //tra quelli non ancora visitati
+                    while(n instanceof Bucket)
+                    {
+                        count++;
+                        if(targetID.testBit((BITID-count)-1))
+                            n=node.getLeft();
+                        else
+                            n=node.getRight();
+                    }
+                    node=(TreeNode) n.getParent();
+                    it=((Bucket) n).getList();
+                    while(it.hasNext())
+                        lkn.add(it.next());
                 }
             }
         }
-        lkn.sort((o1, o2) ->
-                distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
-        List<KadNode> alphaNode=lkn.subList(0,ALPHA-1);
-        List<KadNode> list=new ArrayList<>();
-        alphaNode.forEach((o1)->list.addAll(findNode(o1.getNodeID())));
-        while(!(list.subList(0,ALPHA-1).containsAll(alphaNode)))
+        return lkn;
+    }
+
+    public List<KadNode> findNode_lookup(BigInteger targetID)
+    {
+        Bucket bucket=routingTree.findNodesBucket(thisNode);
+        KadNode targetKN=new KadNode("",(short)0,targetID);
+        int depth=((Node)bucket).getDepth();
+        BigInteger prefix=thisNode.getNodeID().shiftRight(BITID-depth); // prendo il prefisso relativo al bucket
+        List<KadNode> lkn=new ArrayList<>();  // lista di tutti i nodi conosciuti
+        Iterator<KadNode> ikn=bucket.getList();
+        while(ikn.hasNext()) // inserisco l'intero bucket nella lista lkn
         {
-            list.subList(0,ALPHA-1).forEach((o1)->list.addAll(findNode(o1.getNodeID())));
+            lkn.add(ikn.next());
         }
-        return list.subList(0,K-1);
+        TreeNode node=(TreeNode)bucket.getParent();
+        int count=depth;
+        while(count>0 && lkn.size()<K)  // se il bucket non contiene K nodi, mi sposto negli altri bucket vicini per prendere i loro nodi fino a raggiungere K
+        {
+            if(prefix.testBit(depth-(count)))
+                bucket=(Bucket)node.getRight();
+            else
+                bucket=(Bucket)node.getLeft();
+            ikn=bucket.getList();
+            List<KadNode> list=new ArrayList<>();
+            while(ikn.hasNext())
+            {
+                list.add(ikn.next());
+            }
+            list.sort((o1, o2) ->
+                    distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
+            if(list.size()>=K-lkn.size())
+                lkn.addAll(list.subList(0,K-lkn.size()));
+            else
+                lkn.addAll(list);
+            node=(TreeNode)node.getParent();
+            count--;
+        }
+        if(thisNode.equals(targetKN))     // se l'id che sto cercando coincide con il mio id, ritorno la lista dei k nodi più vicini a me che io conosco
+            return lkn;
+        lkn.sort((o1, o2) ->
+                distanza(o1, targetKN).compareTo(distanza(o2,targetKN)));
+        List<KadNode> alphaNode;
+        AbstractQueue<KadNode> queryNode=new PriorityQueue<>();
+        if(lkn.size()>=ALPHA)
+            alphaNode=lkn.subList(0,ALPHA-1);
+        else
+            alphaNode=lkn;
+        if(alphaNode.get(0).equals(thisNode))
+        {
+            queryNode.add(thisNode);
+            alphaNode.remove(0);
+        }
+        while(true)
+        {
+            int size=lkn.size(); // per capire se il round di find nodes è fallito o meno
+            for(int i=0;i<alphaNode.size();i++)
+            {
+                KadNode kadNode=alphaNode.get(i);
+                FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode);
+                try {
+                    Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
+                    s.setSoTimeout(pingTimeout);
+
+                    OutputStream os = s.getOutputStream();
+                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                    outputStream.writeObject(fnr);
+                    outputStream.flush();
+
+                    InputStream is = s.getInputStream();
+                    ObjectInputStream inputStream = new ObjectInputStream(is);
+
+                    long timeInit = System.currentTimeMillis();
+                    boolean state = true;
+                    while (state) {
+                        try {
+                            Object fnreply = inputStream.readObject();
+                            if (fnreply instanceof FindNodeReply) {
+                                if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
+                                {
+                                    Iterator<KadNode> it1=((FindNodeReply) fnreply).getList().iterator();
+                                    while(it1.hasNext())
+                                    {
+                                        KadNode k=it1.next();
+                                        if(!(lkn.contains(k)))
+                                            lkn.add(k);
+                                    }
+                                    is.close();
+                                    s.close();
+                                    state = false;
+                                }
+                            }
+                            if (state)
+                                s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
+                        } catch (ClassNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (SocketTimeoutException soe) {
+                    System.out.println("Timeout");
+                } catch (ConnectException soe) {
+                    System.out.println("Non c'è risposta");
+                } catch (EOFException e) {
+                    e.printStackTrace();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            queryNode.addAll(alphaNode);
+            lkn.sort((o1, o2) ->
+                    distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
+            if(lkn.size()<K)
+            {
+                if (queryNode.containsAll(lkn))
+                    return lkn;
+            }
+            else
+            {
+                if (queryNode.containsAll(lkn.subList(0, K)))
+                    return lkn.subList(0, K);
+            }
+            alphaNode.clear();
+            int alphaSize;
+            if(size==lkn.size())
+                alphaSize=K;
+            else
+                alphaSize=ALPHA;
+            int i=0;
+            while(i<lkn.size() && alphaNode.size()<alphaSize)
+            {
+                if(!(queryNode.contains(lkn.get(i))))
+                    alphaNode.add(lkn.get(i));
+                i++;
+            }
+        }
     }
 
     public KadFileList getFileList()
