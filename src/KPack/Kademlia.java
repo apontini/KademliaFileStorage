@@ -250,24 +250,27 @@ public class Kademlia implements KademliaInterf {
         int depth=((Node)bucket).getDepth();
         BigInteger prefix=thisNode.getNodeID().shiftRight(BITID-depth); // prendo il prefisso relativo al bucket
         List<KadNode> lkn=new ArrayList<>();  // lista di tutti i nodi conosciuti
-        Iterator<KadNode> ikn=bucket.getList();
-        while(ikn.hasNext()) // inserisco l'intero bucket nella lista lkn
+        List<KadNode> alphaNode;
+        AbstractQueue<KadNode> queryNode=new PriorityQueue<>(); // lista dei nodi interrogati
+        Iterator<KadNode> it=bucket.getList();
+        while(it.hasNext()) // inserisco l'intero bucket nella lista lkn
         {
-            lkn.add(ikn.next());
+            lkn.add(it.next());
         }
         TreeNode node=(TreeNode)bucket.getParent();
         int count=depth;
+        //sfrutto il fatto che solo il bucket contente this node viene splittato, quindi risalendo l'albero ogni fratello è un bucket
         while(count>0 && lkn.size()<K)  // se il bucket non contiene K nodi, mi sposto negli altri bucket vicini per prendere i loro nodi fino a raggiungere K
         {
-            if(prefix.testBit(depth-(count)))
+            if(prefix.testBit(depth-count))
                 bucket=(Bucket)node.getRight();
             else
                 bucket=(Bucket)node.getLeft();
-            ikn=bucket.getList();
+            it=bucket.getList();
             List<KadNode> list=new ArrayList<>();
-            while(ikn.hasNext())
+            while(it.hasNext())
             {
-                list.add(ikn.next());
+                list.add(it.next());
             }
             list.sort((o1, o2) ->
                     distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
@@ -278,24 +281,17 @@ public class Kademlia implements KademliaInterf {
             node=(TreeNode)node.getParent();
             count--;
         }
-        if(thisNode.equals(targetKN))     // se l'id che sto cercando coincide con il mio id, ritorno la lista dei k nodi più vicini a me che io conosco
-            return lkn;
         lkn.sort((o1, o2) ->
                 distanza(o1, targetKN).compareTo(distanza(o2,targetKN)));
-        List<KadNode> alphaNode;
-        AbstractQueue<KadNode> queryNode=new PriorityQueue<>();
         if(lkn.size()>=ALPHA)
-            alphaNode=lkn.subList(0,ALPHA-1);
+            alphaNode=lkn.subList(0,ALPHA);
         else
             alphaNode=lkn;
-        if(alphaNode.get(0).equals(thisNode))
-        {
-            queryNode.add(thisNode);
-            alphaNode.remove(0);
-        }
+        //chiedo anche a me stesso
         while(true)
         {
             int size=lkn.size(); // per capire se il round di find nodes è fallito o meno
+            //ad ognuno degli alpha node vado a inviargli un findNode
             for(int i=0;i<alphaNode.size();i++)
             {
                 KadNode kadNode=alphaNode.get(i);
@@ -320,11 +316,11 @@ public class Kademlia implements KademliaInterf {
                             if (fnreply instanceof FindNodeReply) {
                                 if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
                                 {
-                                    Iterator<KadNode> it1=((FindNodeReply) fnreply).getList().iterator();
-                                    while(it1.hasNext())
+                                    it=((FindNodeReply) fnreply).getList().iterator();
+                                    while(it.hasNext())
                                     {
-                                        KadNode k=it1.next();
-                                        if(!(lkn.contains(k)))
+                                        KadNode k=it.next();
+                                        if(!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
                                             lkn.add(k);
                                     }
                                     is.close();
@@ -339,9 +335,9 @@ public class Kademlia implements KademliaInterf {
                         }
                     }
                 } catch (SocketTimeoutException soe) {
-                    System.out.println("Timeout");
+                    soe.printStackTrace();
                 } catch (ConnectException soe) {
-                    System.out.println("Non c'è risposta");
+                    soe.printStackTrace();
                 } catch (EOFException e) {
                     e.printStackTrace();
                 } catch (IOException ex) {
@@ -363,7 +359,7 @@ public class Kademlia implements KademliaInterf {
             }
             alphaNode.clear();
             int alphaSize;
-            if(size==lkn.size())
+            if(size==lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
                 alphaSize=K;
             else
                 alphaSize=ALPHA;
