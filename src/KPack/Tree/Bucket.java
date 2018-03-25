@@ -13,11 +13,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class Bucket extends Node {
 
     //SOLO foglia
-    private Node parent;
     private int dimensioneMax;
     private List<KadNode> listaNodi;
     private boolean splittable;
     private Kademlia thisKadNode;
+    private Node parent;
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
@@ -35,6 +35,7 @@ public class Bucket extends Node {
         writeLock.lock();
         try
         {
+            listaNodi.remove(kn);
             if (listaNodi.size() == dimensioneMax)
             {
                 if (splittable)
@@ -43,15 +44,17 @@ public class Bucket extends Node {
                 }
                 else
                 {
-                    //pingu i nodi, tutti quelli nella lista
-                    for (KadNode node : listaNodi)
+                    //pingu 1 solo nodo (il più vecchio)
+                    KadNode node = listaNodi.get(0);
+                    if (node.equals(this.thisKadNode.getMyNode()))
                     {
-                        if (!thisKadNode.ping(node))
-                        {
-                            listaNodi.remove(node);
-                            listaNodi.add(kn);
-                            return true;
-                        }
+                        node = listaNodi.get(1);
+                    }
+                    if (!thisKadNode.ping(node))
+                    {
+                        listaNodi.remove(node);
+                        listaNodi.add(kn);
+                        return true;
                     }
                     //Se non l'ho sostituito, scarto il nuovo nodo
                 }
@@ -60,11 +63,12 @@ public class Bucket extends Node {
             {
                 //C'è spazio, rimuoviamo il nodo (nel caso sia già presente) e lo riaggiungiamo
                 //il nodo nuovo è in coda
-                listaNodi.remove(kn);
+                
                 listaNodi.add(kn);
             }
             return true; //l'albero non deve gestire niente
         }
+
         finally
         {
             writeLock.unlock();
@@ -89,7 +93,7 @@ public class Bucket extends Node {
         writeLock.lock();
         try
         {
-            this.parent = parent;
+            this.parent=parent;
         }
         finally
         {
@@ -150,5 +154,11 @@ public class Bucket extends Node {
         }
         bu += "}";
         return bu;
+    }
+    
+    public int getDepth()
+    {
+        if(parent == null) return 0;
+        return parent.getDepth()+1;
     }
 }

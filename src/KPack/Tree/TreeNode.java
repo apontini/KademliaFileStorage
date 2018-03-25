@@ -4,15 +4,22 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class TreeNode extends Node
-{
+public class TreeNode extends Node {
+
     //SOLO nodo interno
+    private Node parent;
     private Node left;
     private Node right;
-    private Node parent;
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final Lock readLock = readWriteLock.readLock();
-    private final Lock writeLock = readWriteLock.writeLock();
+    private final ReadWriteLock readWriteLock;
+    private final Lock readLock;
+    private final Lock writeLock;
+
+    public TreeNode()
+    {
+        readWriteLock = new ReentrantReadWriteLock();
+        readLock = readWriteLock.readLock();
+        writeLock = readWriteLock.writeLock();
+    }
 
     public Node getParent()
     {
@@ -32,7 +39,7 @@ public class TreeNode extends Node
         writeLock.lock();
         try
         {
-            this.parent = parent;
+            this.parent=parent;
         }
         finally
         {
@@ -90,5 +97,11 @@ public class TreeNode extends Node
         {
             writeLock.unlock();
         }
+    }
+    
+    public int getDepth()
+    {
+        if(parent == null) return 0;
+        return parent.getDepth()+1;
     }
 }

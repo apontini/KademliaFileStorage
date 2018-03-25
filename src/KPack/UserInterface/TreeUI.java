@@ -62,7 +62,7 @@ public class TreeUI extends javax.swing.JFrame {
         if (n instanceof Bucket)
         {
             Bucket b = (Bucket) n;
-            System.out.println(b.toString());
+            //System.out.println(b.toString());
             Iterator<KadNode> ikn = b.getList();
             while (ikn.hasNext())
             {

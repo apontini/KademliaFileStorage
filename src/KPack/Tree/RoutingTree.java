@@ -25,22 +25,29 @@ public class RoutingTree {
             throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
         }
         root = new Bucket(thisNode, true);
+        System.out.println(Kademlia.intToBinary(thisNode.getMyNode().getNodeID()));
         this.thisNode = thisNode;
 
         add(thisNode.getMyNode());
 
-        new TreeUI(this);
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 60; i++)
         {
-            add(new KadNode("0.0.0.0", (short) 0, new BigInteger(Integer.toString((int) (Math.random() * 256)))));
-            new TreeUI(this);
+            KadNode n = new KadNode("0.0.0.0", (short) 0, new BigInteger(Integer.toString((int) (Math.random() * 256))));
+            if (n.equals(thisNode.getMyNode()))
+            {
+                i--;
+                continue;
+            }
+            add(n);
         }
+        new TreeUI(this);
     }
 
     public void add(KadNode nodo)
     {
         Bucket tempBuck;
-        if (!((tempBuck = findNodesBucket(nodo)).add(nodo)))
+        System.out.println("Aggiungo il nodo: " + Kademlia.intToBinary(nodo.getNodeID()));
+        while (!((tempBuck = findNodesBucket(nodo)).add(nodo)))
         {
             TreeNode temp = new TreeNode();
             Bucket bucketSx = new Bucket(thisNode, false);
@@ -52,6 +59,7 @@ public class RoutingTree {
             bucketDx.setParent(temp);
 
             Node tempBuckParent = tempBuck.getParent();
+            temp.setParent(tempBuckParent);
             //SOLO ORA vado a modificare il nodo che dev'essere splittato
             if (tempBuckParent == null)  //il genitore di tempBuck è null, quindi tempBuck è la radice
             {
@@ -59,7 +67,6 @@ public class RoutingTree {
             }
             else
             {
-                temp.setParent(tempBuckParent); //Prima il nodo che sto costruendo
                 TreeNode tempBuckParentCast = (TreeNode) tempBuckParent;
                 //Ora il nodo originale che devo sostituire
                 //temp diventa nodo destro o sinistro di tempBuckParent?
@@ -72,33 +79,37 @@ public class RoutingTree {
                     tempBuckParentCast.setRight(temp);
                 }
             }
-            
+
+            int tempDepth = tempBuck.getDepth();
             for (int i = 0; i < tempBuck.size(); i++)
             {
                 BigInteger tempNodeID = tempBuck.get(i).getNodeID();
-                if (tempNodeID.testBit(thisNode.BITID - tempBuck.getDepth() - 1))
+                //findNodesBucket(tempBuck.get(i)).add(tempBuck.get(i));
+                
+                System.out.println(tempDepth);
+                if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
                 {
-                    ((Bucket) temp.getLeft()).add(tempBuck.get(i));
+                    bucketSx.add(tempBuck.get(i));
                 }
                 else
                 {
-                    ((Bucket) temp.getRight()).add(tempBuck.get(i));
+                    bucketDx.add(tempBuck.get(i));
                 }
+
             }
             //aggiorno il flag splittable
             //findNodesBucket(thisNode.getMyNode()).setSplittable(true);
 
-            if (thisNode.getNodeID().testBit(thisNode.BITID - tempBuck.getDepth() - 1))
+             if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
             {
-                ((Bucket) temp.getLeft()).setSplittable(true);
+                bucketSx.setSplittable(true);
             }
             else
             {
-                ((Bucket) temp.getRight()).setSplittable(true);
+                bucketDx.setSplittable(true);
             }
-
             //chiamo ricorsivamente il metodo add per aggiungere il nodo e splittare di nuovo se neccesario
-            add(nodo);
+            // add(nodo);
         }
     }
 
@@ -120,6 +131,7 @@ public class RoutingTree {
                 curNode = ((TreeNode) curNode).getRight();
             }
         }
+        
         return (Bucket) curNode;
     }
 
