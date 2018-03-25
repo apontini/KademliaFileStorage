@@ -1,7 +1,9 @@
+import KPack.Exceptions.FileNotKnown;
 import KPack.Files.KadFile;
 import KPack.KadNode;
 import KPack.Kademlia;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Scanner;
 
@@ -14,6 +16,10 @@ public class Main
         boolean keep = true;
         String in = null;
         Scanner reader = new Scanner(System.in);
+
+        System.out.println("I file conosciuti nella lista sono: ");
+        for(KadFile i : myNode.getFileList())
+            System.out.println(i.toString());
 
         while(keep)
         {
@@ -58,6 +64,40 @@ public class Main
                     break;
                 case "ip":
                     System.out.println(myNode.getIP().getHostAddress());
+                    break;
+                case "store":
+                    if(split.length > 1)
+                    {
+                        try
+                        {
+                            myNode.store(split[1]);
+                        }
+                        catch(IOException ioe)
+                        {
+                            ioe. printStackTrace();
+                        }
+                    }
+                    else
+                    {
+                        System.out.println("Inserisci il percorso del file");
+                    }
+                    break;
+                case "delete":
+                    if(split.length > 1)
+                    {
+                        try
+                        {
+                            myNode.delete(new BigInteger(split[1]));
+                        }
+                        catch(FileNotKnown fnk)
+                        {
+                            System.out.println("Il file non esiste o non ne sei il proprietario");
+                        }
+                    }
+                    else
+                    {
+                        System.out.println("Inserisci L'ID del file");
+                    }
                     break;
                 case "ping":
                     //Funzione di test

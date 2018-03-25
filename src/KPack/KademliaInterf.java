@@ -1,8 +1,9 @@
 package KPack;
 
-import KPack.Files.KadFile;
+import KPack.Exceptions.FileNotKnown;
 import KPack.Files.KadFileList;
 
+import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.util.List;
 
@@ -18,7 +19,9 @@ public interface KademliaInterf
 
     List<KadNode> findNode(BigInteger nodeID);
 
-    void store(KadNode node, KadFile file); //gestire eccezioni
+    void store(String filepath) throws FileNotFoundException;
+
+    void delete(BigInteger ID) throws FileNotKnown;
 
     KadNode getMyNode();
 }

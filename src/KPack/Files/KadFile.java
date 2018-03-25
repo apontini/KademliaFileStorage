@@ -7,7 +7,7 @@ public class KadFile implements KadFileInterf, Serializable
 {
     //deve mantenere singolo file
     private BigInteger fileID;
-    private boolean redundant; //Se il file è mio o mi è stato dato grazie al protocollo della rete Kademlia
+    private boolean redundant; //false se il file è mio o true se mi è stato dato grazie al protocollo della rete Kademlia
     private String fileName;
     private String path;
 
@@ -33,5 +33,16 @@ public class KadFile implements KadFileInterf, Serializable
 
     public String getPath() {
         return path;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "KadFile{" +
+                "fileID=" + fileID +
+                ", redundant=" + redundant +
+                ", fileName='" + fileName + '\'' +
+                ", path='" + path + '\'' +
+                '}';
     }
 }

@@ -4,12 +4,11 @@ import java.math.BigInteger;
 
 public interface KadFileInterf
 {
-    public BigInteger getFileID();
+    BigInteger getFileID();
 
-    public boolean isRedundant();
+    boolean isRedundant();
 
-    public String getFileName();
+    String getFileName();
 
-    public String getPath();
-
+    String getPath();
 }

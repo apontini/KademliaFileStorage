@@ -1,4 +1,4 @@
-package KPack.Tree;
+package KPack.Exceptions;
 
 public class NotAValidParentException extends Exception
 {

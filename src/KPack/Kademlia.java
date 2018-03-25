@@ -4,12 +4,11 @@ import KPack.Files.KadFile;
 import KPack.Files.KadFileList;
 import KPack.Packets.*;
 import KPack.Tree.Bucket;
-import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
+import KPack.Exceptions.*;
 
 import java.io.*;
-
 import java.math.BigInteger;
 import java.net.*;
 import java.util.*;
@@ -228,9 +227,43 @@ public class Kademlia implements KademliaInterf {
         return thisNode;
     }
 
-    public void store(KadNode node, KadFile file) //gestire eccezioni
+    public void store(String filepath) throws FileNotFoundException //gestire eccezioni
     {
+        //Funzione temporanea, non completa
+        File temp = new File(filepath);
+        if(!temp.exists()) throw new FileNotFoundException();
 
+        //Genero un ID per il file e controllo se esiste
+        BigInteger fileID = null;
+        boolean exists = true;
+        do
+        {
+            fileID = new BigInteger(BITID, new Random());
+            //Controllare se esiste
+            //TODO
+            exists = false;
+        }
+        while (exists);
+
+        KadFile tempfile = new KadFile(fileID, false, temp.getName(), filepath);
+        fileList.add(tempfile);
+        //Manca la parte di invio agli altri nodi
+    }
+
+    public void delete(BigInteger id) throws FileNotKnown
+    {
+        //Funzione temporanea, non completa
+        for (KadFile i : fileList)
+        {
+            if(i.getFileID().equals(id))
+            {
+                fileList.remove(i);
+                //Manca l'invio agli altri nodi
+                System.out.println("Eliminato");
+                return;
+            }
+        }
+        throw new FileNotKnown();
     }
 
     private class ListenerThread implements Runnable {

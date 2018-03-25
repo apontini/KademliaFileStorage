@@ -21,13 +21,13 @@ public class KadFileList implements Iterable<KadFile>
     synchronized public void add(KadFile file)
     {
         fileList.add(file);
-        indexRefresh();
+        serializeList();
     }
 
     synchronized public void remove(KadFile file)
     {
-        fileList.remove(file);
-        indexRefresh();
+        fileList.remove(file); //override di equals() per eliminare il nodo solo usando l'ID?
+        serializeList();
     }
 
     synchronized public KadFile get(int i)
@@ -50,7 +50,7 @@ public class KadFileList implements Iterable<KadFile>
         return fileList.size();
     }
 
-    private void indexRefresh()
+    private void serializeList()
     {
         try
         {
