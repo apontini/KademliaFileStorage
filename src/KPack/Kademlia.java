@@ -378,4 +378,14 @@ public class Kademlia implements KademliaInterf {
     {
         return o1.getNodeID().xor(o2.getNodeID());
     }
+    
+    public static String intToBinary(BigInteger n)
+    {
+        String num="";
+        for(int i=0;i<Kademlia.BITID;i++)
+        {
+            num=(n.testBit(i)?1:0)+num;
+        }
+        return num;
+    }
 }
