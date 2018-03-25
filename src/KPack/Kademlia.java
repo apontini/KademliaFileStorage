@@ -32,12 +32,15 @@ public class Kademlia implements KademliaInterf {
 
     public Kademlia()
     {
-        if (instance) return; //Aggiungere un'eccezione tipo AlreadyInstanced
+        if (instance)
+        {
+            return; //Aggiungere un'eccezione tipo AlreadyInstanced
+        }
         instance = true;
 
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
-        fixedNodes.put(BigInteger.ONE,"79.6.223.119");   //aggiungo ID,IP alla mappa
+        fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
         //fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
         //fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
         //fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
@@ -45,8 +48,10 @@ public class Kademlia implements KademliaInterf {
         do
         {
             nodeID = new BigInteger(BITID, new Random());
-            if(!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
+            if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
+            {
                 exists = false;
+            }
             //Controllare se esiste
             //TODO
         }
@@ -56,9 +61,9 @@ public class Kademlia implements KademliaInterf {
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
-
         new Thread(new ListenerThread()).start();
     }
+
     /*
     public InetAddress getIP()   //per il momento restituisce l'ip locale.
     {
@@ -73,12 +78,13 @@ public class Kademlia implements KademliaInterf {
         }
         return null;
     }
-    */
+     */
 
     public InetAddress getIP()
     {
         String publicIP = null;
-        try {
+        try
+        {
             URL urlForIP = new URL("https://api.ipify.org/");
             BufferedReader in = new BufferedReader(new InputStreamReader(urlForIP.openStream()));
 
@@ -97,7 +103,7 @@ public class Kademlia implements KademliaInterf {
         {
             return InetAddress.getByName(publicIP);
         }
-        catch(UnknownHostException e)
+        catch (UnknownHostException e)
         {
             e.printStackTrace();
             //DA GESTIRE
@@ -112,7 +118,7 @@ public class Kademlia implements KademliaInterf {
 
     public boolean ping(KadNode node)
     {
-        PingRequest pr = new PingRequest(thisNode,node);
+        PingRequest pr = new PingRequest(thisNode, node);
         try
         {
             Socket s = new Socket(node.getIp(), node.getUDPPort());
@@ -128,34 +134,34 @@ public class Kademlia implements KademliaInterf {
 
             long timeInit = System.currentTimeMillis();
             boolean state = true;
-            while(true)
+            while (true)
             {
                 try
                 {
                     Object preply = inputStream.readObject();
-                    if(preply instanceof PingReply)
+                    if (preply instanceof PingReply)
                     {
-                        if(((PingReply)preply).getSourceKadNode().equals(pr.getDestKadNode()))
+                        if (((PingReply) preply).getSourceKadNode().equals(pr.getDestKadNode()))
                         {
                             is.close();
                             s.close();
                             return true;
                         }
                     }
-                    s.setSoTimeout(((int)(pingTimeout-(System.currentTimeMillis()-timeInit))));
+                    s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
                 }
-                catch(ClassNotFoundException e)
+                catch (ClassNotFoundException e)
                 {
                     e.printStackTrace();
                 }
             }
         }
-        catch(SocketTimeoutException soe)
+        catch (SocketTimeoutException soe)
         {
             System.out.println("Timeout");
             return false;
         }
-        catch(ConnectException soe)
+        catch (ConnectException soe)
         {
             System.out.println("Non c'è risposta");
             return false;
@@ -178,65 +184,77 @@ public class Kademlia implements KademliaInterf {
 
     public List<KadNode> findNode(BigInteger targetID)
     {
-        Bucket bucket=routingTree.findNodesBucket(new KadNode("",(short)0,targetID));
-        BigInteger currentID=targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
-        int depth=((Node)bucket).getDepth();
-        List<KadNode> lkn=new ArrayList<>();                //lista dei K nodi conosciuti più vicini al target
-        Iterator<KadNode> it=bucket.getList();
-        while(it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a targetID che conosco)
+        Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
+        BigInteger currentID = targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
+        int depth = ((Node) bucket).getDepth();
+        List<KadNode> lkn = new ArrayList<>();                //lista dei K nodi conosciuti più vicini al target
+        Iterator<KadNode> it = bucket.getList();
+        while (it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a targetID che conosco)
         {
             lkn.add(it.next());
         }
-        TreeNode node=(TreeNode)bucket.getParent();
-        int count=depth;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
-        while(count>0 && lkn.size()<K)                      //ricerco altri nodi vicini al targetID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
+        TreeNode node = (TreeNode) bucket.getParent();
+        int count = depth;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
+        while (count > 0 && lkn.size() < K)                      //ricerco altri nodi vicini al targetID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
         {
             //sono ad un certo TreeNode node dell'albero, se seguo il targetID, partendo da node, e vado nello stesso ramo che raggiungo seguendo il currentID (partendo da node),
             // allora vuol dire che il sottoalbero relativo a quel ramo l'ho già visitato e passo a visitare il sottoalbero fratello. Altrimenti vuol dire che ho già
             // visitato entrambi i sottoalberi (sinistro e destro) di node e mi sposto più in su al nodo padre di node.
             //Sfrutto il fatto che due ID sono tanto più distanti quanto più verso sinistra è il primo bit diverso. 10111 è più distante da 11111 piuttosto che da 10000
-            if(!(targetID.testBit((BITID-count)-1) && currentID.testBit((BITID-count)-1) ||
-                    (!(targetID.testBit((BITID-count)-1)) && !(currentID.testBit((BITID-count)-1)))))
+            if (!(targetID.testBit((BITID - count) - 1) && currentID.testBit((BITID - count) - 1)
+                    || (!(targetID.testBit((BITID - count) - 1)) && !(currentID.testBit((BITID - count) - 1)))))
             {
                 //qui ho già visitato entrambi i sottoalberi
-                node=(TreeNode)node.getParent();
+                node = (TreeNode) node.getParent();
                 count--;
             }
             else
             {
                 //qui il sottoalbero fratello non l'ho ancora visitato
                 Node n;
-                if(targetID.testBit((BITID-count)-1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
-                    n=node.getRight();
+                if (targetID.testBit((BITID - count) - 1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
+                {
+                    n = node.getRight();
+                }
                 else
-                    n=node.getLeft();
+                {
+                    n = node.getLeft();
+                }
                 //aggiorno currentID perchè il bit alla profondità del nodo fratello è diverso da quello del targetID, questo mi permette, quando risalgo,
                 //di ricordarmi se ho già visitato o meno quel sottoalbero
-                currentID=currentID.flipBit((BITID-count)-1);
-                if(n instanceof Bucket)
+                currentID = currentID.flipBit((BITID - count) - 1);
+                if (n instanceof Bucket)
                 {
-                    it=((Bucket) n).getList();
-                    while(it.hasNext())
+                    it = ((Bucket) n).getList();
+                    while (it.hasNext())
+                    {
                         lkn.add(it.next());
-                    node=(TreeNode) node.getParent();
+                    }
+                    node = (TreeNode) node.getParent();
                     count--;
                 }
                 else
                 {
                     //seguo il percorso del targetID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
                     //tra quelli non ancora visitati
-                    while(n instanceof Bucket)
+                    while (n instanceof Bucket)
                     {
                         count++;
-                        if(targetID.testBit((BITID-count)-1))
-                            n=node.getLeft();
+                        if (targetID.testBit((BITID - count) - 1))
+                        {
+                            n = node.getLeft();
+                        }
                         else
-                            n=node.getRight();
+                        {
+                            n = node.getRight();
+                        }
                     }
-                    node=(TreeNode) n.getParent();
-                    it=((Bucket) n).getList();
-                    while(it.hasNext())
+                    node = (TreeNode) n.getParent();
+                    it = ((Bucket) n).getList();
+                    while (it.hasNext())
+                    {
                         lkn.add(it.next());
+                    }
                 }
             }
         }
@@ -245,58 +263,71 @@ public class Kademlia implements KademliaInterf {
 
     public List<KadNode> findNode_lookup(BigInteger targetID)
     {
-        Bucket bucket=routingTree.findNodesBucket(thisNode);
-        KadNode targetKN=new KadNode("",(short)0,targetID);
-        int depth=((Node)bucket).getDepth();
-        BigInteger prefix=thisNode.getNodeID().shiftRight(BITID-depth); // prendo il prefisso relativo al bucket
-        List<KadNode> lkn=new ArrayList<>();  // lista di tutti i nodi conosciuti
+        Bucket bucket = routingTree.findNodesBucket(thisNode);
+        KadNode targetKN = new KadNode("", (short) 0, targetID);
+        int depth = ((Node) bucket).getDepth();
+        BigInteger prefix = thisNode.getNodeID().shiftRight(BITID - depth); // prendo il prefisso relativo al bucket
+        List<KadNode> lkn = new ArrayList<>();  // lista di tutti i nodi conosciuti
         List<KadNode> alphaNode;
-        AbstractQueue<KadNode> queryNode=new PriorityQueue<>(); // lista dei nodi interrogati
-        Iterator<KadNode> it=bucket.getList();
-        while(it.hasNext()) // inserisco l'intero bucket nella lista lkn
+        AbstractQueue<KadNode> queryNode = new PriorityQueue<>(); // lista dei nodi interrogati
+        Iterator<KadNode> it = bucket.getList();
+        while (it.hasNext()) // inserisco l'intero bucket nella lista lkn
         {
             lkn.add(it.next());
         }
-        TreeNode node=(TreeNode)bucket.getParent();
-        int count=depth;
+        TreeNode node = (TreeNode) bucket.getParent();
+        int count = depth;
         //sfrutto il fatto che solo il bucket contente this node viene splittato, quindi risalendo l'albero ogni fratello è un bucket
-        while(count>0 && lkn.size()<K)  // se il bucket non contiene K nodi, mi sposto negli altri bucket vicini per prendere i loro nodi fino a raggiungere K
+        while (count > 0 && lkn.size() < K)  // se il bucket non contiene K nodi, mi sposto negli altri bucket vicini per prendere i loro nodi fino a raggiungere K
         {
-            if(prefix.testBit(depth-count))
-                bucket=(Bucket)node.getRight();
+            if (prefix.testBit(depth - count))
+            {
+                bucket = (Bucket) node.getRight();
+            }
             else
-                bucket=(Bucket)node.getLeft();
-            it=bucket.getList();
-            List<KadNode> list=new ArrayList<>();
-            while(it.hasNext())
+            {
+                bucket = (Bucket) node.getLeft();
+            }
+            it = bucket.getList();
+            List<KadNode> list = new ArrayList<>();
+            while (it.hasNext())
             {
                 list.add(it.next());
             }
-            list.sort((o1, o2) ->
-                    distanza(o1, thisNode).compareTo(distanza(o2,thisNode)));
-            if(list.size()>=K-lkn.size())
-                lkn.addAll(list.subList(0,K-lkn.size()));
+            list.sort((o1, o2)
+                    -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
+            if (list.size() >= K - lkn.size())
+            {
+                lkn.addAll(list.subList(0, K - lkn.size()));
+            }
             else
+            {
                 lkn.addAll(list);
-            node=(TreeNode)node.getParent();
+            }
+            node = (TreeNode) node.getParent();
             count--;
         }
-        lkn.sort((o1, o2) ->
-                distanza(o1, targetKN).compareTo(distanza(o2,targetKN)));
-        if(lkn.size()>=ALPHA)
-            alphaNode=lkn.subList(0,ALPHA);
-        else
-            alphaNode=lkn;
-        //chiedo anche a me stesso
-        while(true)
+        lkn.sort((o1, o2)
+                -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
+        if (lkn.size() >= ALPHA)
         {
-            int size=lkn.size(); // per capire se il round di find nodes è fallito o meno
+            alphaNode = lkn.subList(0, ALPHA);
+        }
+        else
+        {
+            alphaNode = lkn;
+        }
+        //chiedo anche a me stesso
+        while (true)
+        {
+            int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
             //ad ognuno degli alpha node vado a inviargli un findNode
-            for(int i=0;i<alphaNode.size();i++)
+            for (int i = 0; i < alphaNode.size(); i++)
             {
-                KadNode kadNode=alphaNode.get(i);
+                KadNode kadNode = alphaNode.get(i);
                 FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode);
-                try {
+                try
+                {
                     Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
                     s.setSoTimeout(pingTimeout);
 
@@ -310,18 +341,23 @@ public class Kademlia implements KademliaInterf {
 
                     long timeInit = System.currentTimeMillis();
                     boolean state = true;
-                    while (state) {
-                        try {
+                    while (state)
+                    {
+                        try
+                        {
                             Object fnreply = inputStream.readObject();
-                            if (fnreply instanceof FindNodeReply) {
+                            if (fnreply instanceof FindNodeReply)
+                            {
                                 if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
                                 {
-                                    it=((FindNodeReply) fnreply).getList().iterator();
-                                    while(it.hasNext())
+                                    it = ((FindNodeReply) fnreply).getList().iterator();
+                                    while (it.hasNext())
                                     {
-                                        KadNode k=it.next();
-                                        if(!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                        KadNode k = it.next();
+                                        if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                        {
                                             lkn.add(k);
+                                        }
                                     }
                                     is.close();
                                     s.close();
@@ -329,45 +365,67 @@ public class Kademlia implements KademliaInterf {
                                 }
                             }
                             if (state)
+                            {
                                 s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
-                        } catch (ClassNotFoundException e) {
+                            }
+                        }
+                        catch (ClassNotFoundException e)
+                        {
                             e.printStackTrace();
                         }
                     }
-                } catch (SocketTimeoutException soe) {
+                }
+                catch (SocketTimeoutException soe)
+                {
                     soe.printStackTrace();
-                } catch (ConnectException soe) {
+                }
+                catch (ConnectException soe)
+                {
                     soe.printStackTrace();
-                } catch (EOFException e) {
+                }
+                catch (EOFException e)
+                {
                     e.printStackTrace();
-                } catch (IOException ex) {
+                }
+                catch (IOException ex)
+                {
                     ex.printStackTrace();
                 }
             }
             queryNode.addAll(alphaNode);
-            lkn.sort((o1, o2) ->
-                    distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
-            if(lkn.size()<K)
+            lkn.sort((o1, o2)
+                    -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
+            if (lkn.size() < K)
             {
                 if (queryNode.containsAll(lkn))
+                {
                     return lkn;
+                }
             }
             else
             {
                 if (queryNode.containsAll(lkn.subList(0, K)))
+                {
                     return lkn.subList(0, K);
+                }
             }
             alphaNode.clear();
             int alphaSize;
-            if(size==lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
-                alphaSize=K;
-            else
-                alphaSize=ALPHA;
-            int i=0;
-            while(i<lkn.size() && alphaNode.size()<alphaSize)
+            if (size == lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
             {
-                if(!(queryNode.contains(lkn.get(i))))
+                alphaSize = K;
+            }
+            else
+            {
+                alphaSize = ALPHA;
+            }
+            int i = 0;
+            while (i < lkn.size() && alphaNode.size() < alphaSize)
+            {
+                if (!(queryNode.contains(lkn.get(i))))
+                {
                     alphaNode.add(lkn.get(i));
+                }
                 i++;
             }
         }
@@ -387,7 +445,10 @@ public class Kademlia implements KademliaInterf {
     {
         //Funzione temporanea, non completa
         File temp = new File(filepath);
-        if(!temp.exists()) throw new FileNotFoundException();
+        if (!temp.exists())
+        {
+            throw new FileNotFoundException();
+        }
 
         //Genero un ID per il file e controllo se esiste
         BigInteger fileID = null;
@@ -411,7 +472,7 @@ public class Kademlia implements KademliaInterf {
         //Funzione temporanea, non completa
         for (KadFile i : fileList)
         {
-            if(i.getFileID().equals(id))
+            if (i.getFileID().equals(id))
             {
                 fileList.remove(i);
                 //Manca l'invio agli altri nodi
@@ -474,33 +535,47 @@ public class Kademlia implements KademliaInterf {
                             }
                         }
                     }
-                    */
-                    if(received instanceof FindNodeRequest)
+                     */
+                    if (received instanceof FindNodeRequest)
                     {
+                        FindNodeRequest fnr = (FindNodeRequest) received;
+                        new Thread(() ->
+                        {
+                            routingTree.add(fnr.getSourceKadNode());
+                        }).start();
 
                     }
-                    else if(received instanceof FindValueRequest)
+                    else if (received instanceof FindValueRequest)
                     {
-
+                        FindValueRequest fvr = (FindValueRequest) received;
+                        new Thread(() ->
+                        {
+                            routingTree.add(fvr.getKadNode());
+                        }).start();
                     }
                     else if (received instanceof StoreRequest)
                     {
                         StoreRequest rq = (StoreRequest) received;
 
                     }
-                    else if(received instanceof DeleteRequest)
+                    else if (received instanceof DeleteRequest)
                     {
 
                     }
                     else if (received instanceof PingRequest)
                     {
                         PingRequest pr = (PingRequest) received;
-                        if(!(pr.getDestKadNode().equals(thisNode)))
+                        if (!(pr.getDestKadNode().equals(thisNode)))
                         {
                             connection.close();
                             continue;
                         }
                         KadNode sourceKadNode = pr.getSourceKadNode();
+
+                        new Thread(() ->
+                        {
+                            routingTree.add(sourceKadNode);
+                        }).start();
 
                         System.out.println("Received PingRequest from: " + pr.getSourceKadNode().toString());
 
@@ -530,17 +605,17 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    public static BigInteger distanza(KadNode o1,KadNode o2)
+    public static BigInteger distanza(KadNode o1, KadNode o2)
     {
         return o1.getNodeID().xor(o2.getNodeID());
     }
-    
+
     public static String intToBinary(BigInteger n)
     {
-        String num="";
-        for(int i=0;i<Kademlia.BITID;i++)
+        String num = "";
+        for (int i = 0; i < Kademlia.BITID; i++)
         {
-            num=(n.testBit(i)?1:0)+num;
+            num = (n.testBit(i) ? 1 : 0) + num;
         }
         return num;
     }
