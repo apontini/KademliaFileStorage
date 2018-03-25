@@ -25,6 +25,7 @@ public class Kademlia implements KademliaInterf {
     private RoutingTree routingTree;
     private KadNode thisNode;
     public short UDPPort = 1337;
+    public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
 
     private final int pingTimeout = 15000;
 
@@ -34,14 +35,13 @@ public class Kademlia implements KademliaInterf {
         instance = true;
 
         fileList = new KadFileList(this);
-
         String myIP = getIP().getHostAddress().toString();
-
+        fixedNodes.put(BigInteger.ONE,"79.6.223.119");   //aggiungo ID,IP alla mappa
         boolean exists = true;
         do
         {
             nodeID = new BigInteger(BITID, new Random());
-            //Controllare se esiste
+                        //Controllare se esiste
             //TODO
             exists = false;
         }
