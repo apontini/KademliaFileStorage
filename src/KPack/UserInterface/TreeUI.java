@@ -7,7 +7,6 @@ import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import java.awt.Dimension;
-import java.math.BigInteger;
 import java.util.Iterator;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -68,7 +67,7 @@ public class TreeUI extends javax.swing.JFrame {
             while (ikn.hasNext())
             {
                 KadNode kn = ikn.next();
-                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(intToBinary(kn.getNodeID()));
+                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()));
                 dmt.add(treeNode);
             }
         }
@@ -84,16 +83,6 @@ public class TreeUI extends javax.swing.JFrame {
             recursiveTree(tn.getRight(), dx);
 
         }
-    }
-
-    private String intToBinary(BigInteger n)
-    {
-        String num="";
-        for(int i=0;i<Kademlia.BITID;i++)
-        {
-            num=(n.testBit(i)?1:0)+num;
-        }
-        return num;
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     // End of variables declaration//GEN-END:variables
