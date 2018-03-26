@@ -2,13 +2,10 @@ package KPack.Tree;
 
 import KPack.KadNode;
 import KPack.Kademlia;
-import java.util.Iterator;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class Bucket extends Node {
 
@@ -18,9 +15,6 @@ public class Bucket extends Node {
     private boolean splittable;
     private Kademlia thisKadNode;
     private Node parent;
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final Lock readLock = readWriteLock.readLock();
-    private final Lock writeLock = readWriteLock.writeLock();
 
     public Bucket(Kademlia thisKadNode, boolean splittable)
     {
@@ -30,114 +24,65 @@ public class Bucket extends Node {
         this.thisKadNode = thisKadNode;
     }
 
-    public boolean add(KadNode kn)
+    public synchronized boolean add(KadNode kn)
     {
-        writeLock.lock();
-        try
+        listaNodi.remove(kn);
+        if (listaNodi.size() == dimensioneMax)
         {
-            listaNodi.remove(kn);
-            if (listaNodi.size() == dimensioneMax)
+            if (splittable)
             {
-                if (splittable)
-                {
-                    return false; //ci pensa l'albero
-                }
-                else
-                {
-                    //pingu 1 solo nodo (il più vecchio)
-                    KadNode node = listaNodi.get(0);
-                    if (node.equals(this.thisKadNode.getMyNode()))
-                    {
-                        node = listaNodi.get(1);
-                    }
-                    if (!thisKadNode.ping(node))
-                    {
-                        listaNodi.remove(node);
-                        listaNodi.add(kn);
-                        return true;
-                    }
-                    //Se non l'ho sostituito, scarto il nuovo nodo
-                }
+                return false; //ci pensa l'albero
             }
             else
             {
-                //C'è spazio, rimuoviamo il nodo (nel caso sia già presente) e lo riaggiungiamo
-                //il nodo nuovo è in coda
-                
-                listaNodi.add(kn);
+                //pingu 1 solo nodo (il più vecchio)
+                KadNode node = listaNodi.get(0);
+                if (node.equals(this.thisKadNode.getMyNode()))
+                {
+                    node = listaNodi.get(1);
+                }
+                if (!thisKadNode.ping(node))
+                {
+                    listaNodi.remove(node);
+                    listaNodi.add(kn);
+                    return true;
+                }
+                //Se non l'ho sostituito, scarto il nuovo nodo
             }
-            return true; //l'albero non deve gestire niente
         }
-
-        finally
+        else
         {
-            writeLock.unlock();
+            //C'è spazio, rimuoviamo il nodo (nel caso sia già presente) e lo riaggiungiamo
+            //il nodo nuovo è in coda
+
+            listaNodi.add(kn);
         }
+        return true; //l'albero non deve gestire niente
     }
 
-    public Node getParent()
+    public synchronized Node getParent()
     {
-        readLock.lock();
-        try
-        {
-            return parent;
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return parent;
     }
 
-    public void setParent(Node parent)
+    public synchronized void setParent(Node parent)
     {
-        writeLock.lock();
-        try
-        {
-            this.parent=parent;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
+        this.parent=parent;
     }
 
-    public int size()
+    public synchronized int size()
     {
-        readLock.lock();
-        try
-        {
-            return listaNodi.size();
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return listaNodi.size();
     }
 
-    public KadNode get(int i)
+    public synchronized KadNode get(int i)
     {
-        readLock.lock();
-        try
-        {
-            return listaNodi.get(i);
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return listaNodi.get(i);
     }
 
     public void setSplittable(boolean splittable)
     {
-        writeLock.lock();
-        try
-        {
-            this.splittable = splittable;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
+        this.splittable = splittable;
     }
 
     public Iterator<KadNode> getList()
@@ -156,7 +101,7 @@ public class Bucket extends Node {
         return bu;
     }
     
-    public int getDepth()
+    public synchronized int getDepth()
     {
         if(parent == null) return 0;
         return parent.getDepth()+1;

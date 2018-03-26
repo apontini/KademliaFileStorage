@@ -1,105 +1,45 @@
 package KPack.Tree;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 public class TreeNode extends Node {
 
     //SOLO nodo interno
     private Node parent;
     private Node left;
     private Node right;
-    private final ReadWriteLock readWriteLock;
-    private final Lock readLock;
-    private final Lock writeLock;
 
-    public TreeNode()
+    public TreeNode() {}
+
+    public synchronized Node getParent()
     {
-        readWriteLock = new ReentrantReadWriteLock();
-        readLock = readWriteLock.readLock();
-        writeLock = readWriteLock.writeLock();
+        return parent;
     }
 
-    public Node getParent()
+    public synchronized void setParent(Node parent)
     {
-        readLock.lock();
-        try
-        {
-            return parent;
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        this.parent=parent;
     }
 
-    public void setParent(Node parent)
+    public synchronized Node getLeft()
     {
-        writeLock.lock();
-        try
-        {
-            this.parent=parent;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
+        return left;
     }
 
-    public Node getLeft()
+    public synchronized Node getRight()
     {
-        readLock.lock();
-        try
-        {
-            return left;
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return right;
     }
 
-    public Node getRight()
+    public synchronized void setLeft(Node left)
     {
-        readLock.lock();
-        try
-        {
-            return right;
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        this.left = left;
     }
 
-    public void setLeft(Node left)
+    public synchronized void setRight(Node right)
     {
-        writeLock.lock();
-        try
-        {
-            this.left = left;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
-    }
-
-    public void setRight(Node right)
-    {
-        writeLock.lock();
-        try
-        {
-            this.right = right;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
+        this.right = right;
     }
     
-    public int getDepth()
+    public synchronized int getDepth()
     {
         if(parent == null) return 0;
         return parent.getDepth()+1;
