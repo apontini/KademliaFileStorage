@@ -113,6 +113,8 @@ public class Main
                         System.out.println("Please define an IP address and ID");
                     }
                     break;
+                case "exit":
+                    break;
                 default:
                     System.out.println("Say what?");
                     break;

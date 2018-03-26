@@ -482,7 +482,29 @@ public class Kademlia implements KademliaInterf {
 
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), filepath);
         fileList.add(tempfile);
-        //Manca la parte di invio agli altri nodi
+
+        StoreRequest sr = null;
+        List<KadNode> closestK = new ArrayList<>();
+
+        //aggiungo i nodi più vicini
+
+        for(KadNode i : closestK)
+        {
+            sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), filepath), thisNode, i);
+            try
+            {
+                Socket s = new Socket(i.getIp(), i.getUDPPort());
+
+                OutputStream os = s.getOutputStream();
+                ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                outputStream.writeObject(sr);
+                outputStream.flush();
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace(); //Gestire
+            }
+        }
     }
 
     public void delete(BigInteger id) throws FileNotKnown
@@ -493,8 +515,29 @@ public class Kademlia implements KademliaInterf {
             if (i.getFileID().equals(id))
             {
                 fileList.remove(i);
-                //Manca l'invio agli altri nodi
-                System.out.println("Eliminato");
+
+                DeleteRequest dr = null;
+                List<KadNode> closestK = new ArrayList<>();
+
+                //aggiungo i nodi più vicini
+
+                for(KadNode k : closestK)
+                {
+                    dr = new DeleteRequest(i.getFileID(), thisNode, k);
+                    try
+                    {
+                        Socket s = new Socket(k.getIp(), k.getUDPPort());
+
+                        OutputStream os = s.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(dr);
+                        outputStream.flush();
+                    }
+                    catch(IOException ioe)
+                    {
+                        ioe.printStackTrace(); //Gestire
+                    }
+                }
                 return;
             }
         }

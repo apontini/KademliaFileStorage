@@ -7,15 +7,16 @@ import java.math.BigInteger;
 
 public class DeleteRequest implements Serializable
 {
-    private final KadNode kn;
+    private final KadNode source;
+    private final KadNode dest;
     private BigInteger fileID;
     private String fileName;
 
-    public DeleteRequest(KadFileInterf kf, KadNode kn)
+    public DeleteRequest(BigInteger id, KadNode source, KadNode dest)
     {
-        this.fileID = kf.getFileID();
-        this.fileName = kf.getFileName();
-        this.kn=kn;
+        this.fileID = id;
+        this.source=source;
+        this.dest = dest;
     }
 
     public BigInteger getFileID() {
@@ -26,9 +27,11 @@ public class DeleteRequest implements Serializable
         return fileName;
     }
 
-    public KadNode getKadNode() {
-        return kn;
+    public KadNode getSourceKadNode() {
+        return source;
     }
+
+    public KadNode getDestKadNode() { return dest; }
 }
 
 
