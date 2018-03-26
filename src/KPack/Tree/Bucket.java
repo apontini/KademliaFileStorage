@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Bucket extends Node {
+public class Bucket extends Node implements Iterable {
 
     //SOLO foglia
     private int dimensioneMax;
@@ -85,7 +85,7 @@ public class Bucket extends Node {
         this.splittable = splittable;
     }
 
-    public Iterator<KadNode> getList()
+    public Iterator<KadNode> iterator()
     {
         return listaNodi.iterator();
     }

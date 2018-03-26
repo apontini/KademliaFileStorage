@@ -187,11 +187,15 @@ public class Kademlia implements KademliaInterf {
         Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
         BigInteger currentID = targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
         int depth = ((Node) bucket).getDepth();
-        List<KadNode> lkn = new ArrayList<>();                //lista dei K nodi conosciuti più vicini al target
-        Iterator<KadNode> it = bucket.getList();
-        while (it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a targetID che conosco)
+        List<KadNode> lkn = new ArrayList<>();
+        Iterator<KadNode> it = null;
+        synchronized (bucket)//lista dei K nodi conosciuti più vicini al target
         {
-            lkn.add(it.next());
+            it = bucket.iterator();
+            while (it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a targetID che conosco)
+            {
+                lkn.add(it.next());
+            }
         }
         TreeNode node = (TreeNode) bucket.getParent();
         int count = depth;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
@@ -225,10 +229,13 @@ public class Kademlia implements KademliaInterf {
                 currentID = currentID.flipBit((BITID - count) - 1);
                 if (n instanceof Bucket)
                 {
-                    it = ((Bucket) n).getList();
-                    while (it.hasNext())
+                    synchronized (n)
                     {
-                        lkn.add(it.next());
+                        it = ((Bucket) n).iterator();
+                        while (it.hasNext())
+                        {
+                            lkn.add(it.next());
+                        }
                     }
                     node = (TreeNode) node.getParent();
                     count--;
@@ -250,10 +257,13 @@ public class Kademlia implements KademliaInterf {
                         }
                     }
                     node = (TreeNode) n.getParent();
-                    it = ((Bucket) n).getList();
-                    while (it.hasNext())
+                    synchronized (n)
                     {
-                        lkn.add(it.next());
+                        it = ((Bucket) n).iterator();
+                        while (it.hasNext())
+                        {
+                            lkn.add(it.next());
+                        }
                     }
                 }
             }
@@ -270,10 +280,14 @@ public class Kademlia implements KademliaInterf {
         List<KadNode> lkn = new ArrayList<>();  // lista di tutti i nodi conosciuti
         List<KadNode> alphaNode;
         AbstractQueue<KadNode> queryNode = new PriorityQueue<>(); // lista dei nodi interrogati
-        Iterator<KadNode> it = bucket.getList();
-        while (it.hasNext()) // inserisco l'intero bucket nella lista lkn
+        Iterator<KadNode> it = null;
+        synchronized (bucket)
         {
-            lkn.add(it.next());
+            it = bucket.iterator();
+            while (it.hasNext()) // inserisco l'intero bucket nella lista lkn
+            {
+                lkn.add(it.next());
+            }
         }
         TreeNode node = (TreeNode) bucket.getParent();
         int count = depth;
@@ -288,11 +302,15 @@ public class Kademlia implements KademliaInterf {
             {
                 bucket = (Bucket) node.getLeft();
             }
-            it = bucket.getList();
             List<KadNode> list = new ArrayList<>();
-            while (it.hasNext())
+            synchronized (bucket)
             {
-                list.add(it.next());
+                it = bucket.iterator();
+
+                while (it.hasNext())
+                {
+                    list.add(it.next());
+                }
             }
             list.sort((o1, o2)
                     -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
