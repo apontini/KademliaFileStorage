@@ -26,7 +26,8 @@ public class Kademlia implements KademliaInterf {
     private RoutingTree routingTree;
     private KadNode thisNode;
     public short UDPPort = 1337;
-    public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
+
+    //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
 
     private final int pingTimeout = 15000;
 
@@ -40,18 +41,24 @@ public class Kademlia implements KademliaInterf {
 
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
+
+        loadFixedNodesFromFile();
+
+        /*
         fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
-        //fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
-        //fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
-        //fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
+        */
         boolean exists = true;
         do
         {
             nodeID = new BigInteger(BITID, new Random());
-            if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
+            /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
             {
                 exists = false;
             }
+            */
             //Controllare se esiste
             //TODO
         }
@@ -62,6 +69,35 @@ public class Kademlia implements KademliaInterf {
         routingTree.add(thisNode); //Mi aggiungo
 
         new Thread(new ListenerThread()).start();
+    }
+
+    public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
+    {
+        ArrayList<KadNode> fixNodes = new ArrayList<>();
+        KadNode Punto = new KadNode("79.6.223.119", (short)1337, BigInteger.ONE);
+        KadNode Tavolino = new KadNode("79.30.181.196", (short)1337, BigInteger.TWO);
+
+        fixNodes.add(Punto);
+        fixNodes.add(Tavolino);
+
+        serializeFixedNodes(fixNodes);
+
+        //TODO
+        //Scrivere file nodes, inserendoci la lista fixNodes
+        //serializza il file
+    }
+
+    private void serializeFixedNodes(ArrayList<KadNode> listaNodi)
+    {
+        //TODO
+    }
+
+    private ArrayList<KadNode> loadFixedNodesFromFile()
+    {
+        ArrayList<KadNode> ret = new ArrayList<>();
+        //TODO
+        //va a leggere il file serializzato e restituisce la lista di KadNodes fissi.
+      return ret;
     }
 
     /*
