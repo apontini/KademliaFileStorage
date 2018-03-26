@@ -52,6 +52,8 @@ public class KadFileList implements Iterable<KadFile>
 
     private void serializeList()
     {
+        FileOutputStream fout = null;
+        ObjectOutputStream oos = null;
         try
         {
             File temp = new File(thisNode.FILESPATH);
@@ -59,13 +61,25 @@ public class KadFileList implements Iterable<KadFile>
             File localFiles = new File(thisNode.FILESPATH + "index");
             if(!(localFiles.exists())) localFiles.createNewFile();
 
-            FileOutputStream fout = new FileOutputStream(thisNode.FILESPATH + "index");
-            ObjectOutputStream oos = new ObjectOutputStream(fout);
+            fout = new FileOutputStream(thisNode.FILESPATH + "index");
+            oos = new ObjectOutputStream(fout);
             oos.writeObject(fileList);
         }
         catch (IOException e)
         {
             e.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if (fout!=null) fout.close();
+                if (oos!=null) oos.close();
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace();
+            }
         }
     }
 
