@@ -75,13 +75,24 @@ public class Kademlia implements KademliaInterf
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
     {
         ArrayList<KadNode> fixNodes = new ArrayList<>();
-        //TODO trovare modo di prendere IP passando il nome
-        KadNode Punto = new KadNode("79.6.223.119", (short) 1337, BigInteger.ONE);
-        KadNode Tavolino = new KadNode("79.30.181.196", (short) 1337, BigInteger.valueOf(2));
+        try
+        {
+            InetAddress inAddrPunto = InetAddress.getByName("pintini.ddns.net");
+            String addressPunto = inAddrPunto.getHostAddress();
 
-        fixNodes.add(Punto);
-        fixNodes.add(Tavolino);
+            InetAddress inAddrTavo = InetAddress.getByName("tavolino.ddns.net");
+            String addressTavo = inAddrTavo.getHostAddress();
 
+            KadNode Punto = new KadNode(addressPunto, (short) 1337, BigInteger.ONE);
+            KadNode Tavolino = new KadNode(addressTavo, (short) 1337, BigInteger.valueOf(2));
+
+            fixNodes.add(Punto);
+            fixNodes.add(Tavolino);
+        }
+        catch (UnknownHostException uhe)
+        {
+          uhe.printStackTrace();
+        }
         //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
