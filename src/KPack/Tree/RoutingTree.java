@@ -25,28 +25,15 @@ public class RoutingTree {
             throw new java.lang.IllegalArgumentException("La dimensione deve essere maggiore di 0");
         }
         root = new Bucket(thisNode, true);
-        System.out.println(Kademlia.intToBinary(thisNode.getMyNode().getNodeID()));
         this.thisNode = thisNode;
 
         add(thisNode.getMyNode());
-
-        for (int i = 0; i < 60; i++)
-        {
-            KadNode n = new KadNode("0.0.0.0", (short) 0, new BigInteger(Integer.toString((int) (Math.random() * 256))));
-            if (n.equals(thisNode.getMyNode()))
-            {
-                i--;
-                continue;
-            }
-            add(n);
-        }
         new TreeUI(this);
     }
 
-    public void add(KadNode nodo)
+    public synchronized void add(KadNode nodo)
     {
         Bucket tempBuck;
-        System.out.println("Aggiungo il nodo: " + Kademlia.intToBinary(nodo.getNodeID()));
         while (!((tempBuck = findNodesBucket(nodo)).add(nodo)))
         {
             TreeNode temp = new TreeNode();
@@ -84,9 +71,6 @@ public class RoutingTree {
             for (int i = 0; i < tempBuck.size(); i++)
             {
                 BigInteger tempNodeID = tempBuck.get(i).getNodeID();
-                //findNodesBucket(tempBuck.get(i)).add(tempBuck.get(i));
-                
-                System.out.println(tempDepth);
                 if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
                 {
                     bucketSx.add(tempBuck.get(i));
@@ -95,12 +79,9 @@ public class RoutingTree {
                 {
                     bucketDx.add(tempBuck.get(i));
                 }
-
             }
             //aggiorno il flag splittable
-            //findNodesBucket(thisNode.getMyNode()).setSplittable(true);
-
-             if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
+            if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
             {
                 bucketSx.setSplittable(true);
             }
@@ -108,15 +89,12 @@ public class RoutingTree {
             {
                 bucketDx.setSplittable(true);
             }
-            //chiamo ricorsivamente il metodo add per aggiungere il nodo e splittare di nuovo se neccesario
-            // add(nodo);
         }
     }
 
-    public Bucket findNodesBucket(KadNode node)
+    public synchronized Bucket findNodesBucket(KadNode node)
     {
         //preghiamo gli dei del java e li ringraziamo per la loro benevolenza per la classe BigInteger
-
         Node curNode = root;
         int i = Kademlia.BITID - 1;
 
@@ -131,7 +109,6 @@ public class RoutingTree {
                 curNode = ((TreeNode) curNode).getRight();
             }
         }
-        
         return (Bucket) curNode;
     }
 

@@ -63,7 +63,7 @@ public class TreeUI extends javax.swing.JFrame {
         {
             Bucket b = (Bucket) n;
             //System.out.println(b.toString());
-            Iterator<KadNode> ikn = b.getList();
+            Iterator<KadNode> ikn = b.iterator();
             while (ikn.hasNext())
             {
                 KadNode kn = ikn.next();

@@ -1,45 +1,25 @@
 package KPack.Tree;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
+public abstract class Node {
 
-public abstract class Node
-{
     private Node parent;
-    private final ReadWriteLock readWriteLock = null;
-    private final Lock readLock = null;
-    private final Lock writeLock = null;
 
-
-    public Node getParent()
+    public synchronized Node getParent()
     {
-        readLock.lock();
-        try
-        {
-            return parent;
-        }
-        finally
-        {
-            readLock.unlock();
-        }
+        return parent;
     }
 
-    public void setParent(Node parent)
+    public synchronized void setParent(Node parent)
     {
-        writeLock.lock();
-        try
-        {
-            this.parent = parent;
-        }
-        finally
-        {
-            writeLock.unlock();
-        }
+        this.parent = parent;
     }
 
-    public int getDepth()
+    public synchronized int getDepth()
     {
-        if(parent == null) return 0;
-        return parent.getDepth()+1;
+        if (parent == null)
+        {
+            return 0;
+        }
+        return parent.getDepth() + 1;
     }
 }

@@ -14,7 +14,6 @@ public class Bucket extends Node implements Iterable {
     private List<KadNode> listaNodi;
     private boolean splittable;
     private Kademlia thisKadNode;
-    private Node parent;
 
     public Bucket(Kademlia thisKadNode, boolean splittable)
     {
@@ -54,20 +53,9 @@ public class Bucket extends Node implements Iterable {
         {
             //C'è spazio, rimuoviamo il nodo (nel caso sia già presente) e lo riaggiungiamo
             //il nodo nuovo è in coda
-
             listaNodi.add(kn);
         }
         return true; //l'albero non deve gestire niente
-    }
-
-    public synchronized Node getParent()
-    {
-        return parent;
-    }
-
-    public synchronized void setParent(Node parent)
-    {
-        this.parent=parent;
     }
 
     public synchronized int size()
@@ -80,12 +68,12 @@ public class Bucket extends Node implements Iterable {
         return listaNodi.get(i);
     }
 
-    public void setSplittable(boolean splittable)
+    public synchronized void setSplittable(boolean splittable)
     {
         this.splittable = splittable;
     }
 
-    public Iterator<KadNode> iterator()
+    public synchronized Iterator<KadNode> iterator()
     {
         return listaNodi.iterator();
     }
@@ -99,11 +87,5 @@ public class Bucket extends Node implements Iterable {
         }
         bu += "}";
         return bu;
-    }
-    
-    public synchronized int getDepth()
-    {
-        if(parent == null) return 0;
-        return parent.getDepth()+1;
     }
 }
