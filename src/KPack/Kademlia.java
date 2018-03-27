@@ -75,22 +75,38 @@ public class Kademlia implements KademliaInterf
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
     {
         ArrayList<KadNode> fixNodes = new ArrayList<>();
+        //TODO trovare modo di prendere IP passando il nome
         KadNode Punto = new KadNode("79.6.223.119", (short) 1337, BigInteger.ONE);
         KadNode Tavolino = new KadNode("79.30.181.196", (short) 1337, BigInteger.valueOf(2));
 
         fixNodes.add(Punto);
         fixNodes.add(Tavolino);
 
-        serializeFixedNodes(fixNodes);
-
-        //TODO
-        //Scrivere file nodes, inserendoci la lista fixNodes
-        //serializza il file
-    }
-
-    private void serializeFixedNodes(ArrayList<KadNode> listaNodi)
-    {
-        //TODO
+        //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
+        FileOutputStream fout = null;
+        ObjectOutputStream oos = null;
+        try
+        {
+            fout = new FileOutputStream(Kademlia.FILESPATH + "nodes");
+            oos = new ObjectOutputStream(fout);
+            oos.writeObject(fixNodes);
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if (fout!=null) fout.close();
+                if (oos!=null) oos.close();
+            }
+            catch(IOException ioe)
+            {
+                ioe.printStackTrace();
+            }
+        }
     }
 
     private ArrayList<KadNode> loadFixedNodesFromFile()
