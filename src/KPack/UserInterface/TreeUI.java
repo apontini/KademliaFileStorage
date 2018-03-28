@@ -23,7 +23,6 @@ public class TreeUI extends javax.swing.JFrame {
 
         Node rootNode = routingTree.getRoot();
         DefaultMutableTreeNode rootTree = new DefaultMutableTreeNode("");
-
         recursiveTree(rootNode, rootTree);
 
         tree = new JTree(rootTree);
@@ -85,8 +84,12 @@ public class TreeUI extends javax.swing.JFrame {
         tree = new JTree(rootTree);
         add(tree);
 
+        for (int i = 0; i < tree.getRowCount(); i++)
+        {
+            tree.expandRow(i);
+        }
         this.pack();
-        
+
     }
 
     private void recursiveTree(Node n, DefaultMutableTreeNode dmt)
