@@ -12,6 +12,7 @@ import KPack.Exceptions.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
+import java.security.InvalidParameterException;
 import java.util.*;
 
 public class Kademlia implements KademliaInterf
@@ -500,13 +501,17 @@ public class Kademlia implements KademliaInterf
         return thisNode;
     }
 
-    public void store(String filepath) throws FileNotFoundException //gestire eccezioni
+    public void store(String filepath) throws FileNotFoundException, InvalidParameterException //gestire eccezioni
     {
         //Funzione temporanea, non completa
         File temp = new File(filepath);
         if (!temp.exists())
         {
             throw new FileNotFoundException();
+        }
+        if(temp.isDirectory())
+        {
+            throw new InvalidParameterException("Non posso memorizzare una directory");
         }
 
         //Genero un ID per il file e controllo se esiste
@@ -521,7 +526,7 @@ public class Kademlia implements KademliaInterf
         }
         while (exists);
 
-        KadFile tempfile = new KadFile(fileID, false, temp.getName(), filepath);
+        KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileList.add(tempfile);
 
         StoreRequest sr = null;
@@ -619,23 +624,6 @@ public class Kademlia implements KademliaInterf
                     Object received = inStream.readObject();
 
                     //Elaboro la risposta
-                    /*
-                    if (received instanceof PingReply)
-                    {
-                        PingReply pr = (PingReply) received;
-                        System.out.println("Received PingReply from: " + pr.toString());
-                        KadNode kn = pr.getKadNode();
-
-                        synchronized (pendentPing)
-                        {
-                            if (pendentPing.contains(kn));
-                            {
-                                pendentPing.remove(kn);
-                                notifyAll();
-                            }
-                        }
-                    }
-                     */
                     if (received instanceof FindNodeRequest)
                     {
                         FindNodeRequest fnr = (FindNodeRequest) received;
@@ -655,21 +643,26 @@ public class Kademlia implements KademliaInterf
 
                         os.close();
 
-                    } else if (received instanceof FindValueRequest)
+                    }
+                    else if (received instanceof FindValueRequest)
                     {
                         FindValueRequest fvr = (FindValueRequest) received;
                         new Thread(() ->
                         {
                             routingTree.add(fvr.getKadNode());
                         }).start();
-                    } else if (received instanceof StoreRequest)
+                    }
+                    else if (received instanceof StoreRequest)
                     {
                         StoreRequest rq = (StoreRequest) received;
+                        //i file ridondanti vengono salvati con estensione .kad
 
-                    } else if (received instanceof DeleteRequest)
+                    }
+                    else if (received instanceof DeleteRequest)
                     {
 
-                    } else if (received instanceof PingRequest)
+                    }
+                    else if (received instanceof PingRequest)
                     {
                         PingRequest pr = (PingRequest) received;
                         if (!(pr.getDestKadNode().equals(thisNode)))
@@ -697,16 +690,35 @@ public class Kademlia implements KademliaInterf
                     }
 
                     connection.close();
-                } catch (IOException ex)
+                }
+                catch (IOException ex)
                 {
                     ex.printStackTrace();
                     ////// GESTIREE
-                } catch (ClassNotFoundException ex)
+                }
+                catch (ClassNotFoundException ex)
                 {
                     ex.printStackTrace();
                     //// GESTIREEEEE
                 }
             }
+        }
+    }
+
+    private class FileRefresh implements Runnable
+    {
+        public void run()
+        {
+            try
+            {
+                Thread.sleep(300000); //5 minuti
+            }
+            catch(InterruptedException ie)
+            {
+                System.out.println("Thread di refresh dei file interrotto");
+            }
+
+
         }
     }
 

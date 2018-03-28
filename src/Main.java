@@ -57,7 +57,7 @@ public class Main
                         {
                             if (!(i.isRedundant()))
                             {
-                                System.out.println(i.getFileName() + " ID: " + i.getFileID());
+                                System.out.println(i.toString());
                             }
                         }
                     }

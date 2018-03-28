@@ -21,13 +21,36 @@ public class KadFileList implements Iterable<KadFile>
     synchronized public void add(KadFile file)
     {
         fileList.add(file);
-        serializeList();
+        if(!file.isRedundant())
+            serializeList();
     }
 
     synchronized public void remove(KadFile file)
     {
         fileList.remove(file); //override di equals() per eliminare il nodo solo usando l'ID?
+        if(file.isRedundant())
+        {
+            new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
+            return;
+        }
         serializeList();
+    }
+
+    synchronized public void clearAll()
+    {
+        for(KadFile i : fileList)
+        {
+            this.remove(i);
+        }
+    }
+
+    synchronized public void clearRedundants()
+    {
+        for(KadFile i : fileList)
+        {
+            if(i.isRedundant())
+                this.remove(i);
+        }
     }
 
     synchronized public KadFile get(int i)
@@ -45,7 +68,7 @@ public class KadFileList implements Iterable<KadFile>
         return fileList.listIterator();
     }
 
-    synchronized public int size() //e se size cambia mentre sto ciclando un for per esempio? Prendo il lock dell'oggetto KadFileList?
+    synchronized public int size()
     {
         return fileList.size();
     }

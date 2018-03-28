@@ -5,6 +5,7 @@ import KPack.Files.KadFileList;
 
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.List;
 
 public interface KademliaInterf
@@ -19,7 +20,7 @@ public interface KademliaInterf
 
     List<KadNode> findNode(BigInteger nodeID);
 
-    void store(String filepath) throws FileNotFoundException;
+    void store(String filepath) throws FileNotFoundException,InvalidParameterException;
 
     void delete(BigInteger ID) throws FileNotKnown;
 

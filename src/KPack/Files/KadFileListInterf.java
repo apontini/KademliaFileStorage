@@ -14,5 +14,7 @@ public interface KadFileListInterf
 
     int size();
 
+    void clear();
+
     Iterator<KadFile> getListIterator();
 }
