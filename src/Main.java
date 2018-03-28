@@ -82,6 +82,16 @@ public class Main
                         System.out.println("Inserisci il percorso del file");
                     }
                     break;
+                case "FindNode":
+                    if(split.length > 1)
+                    {
+                        myNode.findNode(new BigInteger(split[1]));
+                    }
+                    else
+                    {
+                        System.out.println("Inserisci l'ID del nodo");
+                    }
+                    break;
                 case "delete":
                     if(split.length > 1)
                     {
