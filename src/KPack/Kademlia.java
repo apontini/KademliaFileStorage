@@ -43,8 +43,7 @@ public class Kademlia implements KademliaInterf
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
 
-        loadFixedNodesFromFile();
-
+        //loadFixedNodesFromFile();
         /*
         fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
         fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
@@ -56,15 +55,15 @@ public class Kademlia implements KademliaInterf
         {
             nodeID = new BigInteger(BITID, new Random());
             /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
-            {
+            {*/
                 exists = false;
-            }
+            /*}
             */
             //Controllare se esiste
             //TODO
         }
         while (exists);
-
+        
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
