@@ -39,7 +39,7 @@ public class TreeUI extends javax.swing.JFrame {
             {
                 try
                 {
-                    sleep(500);
+                    sleep(750);
                 }
                 catch (InterruptedException ex)
                 {

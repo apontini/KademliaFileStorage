@@ -1,3 +1,4 @@
+
 import KPack.Exceptions.FileNotKnown;
 import KPack.Files.KadFile;
 import KPack.KadNode;
@@ -8,8 +9,8 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Scanner;
 
-public class Main
-{
+public class Main {
+
     public static void main(String[] args)
     {
         System.out.println("Cerco un ID valido..");
@@ -19,21 +20,23 @@ public class Main
         Scanner reader = new Scanner(System.in);
 
         System.out.println("I file conosciuti nella lista sono: ");
-        for(KadFile i : myNode.getFileList())
+        for (KadFile i : myNode.getFileList())
+        {
             System.out.println(i.toString());
+        }
 
-        while(keep)
+        while (keep)
         {
             System.out.print("KadNode@ " + myNode.getNodeID() + "-: ");
             in = reader.nextLine();
             String[] split = in.split(" ");
-            switch(split[0])
+            switch (split[0])
             {
                 case "get":
                     //Cerca di ottenere un file di cui conosce l'esistenza, se è possibile
-                    if(split.length > 1)
+                    if (split.length > 1)
                     {
-                        synchronized(myNode.getFileList())
+                        synchronized (myNode.getFileList())
                         {
                             for (KadFile i : myNode.getFileList())
                             {
@@ -52,7 +55,7 @@ public class Main
                     break;
                 case "ls":
                     //Lista tutti i file di cui conosco l'esistenza
-                    synchronized(myNode.getFileList())
+                    synchronized (myNode.getFileList())
                     {
                         for (KadFile i : myNode.getFileList())
                         {
@@ -67,15 +70,15 @@ public class Main
                     System.out.println(myNode.getIP().getHostAddress());
                     break;
                 case "store":
-                    if(split.length > 1)
+                    if (split.length > 1)
                     {
                         try
                         {
                             myNode.store(split[1]);
                         }
-                        catch(IOException ioe)
+                        catch (IOException ioe)
                         {
-                            ioe. printStackTrace();
+                            ioe.printStackTrace();
                         }
                     }
                     else
@@ -84,11 +87,13 @@ public class Main
                     }
                     break;
                 case "findnode":
-                    if(split.length > 1)
+                    if (split.length > 1)
                     {
-                        List<KadNode> l=myNode.findNode(new BigInteger(split[1]));
-                        for(int i=0;i<l.size();i++)
-                            System.out.println("******* "+l.get(i));
+                        List<KadNode> l = myNode.findNode(new BigInteger(split[1]));
+                        for (int i = 0; i < l.size(); i++)
+                        {
+                            System.out.println("******* " + l.get(i));
+                        }
                     }
                     else
                     {
@@ -96,13 +101,13 @@ public class Main
                     }
                     break;
                 case "delete":
-                    if(split.length > 1)
+                    if (split.length > 1)
                     {
                         try
                         {
                             myNode.delete(new BigInteger(split[1]));
                         }
-                        catch(FileNotKnown fnk)
+                        catch (FileNotKnown fnk)
                         {
                             System.out.println("Il file non esiste o non ne sei il proprietario");
                         }
@@ -114,18 +119,29 @@ public class Main
                     break;
                 case "ping":
                     //Funzione di test
-                    if(split.length > 2)
+                    if (split.length > 1)
                     {
-                        if(myNode.ping(new KadNode(split[1],myNode.UDPPort,new BigInteger(split[2]))))
+                        try
                         {
-                            System.out.println("VIVO");
+                            if (myNode.ping(new KadNode(split[1], Short.parseShort(split[2]), new BigInteger(split[3]))))
+                            {
+                                System.out.println("VIVO");
+                            }
+                        }
+                        catch (NumberFormatException nfe)
+                        {
+                            if (myNode.ping(new KadNode(split[1], myNode.UDPPort, new BigInteger(split[2]))))
+                            {
+                                System.out.println("VIVO");
+                            }
                         }
                     }
                     else
                     {
-                        System.out.println("Please define an IP address and ID");
+                        System.out.println("Please define an IP address and ID or IP,Port and ID");
                     }
                     break;
+
                 case "exit":
                     break;
                 default:

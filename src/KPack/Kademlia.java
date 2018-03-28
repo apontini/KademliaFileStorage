@@ -38,7 +38,6 @@ public class Kademlia implements KademliaInterf {
             return; //Aggiungere un'eccezione tipo AlreadyInstanced
         }
         instance = true;
-
         Runtime.getRuntime().addShutdownHook(new Thread() { //Hook per eliminare i file ridondanti allo spegnimento
             @Override
             public void run()
@@ -72,7 +71,6 @@ public class Kademlia implements KademliaInterf {
 
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
-        //String myIP = "192.168.1.3";
         //loadFixedNodesFromFile();
         /*
         fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
@@ -83,6 +81,11 @@ public class Kademlia implements KademliaInterf {
         boolean exists = true;
         do
         {
+            if (fixedNode())
+            {
+                break;
+            }
+
             nodeID = new BigInteger(BITID, new Random());
             /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
             {*/
@@ -98,23 +101,66 @@ public class Kademlia implements KademliaInterf {
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
-        networkJoin();
-
         new Thread(new ListenerThread()).start();
         new Thread(new FileRefresh()).start();
 
+        if (!fixedNode())
+        {
+            networkJoin();
+        }
         //aggiungo nodi random, solo per testare il find node
-        for (int i = 0; i < 5; i++)
+        /*for (int i = 1; i < 6; i++)
         {
             routingTree.add(new KadNode("192.168.1.20", (short) 1337, new BigInteger("" + i * 30)));
-        }
+        }*/
     }
 
-    public void networkJoin()
+    private boolean fixedNode()
     {
-        //Aggiungo all'alberto i nodi noti
+        String hostname;
+        InetAddress addr;
+        try
+        {
+            addr = InetAddress.getLocalHost();
+            hostname = addr.getHostName();
+            if (hostname.toLowerCase().equals("tavolino"))
+            {
+                nodeID = new BigInteger("2");
+                UDPPort = 1336;
+                System.out.println(nodeID);
+                return true;
+            }
+            else if (hostname.toLowerCase().equals("SERVER LUCA"))
+            {
+                nodeID = new BigInteger("0");
+                return true;
+            }
+            else if (hostname.toLowerCase().equals("Raspberry punto"))
+            {
+                nodeID = new BigInteger("1");
+                return true;
+            }
+        }
+        catch (UnknownHostException uhe)
+        {
+        }
+        return false;
+    }
 
+    private void networkJoin()
+    {
+       // try
+        //{
+            //Aggiungo all'alberto i nodi noti
+            KadNode Tavolino = new KadNode("82.52.116.96", (short) 1336, BigInteger.valueOf(2));
+            routingTree.add(Tavolino);
+       // }
+        /*catch (UnknownHostException ex)
+        {
+            ex.printStackTrace();
+        }*/
         //Faccio il findNode su me stesso
+        findNode(nodeID);
     }
 
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
@@ -129,7 +175,7 @@ public class Kademlia implements KademliaInterf {
             String addressTavo = inAddrTavo.getHostAddress();
 
             KadNode Punto = new KadNode(addressPunto, (short) 1337, BigInteger.ONE);
-            KadNode Tavolino = new KadNode(addressTavo, (short) 1337, BigInteger.valueOf(2));
+            KadNode Tavolino = new KadNode(addressTavo, (short) 1336, BigInteger.valueOf(2));
 
             fixNodes.add(Punto);
             fixNodes.add(Tavolino);
@@ -179,7 +225,7 @@ public class Kademlia implements KademliaInterf {
         return ret;
     }
 
-    public InetAddress getIP()   //per il momento restituisce l'ip locale.
+    /*  public InetAddress getIP()   //per il momento restituisce l'ip locale.
     {
         try
         {
@@ -191,9 +237,8 @@ public class Kademlia implements KademliaInterf {
             /////////////// DA GESTIRE
         }
         return null;
-    }
-
-    /* public InetAddress getIP()
+    }*/
+    public InetAddress getIP()
     {
         String publicIP = null;
         try
@@ -202,24 +247,28 @@ public class Kademlia implements KademliaInterf {
             BufferedReader in = new BufferedReader(new InputStreamReader(urlForIP.openStream()));
 
             publicIP = in.readLine(); //IP as a String
-        } catch (MalformedURLException mue)
+        }
+        catch (MalformedURLException mue)
         {
             mue.printStackTrace();
             /////////////// DA GESTIRE
-        } catch (IOException ioe)
+        }
+        catch (IOException ioe)
         {
             ioe.printStackTrace();
         }
         try
         {
             return InetAddress.getByName(publicIP);
-        } catch (UnknownHostException e)
+        }
+        catch (UnknownHostException e)
         {
             e.printStackTrace();
             //DA GESTIRE
             return null;
         }
-    }*/
+    }
+
     public BigInteger getNodeID()
     {
         return nodeID;

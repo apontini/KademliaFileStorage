@@ -3,6 +3,7 @@ package KPack.Tree;
 import KPack.KadNode;
 import KPack.Kademlia;
 import KPack.UserInterface.TreeUI;
+import java.awt.HeadlessException;
 
 import java.math.BigInteger;
 
@@ -27,7 +28,11 @@ public class RoutingTree {
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
 
-        new TreeUI(this);
+        try{
+            new TreeUI(this);
+        }
+        catch(HeadlessException he) //per dispositivi senza schermo
+        {}
     }
 
     public synchronized void add(KadNode nodo)
