@@ -87,10 +87,19 @@ public class Kademlia implements KademliaInterf
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
+        networkJoin();
+        
         new Thread(new ListenerThread()).start();
         new Thread(new FileRefresh()).start();
     }
 
+    public void networkJoin()
+    {
+        //Aggiungo all'alberto i nodi noti
+        
+        //Faccio il findNode su me stesso
+    }
+    
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
     {
         ArrayList<KadNode> fixNodes = new ArrayList<>();
@@ -147,7 +156,6 @@ public class Kademlia implements KademliaInterf
         return ret;
     }
 
-    /*
     public InetAddress getIP()   //per il momento restituisce l'ip locale.
     {
         try
@@ -161,9 +169,8 @@ public class Kademlia implements KademliaInterf
         }
         return null;
     }
-     */
-
-    public InetAddress getIP()
+    
+   /* public InetAddress getIP()
     {
         String publicIP = null;
         try
@@ -189,7 +196,7 @@ public class Kademlia implements KademliaInterf
             //DA GESTIRE
             return null;
         }
-    }
+    }*/
 
     public BigInteger getNodeID()
     {
