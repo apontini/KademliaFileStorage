@@ -643,6 +643,17 @@ public class Kademlia implements KademliaInterf
                         {
                             routingTree.add(fnr.getSourceKadNode());
                         }).start();
+                        
+                        List<KadNode> lkn=findNode_lookup(fnr.getTargetID());
+                        
+                        FindNodeReply fnrep=new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
+                        
+                        OutputStream os = connection.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(fnrep);
+                        outputStream.flush();
+
+                        os.close();
 
                     } else if (received instanceof FindValueRequest)
                     {
