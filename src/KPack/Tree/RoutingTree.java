@@ -28,6 +28,7 @@ public class RoutingTree {
         this.thisNode = thisNode;
 
         add(thisNode.getMyNode());
+        
         new TreeUI(this);
     }
 

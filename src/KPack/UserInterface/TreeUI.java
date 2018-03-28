@@ -9,8 +9,6 @@ import KPack.Tree.TreeNode;
 import java.awt.Dimension;
 import static java.lang.Thread.sleep;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 
@@ -38,27 +36,19 @@ public class TreeUI extends javax.swing.JFrame {
 
         new Thread(() ->
         {
-            try
+            while (true)
             {
-                sleep(500);
+                try
+                {
+                    sleep(500);
+                }
+                catch (InterruptedException ex)
+                {
+                    ex.printStackTrace();
+                }
+
+                updateTree();
             }
-            catch (InterruptedException ex)
-            {
-                Logger.getLogger(TreeUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-
-            removeAll();
-
-            DefaultMutableTreeNode rootTreee = new DefaultMutableTreeNode("");
-
-            recursiveTree(rootNode, rootTreee);
-
-            tree = new JTree(rootTreee);
-            
-            add(tree);
-            this.pack();
-            this.setVisible(true);
-
         }).start();
     }
 
@@ -83,6 +73,21 @@ public class TreeUI extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void updateTree()
+    {
+        remove(tree);
+        Node rootNode = routingTree.getRoot();
+        DefaultMutableTreeNode rootTree = new DefaultMutableTreeNode("");
+
+        recursiveTree(rootNode, rootTree);
+
+        tree = new JTree(rootTree);
+        add(tree);
+
+        this.pack();
+        
+    }
 
     private void recursiveTree(Node n, DefaultMutableTreeNode dmt)
     {
