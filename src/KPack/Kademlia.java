@@ -15,8 +15,7 @@ import java.net.*;
 import java.security.InvalidParameterException;
 import java.util.*;
 
-public class Kademlia implements KademliaInterf
-{
+public class Kademlia implements KademliaInterf {
 
     private static boolean instance = false;
     public final static int BITID = 8;
@@ -30,7 +29,6 @@ public class Kademlia implements KademliaInterf
     public short UDPPort = 1337;
 
     //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
-
     private final int pingTimeout = 15000;
 
     public Kademlia()
@@ -43,63 +41,82 @@ public class Kademlia implements KademliaInterf
 
         Runtime.getRuntime().addShutdownHook(new Thread() { //Hook per eliminare i file ridondanti allo spegnimento
             @Override
-            public void run() {
+            public void run()
+            {
                 File temp = new File(FILESPATH);
-                if(temp.listFiles() != null)
-                    for(File i : temp.listFiles())
-                        if(i.getName().endsWith(".kad"))
+                if (temp.listFiles() != null)
+                {
+                    for (File i : temp.listFiles())
+                    {
+                        if (i.getName().endsWith(".kad"))
+                        {
                             i.delete();
+                        }
+                    }
+                }
             }
         });
 
         //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash
         File temp = new File(FILESPATH);
-        if(temp.listFiles() != null)
-            for(File i : temp.listFiles())
-                if(i.getName().endsWith(".kad"))
+        if (temp.listFiles() != null)
+        {
+            for (File i : temp.listFiles())
+            {
+                if (i.getName().endsWith(".kad"))
+                {
                     i.delete();
+                }
+            }
+        }
 
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
-
+        //String myIP = "192.168.1.3";
         //loadFixedNodesFromFile();
         /*
         fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
         fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
         fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
         fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
-        */
+         */
         boolean exists = true;
         do
         {
             nodeID = new BigInteger(BITID, new Random());
             /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
             {*/
-                exists = false;
+            exists = false;
             /*}
-            */
+             */
             //Controllare se esiste
             //TODO
         }
         while (exists);
-        
+
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
         networkJoin();
-        
+
         new Thread(new ListenerThread()).start();
         new Thread(new FileRefresh()).start();
+
+        //aggiungo nodi random, solo per testare il find node
+        for (int i = 0; i < 5; i++)
+        {
+            routingTree.add(new KadNode("192.168.1.20", (short) 1337, new BigInteger("" + i * 30)));
+        }
     }
 
     public void networkJoin()
     {
         //Aggiungo all'alberto i nodi noti
-        
+
         //Faccio il findNode su me stesso
     }
-    
+
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
     {
         ArrayList<KadNode> fixNodes = new ArrayList<>();
@@ -119,7 +136,7 @@ public class Kademlia implements KademliaInterf
         }
         catch (UnknownHostException uhe)
         {
-          uhe.printStackTrace();
+            uhe.printStackTrace();
         }
         //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
         FileOutputStream fout = null;
@@ -138,10 +155,16 @@ public class Kademlia implements KademliaInterf
         {
             try
             {
-                if (fout!=null) fout.close();
-                if (oos!=null) oos.close();
+                if (fout != null)
+                {
+                    fout.close();
+                }
+                if (oos != null)
+                {
+                    oos.close();
+                }
             }
-            catch(IOException ioe)
+            catch (IOException ioe)
             {
                 ioe.printStackTrace();
             }
@@ -169,8 +192,8 @@ public class Kademlia implements KademliaInterf
         }
         return null;
     }
-    
-   /* public InetAddress getIP()
+
+    /* public InetAddress getIP()
     {
         String publicIP = null;
         try
@@ -197,7 +220,6 @@ public class Kademlia implements KademliaInterf
             return null;
         }
     }*/
-
     public BigInteger getNodeID()
     {
         return nodeID;
@@ -235,7 +257,8 @@ public class Kademlia implements KademliaInterf
                         }
                     }
                     s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
-                } catch (ClassNotFoundException e)
+                }
+                catch (ClassNotFoundException e)
                 {
                     e.printStackTrace();
                 }
@@ -296,14 +319,16 @@ public class Kademlia implements KademliaInterf
                 //qui ho già visitato entrambi i sottoalberi
                 node = (TreeNode) node.getParent();
                 count--;
-            } else
+            }
+            else
             {
                 //qui il sottoalbero fratello non l'ho ancora visitato
                 Node n;
                 if (targetID.testBit((BITID - count) - 1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
                 {
                     n = node.getRight();
-                } else
+                }
+                else
                 {
                     n = node.getLeft();
                 }
@@ -322,7 +347,8 @@ public class Kademlia implements KademliaInterf
                     }
                     node = (TreeNode) node.getParent();
                     count--;
-                } else
+                }
+                else
                 {
                     //seguo il percorso del targetID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
                     //tra quelli non ancora visitati
@@ -332,7 +358,8 @@ public class Kademlia implements KademliaInterf
                         if (targetID.testBit((BITID - count) - 1))
                         {
                             n = node.getLeft();
-                        } else
+                        }
+                        else
                         {
                             n = node.getRight();
                         }
@@ -379,7 +406,8 @@ public class Kademlia implements KademliaInterf
             if (prefix.testBit(depth - count))
             {
                 bucket = (Bucket) node.getRight();
-            } else
+            }
+            else
             {
                 bucket = (Bucket) node.getLeft();
             }
@@ -397,8 +425,12 @@ public class Kademlia implements KademliaInterf
                     -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
             if (list.size() >= K - lkn.size())
             {
-                lkn.addAll(list.subList(0, K - lkn.size()));
-            } else
+                for (KadNode kn : list.subList(0, K - lkn.size()))
+                {
+                    lkn.add(kn);
+                }
+            }
+            else
             {
                 lkn.addAll(list);
             }
@@ -409,8 +441,14 @@ public class Kademlia implements KademliaInterf
                 -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
         if (lkn.size() >= ALPHA)
         {
-            alphaNode = lkn.subList(0, ALPHA);
-        } else
+            alphaNode = new ArrayList<>();
+            for (KadNode kn : lkn.subList(0, ALPHA))
+            {
+                alphaNode.add(kn);
+            }
+
+        }
+        else
         {
             alphaNode = lkn;
         }
@@ -419,9 +457,10 @@ public class Kademlia implements KademliaInterf
         {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
             //ad ognuno degli alpha node vado a inviargli un findNode
-            for (int i = 0; i < alphaNode.size(); i++)
+            // for (int i = 0; i < alphaNode.size(); i++)
+            for (KadNode akn : alphaNode)
             {
-                KadNode kadNode = alphaNode.get(i);
+                KadNode kadNode = akn;
                 FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode);
                 try
                 {
@@ -465,21 +504,26 @@ public class Kademlia implements KademliaInterf
                             {
                                 s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
                             }
-                        } catch (ClassNotFoundException e)
+                        }
+                        catch (ClassNotFoundException e)
                         {
                             e.printStackTrace();
                         }
                     }
-                } catch (SocketTimeoutException soe)
+                }
+                catch (SocketTimeoutException soe)
                 {
                     soe.printStackTrace();
-                } catch (ConnectException soe)
+                }
+                catch (ConnectException soe)
                 {
                     soe.printStackTrace();
-                } catch (EOFException e)
+                }
+                catch (EOFException e)
                 {
                     e.printStackTrace();
-                } catch (IOException ex)
+                }
+                catch (IOException ex)
                 {
                     ex.printStackTrace();
                 }
@@ -493,11 +537,17 @@ public class Kademlia implements KademliaInterf
                 {
                     return lkn;
                 }
-            } else
+            }
+            else
             {
                 if (queriedNode.containsAll(lkn.subList(0, K)))
                 {
-                    return lkn.subList(0, K);
+                    List<KadNode> toRet = new ArrayList<>();
+                    for (KadNode kn : lkn.subList(0, K))
+                    {
+                        toRet.add(kn);
+                    }
+                    return toRet;
                 }
             }
             alphaNode.clear();
@@ -505,7 +555,8 @@ public class Kademlia implements KademliaInterf
             if (size == lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
             {
                 alphaSize = K;
-            } else
+            }
+            else
             {
                 alphaSize = ALPHA;
             }
@@ -539,7 +590,7 @@ public class Kademlia implements KademliaInterf
         {
             throw new FileNotFoundException();
         }
-        if(temp.isDirectory())
+        if (temp.isDirectory())
         {
             throw new InvalidParameterException("Non posso memorizzare una directory");
         }
@@ -564,7 +615,6 @@ public class Kademlia implements KademliaInterf
         List<KadNode> closestK = new ArrayList<>();
 
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
-
         for (KadNode i : closestK)
         {
             sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), filepath), thisNode, i);
@@ -576,7 +626,8 @@ public class Kademlia implements KademliaInterf
                 ObjectOutputStream outputStream = new ObjectOutputStream(os);
                 outputStream.writeObject(sr);
                 outputStream.flush();
-            } catch (IOException ioe)
+            }
+            catch (IOException ioe)
             {
                 ioe.printStackTrace(); //Gestire
             }
@@ -596,7 +647,6 @@ public class Kademlia implements KademliaInterf
                 List<KadNode> closestK = new ArrayList<>();
 
                 // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
-
                 for (KadNode k : closestK)
                 {
                     dr = new DeleteRequest(i.getFileID(), thisNode, k);
@@ -613,7 +663,7 @@ public class Kademlia implements KademliaInterf
                         InputStream is = s.getInputStream();
                         ObjectInputStream inputStream = new ObjectInputStream(is);
 
-                        if(inputStream.readObject() instanceof FindNodeReply)
+                        if (inputStream.readObject() instanceof FindNodeReply)
                         {
                             //Invio il file al nodo
                         }
@@ -632,8 +682,7 @@ public class Kademlia implements KademliaInterf
         throw new FileNotKnown();
     }
 
-    private class ListenerThread implements Runnable
-    {
+    private class ListenerThread implements Runnable {
 
         private ServerSocket listener;
 
@@ -644,7 +693,8 @@ public class Kademlia implements KademliaInterf
             {
                 listener = new ServerSocket(UDPPort);
                 System.out.println("Thread Server avviato\n" + "IP: " + getIP() + "\nPorta: " + UDPPort);
-            } catch (IOException ex)
+            }
+            catch (IOException ex)
             {
                 ex.printStackTrace();
                 ////////// DA GESTIRE
@@ -675,11 +725,11 @@ public class Kademlia implements KademliaInterf
                         {
                             routingTree.add(fnr.getSourceKadNode());
                         }).start();
-                        
-                        List<KadNode> lkn=findNode_lookup(fnr.getTargetID());
-                        
-                        FindNodeReply fnrep=new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
-                        
+
+                        List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
+
+                        FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
+
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(fnrep);
@@ -749,11 +799,11 @@ public class Kademlia implements KademliaInterf
         }
     }
 
-    private class FileRefresh implements Runnable
-    {
+    private class FileRefresh implements Runnable {
+
         public void run()
         {
-            while(true)
+            while (true)
             {
                 try
                 {
@@ -763,7 +813,7 @@ public class Kademlia implements KademliaInterf
                         if (i.isRedundant())
                         {
                             List<KadNode> temp = findNode(i.getFileID());
-                            for(KadNode n : temp)
+                            for (KadNode n : temp)
                             {
                                 Socket tempS = new Socket();
                                 OutputStream os = tempS.getOutputStream();
@@ -779,7 +829,7 @@ public class Kademlia implements KademliaInterf
                 {
                     System.out.println("Thread di refresh dei file interrotto");
                 }
-                catch(IOException ioe)
+                catch (IOException ioe)
                 {
                     ioe.printStackTrace();
                 }
