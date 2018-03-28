@@ -353,7 +353,8 @@ public class Kademlia implements KademliaInterf
         BigInteger prefix = thisNode.getNodeID().shiftRight(BITID - depth); // prendo il prefisso relativo al bucket
         List<KadNode> lkn = new ArrayList<>();  // lista di tutti i nodi conosciuti
         List<KadNode> alphaNode;
-        AbstractQueue<KadNode> queriedNode = new PriorityQueue<>(); // lista dei nodi interrogati
+        AbstractQueue<KadNode> queriedNode = new PriorityQueue<>((o1, o2)
+                -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN))); // lista dei nodi interrogati
         Iterator<KadNode> it = null;
         synchronized (bucket)
         {

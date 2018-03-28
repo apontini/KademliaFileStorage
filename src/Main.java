@@ -5,6 +5,7 @@ import KPack.Kademlia;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main
@@ -82,10 +83,12 @@ public class Main
                         System.out.println("Inserisci il percorso del file");
                     }
                     break;
-                case "FindNode":
+                case "findnode":
                     if(split.length > 1)
                     {
-                        myNode.findNode(new BigInteger(split[1]));
+                        List<KadNode> l=myNode.findNode(new BigInteger(split[1]));
+                        for(int i=0;i<l.size();i++)
+                            System.out.println("******* "+l.get(i));
                     }
                     else
                     {
