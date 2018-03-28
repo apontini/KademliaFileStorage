@@ -41,6 +41,24 @@ public class Kademlia implements KademliaInterf
         }
         instance = true;
 
+        Runtime.getRuntime().addShutdownHook(new Thread() { //Hook per eliminare i file ridondanti allo spegnimento
+            @Override
+            public void run() {
+                File temp = new File(FILESPATH);
+                if(temp.listFiles() != null)
+                    for(File i : temp.listFiles())
+                        if(i.getName().endsWith(".kad"))
+                            i.delete();
+            }
+        });
+
+        //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash
+        File temp = new File(FILESPATH);
+        if(temp.listFiles() != null)
+            for(File i : temp.listFiles())
+                if(i.getName().endsWith(".kad"))
+                    i.delete();
+
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
 
@@ -70,6 +88,7 @@ public class Kademlia implements KademliaInterf
         routingTree.add(thisNode); //Mi aggiungo
 
         new Thread(new ListenerThread()).start();
+        new Thread(new FileRefresh()).start();
     }
 
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
@@ -194,7 +213,6 @@ public class Kademlia implements KademliaInterf
             ObjectInputStream inputStream = new ObjectInputStream(is);
 
             long timeInit = System.currentTimeMillis();
-            boolean state = true;
             while (true)
             {
                 try
@@ -215,18 +233,22 @@ public class Kademlia implements KademliaInterf
                     e.printStackTrace();
                 }
             }
-        } catch (SocketTimeoutException soe)
+        }
+        catch (SocketTimeoutException soe)
         {
             System.out.println("Timeout");
             return false;
-        } catch (ConnectException soe)
+        }
+        catch (ConnectException soe)
         {
             System.out.println("Non c'è risposta");
             return false;
-        } catch (EOFException e)
+        }
+        catch (EOFException e)
         {
             return false;
-        } catch (IOException ex)
+        }
+        catch (IOException ex)
         {
             ex.printStackTrace();
             return false;
@@ -238,7 +260,7 @@ public class Kademlia implements KademliaInterf
         return null;
     }
 
-    public List<KadNode> findNode_lookup(BigInteger targetID)
+    private List<KadNode> findNode_lookup(BigInteger targetID)
     {
         Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
         BigInteger currentID = targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
@@ -530,9 +552,10 @@ public class Kademlia implements KademliaInterf
         fileList.add(tempfile);
 
         StoreRequest sr = null;
+
         List<KadNode> closestK = new ArrayList<>();
 
-        //aggiungo i nodi più vicini
+        // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
 
         for (KadNode i : closestK)
         {
@@ -564,7 +587,7 @@ public class Kademlia implements KademliaInterf
                 DeleteRequest dr = null;
                 List<KadNode> closestK = new ArrayList<>();
 
-                //aggiungo i nodi più vicini
+                // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
 
                 for (KadNode k : closestK)
                 {
@@ -572,17 +595,30 @@ public class Kademlia implements KademliaInterf
                     try
                     {
                         Socket s = new Socket(k.getIp(), k.getUDPPort());
+                        s.setSoTimeout(pingTimeout);
 
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(dr);
                         outputStream.flush();
-                    } catch (IOException ioe)
+
+                        InputStream is = s.getInputStream();
+                        ObjectInputStream inputStream = new ObjectInputStream(is);
+
+                        if(inputStream.readObject() instanceof FindNodeReply)
+                        {
+                            //Invio il file al nodo
+                        }
+                    }
+                    catch (IOException ioe)
                     {
                         ioe.printStackTrace(); //Gestire
                     }
+                    catch (ClassNotFoundException cnfe)
+                    {
+                        System.out.println("Risposta sconosciuta");
+                    }
                 }
-                return;
             }
         }
         throw new FileNotKnown();
@@ -709,16 +745,37 @@ public class Kademlia implements KademliaInterf
     {
         public void run()
         {
-            try
+            while(true)
             {
-                Thread.sleep(300000); //5 minuti
-            }
-            catch(InterruptedException ie)
-            {
-                System.out.println("Thread di refresh dei file interrotto");
-            }
+                try
+                {
+                    Thread.sleep(300000); //5 minuti
+                    for (KadFile i : fileList)
+                    {
+                        if (i.isRedundant())
+                        {
+                            List<KadNode> temp = findNode(i.getFileID());
+                            for(KadNode n : temp)
+                            {
+                                Socket tempS = new Socket();
+                                OutputStream os = tempS.getOutputStream();
+                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                outputStream.writeObject(new FindValueRequest(i.getFileID(), n, false));
+                                outputStream.flush();
+                            }
+                        }
+                    }
 
-
+                }
+                catch (InterruptedException ie)
+                {
+                    System.out.println("Thread di refresh dei file interrotto");
+                }
+                catch(IOException ioe)
+                {
+                    ioe.printStackTrace();
+                }
+            }
         }
     }
 

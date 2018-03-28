@@ -27,7 +27,6 @@ public class RoutingTree {
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
 
-        add(thisNode.getMyNode());
         new TreeUI(this);
     }
 

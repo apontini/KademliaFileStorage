@@ -8,13 +8,13 @@ public class FindValueRequest implements Serializable
 {
     private final KadNode kn;
     private BigInteger fileID;
-    private boolean fileCheck;
+    private boolean contentRequested;
 
-    public FindValueRequest(BigInteger fileID, KadNode kn, boolean fileCheck)
+    public FindValueRequest(BigInteger fileID, KadNode kn, boolean contentRequested)
     {
         this.fileID = fileID;
         this.kn=kn;
-        this.fileCheck = fileCheck;
+        this.contentRequested = contentRequested;
     }
 
     public KadNode getKadNode() {
@@ -25,7 +25,7 @@ public class FindValueRequest implements Serializable
         return fileID;
     }
 
-    public boolean isFileCheck() { return fileCheck; }
+    public boolean isContentRequested() { return contentRequested; }
 }
 
 
