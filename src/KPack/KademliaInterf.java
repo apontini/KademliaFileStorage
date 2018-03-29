@@ -8,8 +8,8 @@ import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.List;
 
-public interface KademliaInterf
-{
+public interface KademliaInterf {
+
     BigInteger getNodeID();
 
     KadFileList getFileList();
@@ -20,7 +20,7 @@ public interface KademliaInterf
 
     List<KadNode> findNode(BigInteger nodeID);
 
-    void store(String filepath) throws FileNotFoundException,InvalidParameterException;
+    void store(String filepath) throws FileNotFoundException, InvalidParameterException;
 
     void delete(BigInteger ID) throws FileNotKnown;
 

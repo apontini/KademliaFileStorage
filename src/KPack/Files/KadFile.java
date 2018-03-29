@@ -3,8 +3,8 @@ package KPack.Files;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-public class KadFile implements KadFileInterf, Serializable
-{
+public class KadFile implements KadFileInterf, Serializable {
+
     //deve mantenere singolo file
     private BigInteger fileID;
     private boolean redundant; //false se il file è mio o true se mi è stato dato grazie al protocollo della rete Kademlia
@@ -19,30 +19,34 @@ public class KadFile implements KadFileInterf, Serializable
         this.path = path;
     }
 
-    public BigInteger getFileID() {
+    public BigInteger getFileID()
+    {
         return fileID;
     }
 
-    public boolean isRedundant() {
+    public boolean isRedundant()
+    {
         return redundant;
     }
 
-    public String getFileName() {
+    public String getFileName()
+    {
         return fileName;
     }
 
-    public String getPath() {
+    public String getPath()
+    {
         return path;
     }
 
     @Override
     public String toString()
     {
-        return "KadFile{" +
-                "fileID=" + fileID +
-                ", redundant=" + redundant +
-                ", fileName='" + fileName + '\'' +
-                ", path='" + path + '\'' +
-                '}';
+        return "KadFile{"
+                + "fileID=" + fileID
+                + ", redundant=" + redundant
+                + ", fileName='" + fileName + '\''
+                + ", path='" + path + '\''
+                + '}';
     }
 }

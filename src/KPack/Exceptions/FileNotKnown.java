@@ -1,9 +1,11 @@
 package KPack.Exceptions;
 
-public class FileNotKnown extends Exception
-{
+public class FileNotKnown extends Exception {
+
     // Parameterless Constructor
-    public FileNotKnown() {}
+    public FileNotKnown()
+    {
+    }
 
     // Constructor that accepts a message
     public FileNotKnown(String message)

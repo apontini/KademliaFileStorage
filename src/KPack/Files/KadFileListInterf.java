@@ -2,8 +2,8 @@ package KPack.Files;
 
 import java.util.Iterator;
 
-public interface KadFileListInterf
-{
+public interface KadFileListInterf {
+
     void add(KadFile file);
 
     void remove(KadFile file);

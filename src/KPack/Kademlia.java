@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
-    
+
     private static boolean instance = false;
     public final static int BITID = 8;
     public final static int K = 4;
@@ -32,7 +32,7 @@ public class Kademlia implements KademliaInterf {
 
     //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
     private final int pingTimeout = 15000;
-    
+
     public Kademlia()
     {
         if (instance)
@@ -70,7 +70,7 @@ public class Kademlia implements KademliaInterf {
                 }
             }
         }
-        
+
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
         //loadFixedNodesFromFile();
@@ -87,7 +87,7 @@ public class Kademlia implements KademliaInterf {
             {
                 break;
             }
-            
+
             nodeID = new BigInteger(BITID, new Random());
             /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
             {*/
@@ -98,14 +98,14 @@ public class Kademlia implements KademliaInterf {
             //TODO
         }
         while (exists);
-        
+
         thisNode = new KadNode(myIP, UDPPort, nodeID);
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
         new Thread(new ListenerThread()).start();
         new Thread(new FileRefresh()).start();
-        
+
         if (!fixedNode())
         {
             networkJoin();
@@ -116,7 +116,7 @@ public class Kademlia implements KademliaInterf {
             routingTree.add(new KadNode("192.168.1.20", (short) 1337, new BigInteger("" + i * 30)));
         }*/
     }
-    
+
     private boolean fixedNode()
     {
         String hostname;
@@ -148,7 +148,7 @@ public class Kademlia implements KademliaInterf {
         }
         return false;
     }
-    
+
     private void networkJoin()
     {
         // try
@@ -163,7 +163,7 @@ public class Kademlia implements KademliaInterf {
         {
             Logger.getLogger(Kademlia.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
         // }
         /*catch (UnknownHostException ex)
         {
@@ -176,7 +176,7 @@ public class Kademlia implements KademliaInterf {
             routingTree.add(kn);
         }
     }
-    
+
     public void writeFixedList()    //poi questo sarà da chiamare da qualche parte una sola volta e poi da commentare
     {
         ArrayList<KadNode> fixNodes = new ArrayList<>();
@@ -184,13 +184,13 @@ public class Kademlia implements KademliaInterf {
         {
             InetAddress inAddrPunto = InetAddress.getByName("pintini.ddns.net");
             String addressPunto = inAddrPunto.getHostAddress();
-            
+
             InetAddress inAddrTavo = InetAddress.getByName("tavolino.ddns.net");
             String addressTavo = inAddrTavo.getHostAddress();
-            
+
             KadNode Punto = new KadNode(addressPunto, (short) 1337, BigInteger.ONE);
             KadNode Tavolino = new KadNode(addressTavo, (short) 1336, BigInteger.valueOf(2));
-            
+
             fixNodes.add(Punto);
             fixNodes.add(Tavolino);
         }
@@ -230,7 +230,7 @@ public class Kademlia implements KademliaInterf {
             }
         }
     }
-    
+
     private ArrayList<KadNode> loadFixedNodesFromFile()
     {
         ArrayList<KadNode> ret = new ArrayList<>();
@@ -259,7 +259,7 @@ public class Kademlia implements KademliaInterf {
         {
             URL urlForIP = new URL("https://api.ipify.org/");
             BufferedReader in = new BufferedReader(new InputStreamReader(urlForIP.openStream()));
-            
+
             publicIP = in.readLine(); //IP as a String
         }
         catch (MalformedURLException mue)
@@ -282,12 +282,12 @@ public class Kademlia implements KademliaInterf {
             return null;
         }
     }
-    
+
     public BigInteger getNodeID()
     {
         return nodeID;
     }
-    
+
     public boolean ping(KadNode node)
     {
         PingRequest pr = new PingRequest(thisNode, node);
@@ -295,15 +295,15 @@ public class Kademlia implements KademliaInterf {
         {
             Socket s = new Socket(node.getIp(), node.getUDPPort());
             s.setSoTimeout(pingTimeout);
-            
+
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
             outputStream.writeObject(pr);
             outputStream.flush();
-            
+
             InputStream is = s.getInputStream();
             ObjectInputStream inputStream = new ObjectInputStream(is);
-            
+
             long timeInit = System.currentTimeMillis();
             while (true)
             {
@@ -346,12 +346,12 @@ public class Kademlia implements KademliaInterf {
             return false;
         }
     }
-    
+
     public Object findValue(BigInteger fileID)
     {
         return null;
     }
-    
+
     private List<KadNode> findNode_lookup(BigInteger targetID)
     {
         Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
@@ -440,7 +440,7 @@ public class Kademlia implements KademliaInterf {
         }
         return lkn;
     }
-    
+
     public List<KadNode> findNode(BigInteger targetID)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
@@ -477,7 +477,7 @@ public class Kademlia implements KademliaInterf {
             synchronized (bucket)
             {
                 it = bucket.iterator();
-                
+
                 while (it.hasNext())
                 {
                     list.add(it.next());
@@ -508,7 +508,7 @@ public class Kademlia implements KademliaInterf {
             {
                 alphaNode.add(kn);
             }
-            
+
         }
         else
         {
@@ -528,15 +528,15 @@ public class Kademlia implements KademliaInterf {
                 {
                     Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
                     s.setSoTimeout(pingTimeout);
-                    
+
                     OutputStream os = s.getOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
                     outputStream.writeObject(fnr);
                     outputStream.flush();
-                    
+
                     InputStream is = s.getInputStream();
                     ObjectInputStream inputStream = new ObjectInputStream(is);
-                    
+
                     long timeInit = System.currentTimeMillis();
                     boolean state = true;
                     while (state)
@@ -583,7 +583,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (EOFException e)
                 {
-                   // e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 catch (IOException ex)
                 {
@@ -633,17 +633,17 @@ public class Kademlia implements KademliaInterf {
             }
         }
     }
-    
+
     public KadFileList getFileList()
     {
         return fileList;
     }
-    
+
     public KadNode getMyNode()
     {
         return thisNode;
     }
-    
+
     public void store(String filepath) throws FileNotFoundException, InvalidParameterException //gestire eccezioni
     {
         //Funzione temporanea, non completa
@@ -668,12 +668,12 @@ public class Kademlia implements KademliaInterf {
             exists = false;
         }
         while (exists);
-        
+
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileList.add(tempfile);
-        
+
         StoreRequest sr = null;
-        
+
         List<KadNode> closestK = new ArrayList<>();
 
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
@@ -683,7 +683,7 @@ public class Kademlia implements KademliaInterf {
             try
             {
                 Socket s = new Socket(i.getIp(), i.getUDPPort());
-                
+
                 OutputStream os = s.getOutputStream();
                 ObjectOutputStream outputStream = new ObjectOutputStream(os);
                 outputStream.writeObject(sr);
@@ -695,7 +695,7 @@ public class Kademlia implements KademliaInterf {
             }
         }
     }
-    
+
     public void delete(BigInteger id) throws FileNotKnown
     {
         //Funzione temporanea, non completa
@@ -704,7 +704,7 @@ public class Kademlia implements KademliaInterf {
             if (i.getFileID().equals(id))
             {
                 fileList.remove(i);
-                
+
                 DeleteRequest dr = null;
                 List<KadNode> closestK = new ArrayList<>();
 
@@ -716,15 +716,15 @@ public class Kademlia implements KademliaInterf {
                     {
                         Socket s = new Socket(k.getIp(), k.getUDPPort());
                         s.setSoTimeout(pingTimeout);
-                        
+
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(dr);
                         outputStream.flush();
-                        
+
                         InputStream is = s.getInputStream();
                         ObjectInputStream inputStream = new ObjectInputStream(is);
-                        
+
                         if (inputStream.readObject() instanceof FindNodeReply)
                         {
                             //Invio il file al nodo
@@ -743,11 +743,11 @@ public class Kademlia implements KademliaInterf {
         }
         throw new FileNotKnown();
     }
-    
+
     private class ListenerThread implements Runnable {
-        
+
         private ServerSocket listener;
-        
+
         @Override
         public void run()
         {
@@ -761,22 +761,22 @@ public class Kademlia implements KademliaInterf {
                 ex.printStackTrace();
                 ////////// DA GESTIRE
             }
-            
+
             Socket connection;
             while (true)
             {
-                
+
                 try
                 {
                     System.out.println("Waiting for connection");
-                    
+
                     connection = listener.accept();
                     System.out.println("Connection received from " + connection.getInetAddress().getHostAddress());
 
                     //Analizzo la richiesta ricevuta
                     InputStream is = connection.getInputStream();
                     ObjectInputStream inStream = new ObjectInputStream(is);
-                    
+
                     Object received = inStream.readObject();
 
                     //Elaboro la risposta
@@ -787,18 +787,18 @@ public class Kademlia implements KademliaInterf {
                         {
                             routingTree.add(fnr.getSourceKadNode());
                         }).start();
-                        
+
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
-                        
+
                         FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
-                        
+
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(fnrep);
                         outputStream.flush();
-                        
+
                         os.close();
-                        
+
                     }
                     else if (received instanceof FindValueRequest)
                     {
@@ -816,7 +816,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     else if (received instanceof DeleteRequest)
                     {
-                        
+
                     }
                     else if (received instanceof PingRequest)
                     {
@@ -827,24 +827,24 @@ public class Kademlia implements KademliaInterf {
                             continue;
                         }
                         KadNode sourceKadNode = pr.getSourceKadNode();
-                        
+
                         new Thread(() ->
                         {
                             routingTree.add(sourceKadNode);
                         }).start();
-                        
+
                         System.out.println("Received PingRequest from: " + pr.getSourceKadNode().toString());
-                        
+
                         PingReply reply = new PingReply(thisNode, sourceKadNode);
-                        
+
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(reply);
                         outputStream.flush();
-                        
+
                         os.close();
                     }
-                    
+
                     connection.close();
                 }
                 catch (IOException ex)
@@ -860,9 +860,9 @@ public class Kademlia implements KademliaInterf {
             }
         }
     }
-    
+
     private class FileRefresh implements Runnable {
-        
+
         public void run()
         {
             while (true)
@@ -885,7 +885,7 @@ public class Kademlia implements KademliaInterf {
                             }
                         }
                     }
-                    
+
                 }
                 catch (InterruptedException ie)
                 {
@@ -898,12 +898,12 @@ public class Kademlia implements KademliaInterf {
             }
         }
     }
-    
+
     public static BigInteger distanza(KadNode o1, KadNode o2)
     {
         return o1.getNodeID().xor(o2.getNodeID());
     }
-    
+
     public static String intToBinary(BigInteger n)
     {
         String num = "";

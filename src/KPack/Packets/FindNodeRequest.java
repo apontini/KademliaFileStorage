@@ -5,30 +5,31 @@ import KPack.KadNode;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-public class FindNodeRequest implements Serializable
-{
+public class FindNodeRequest implements Serializable {
+
     private KadNode sourceKN;
     private KadNode destKN;
     private BigInteger targetID;
 
-    public FindNodeRequest (BigInteger targetID,KadNode sourceKN,KadNode destKN)
+    public FindNodeRequest(BigInteger targetID, KadNode sourceKN, KadNode destKN)
     {
-        this.targetID=targetID;
-        this.sourceKN=sourceKN;
-        this.destKN=destKN;
+        this.targetID = targetID;
+        this.sourceKN = sourceKN;
+        this.destKN = destKN;
     }
 
-    public KadNode getSourceKadNode() {
+    public KadNode getSourceKadNode()
+    {
         return sourceKN;
     }
 
-    public KadNode getDestKadNode() {
+    public KadNode getDestKadNode()
+    {
         return destKN;
     }
 
-    public BigInteger getTargetID() {
+    public BigInteger getTargetID()
+    {
         return targetID;
     }
 }
-
-

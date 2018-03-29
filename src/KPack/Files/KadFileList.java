@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class KadFileList implements Iterable<KadFile>
-{
+public class KadFileList implements Iterable<KadFile> {
+
     private List<KadFile> fileList;
     private Kademlia thisNode;
 
@@ -21,14 +21,16 @@ public class KadFileList implements Iterable<KadFile>
     synchronized public void add(KadFile file)
     {
         fileList.add(file);
-        if(!file.isRedundant())
+        if (!file.isRedundant())
+        {
             serializeList();
+        }
     }
 
     synchronized public void remove(KadFile file)
     {
         fileList.remove(file); //override di equals() per eliminare il nodo solo usando l'ID?
-        if(file.isRedundant())
+        if (file.isRedundant())
         {
             new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
             return;
@@ -38,7 +40,7 @@ public class KadFileList implements Iterable<KadFile>
 
     synchronized public void clearAll()
     {
-        for(KadFile i : fileList)
+        for (KadFile i : fileList)
         {
             this.remove(i);
         }
@@ -46,10 +48,12 @@ public class KadFileList implements Iterable<KadFile>
 
     synchronized public void clearRedundants()
     {
-        for(KadFile i : fileList)
+        for (KadFile i : fileList)
         {
-            if(i.isRedundant())
+            if (i.isRedundant())
+            {
                 this.remove(i);
+            }
         }
     }
 
@@ -80,9 +84,15 @@ public class KadFileList implements Iterable<KadFile>
         try
         {
             File temp = new File(thisNode.FILESPATH);
-            if(!(temp.exists())) temp.mkdir();
+            if (!(temp.exists()))
+            {
+                temp.mkdir();
+            }
             File localFiles = new File(thisNode.FILESPATH + "index");
-            if(!(localFiles.exists())) localFiles.createNewFile();
+            if (!(localFiles.exists()))
+            {
+                localFiles.createNewFile();
+            }
 
             fout = new FileOutputStream(thisNode.FILESPATH + "index");
             oos = new ObjectOutputStream(fout);
@@ -96,10 +106,16 @@ public class KadFileList implements Iterable<KadFile>
         {
             try
             {
-                if (fout!=null) fout.close();
-                if (oos!=null) oos.close();
+                if (fout != null)
+                {
+                    fout.close();
+                }
+                if (oos != null)
+                {
+                    oos.close();
+                }
             }
-            catch(IOException ioe)
+            catch (IOException ioe)
             {
                 ioe.printStackTrace();
             }
@@ -112,11 +128,14 @@ public class KadFileList implements Iterable<KadFile>
         ArrayList<KadFile> ret = new ArrayList<>();
 
         File temp = new File(thisNode.FILESPATH);
-        if(!(temp.exists())) temp.mkdir();
+        if (!(temp.exists()))
+        {
+            temp.mkdir();
+        }
 
         File localFiles = new File(thisNode.FILESPATH + "index");
 
-        if(localFiles.exists())
+        if (localFiles.exists())
         {
             FileInputStream fis = null;
             try
@@ -124,24 +143,35 @@ public class KadFileList implements Iterable<KadFile>
                 fis = new FileInputStream(thisNode.FILESPATH + "index");
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 ret = new ArrayList<>();
-                while(true)
+                while (true)
                 {
-                    ret = ((ArrayList<KadFile>)ois.readObject());
+                    ret = ((ArrayList<KadFile>) ois.readObject());
                 }
             }
             catch (EOFException | FileNotFoundException | ClassNotFoundException e)
             {
                 //Aspettate o impossibili
             }
-            catch(IOException ioe)
+            catch (IOException ioe)
             {
                 ioe.printStackTrace();
             }
             finally
             {
-                try { if (fis != null) fis.close();}
-                catch (IOException ioe) {} //Ignorata
-                finally { return ret; }
+                try
+                {
+                    if (fis != null)
+                    {
+                        fis.close();
+                    }
+                }
+                catch (IOException ioe)
+                {
+                } //Ignorata
+                finally
+                {
+                    return ret;
+                }
             }
         }
 

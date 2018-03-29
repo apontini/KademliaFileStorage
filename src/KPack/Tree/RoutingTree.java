@@ -28,11 +28,13 @@ public class RoutingTree {
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
 
-        try{
+        try
+        {
             new TreeUI(this);
         }
-        catch(HeadlessException he) //per dispositivi senza schermo
-        {}
+        catch (HeadlessException he) //per dispositivi senza schermo
+        {
+        }
     }
 
     public synchronized void add(KadNode nodo)

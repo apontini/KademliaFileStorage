@@ -6,8 +6,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
-public class KadNode implements Serializable
-{
+public class KadNode implements Serializable {
+
     private InetAddress ip;
     private short UDPport;
     private BigInteger nodeID;
@@ -27,22 +27,32 @@ public class KadNode implements Serializable
         nodeID = ID;
     }
 
-    public InetAddress getIp() {
+    public InetAddress getIp()
+    {
         return ip;
     }
 
-    public short getUDPPort() {
+    public short getUDPPort()
+    {
         return UDPport;
     }
 
-    public BigInteger getNodeID() {
+    public BigInteger getNodeID()
+    {
         return nodeID;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+    public boolean equals(Object o)
+    {
+        if (this == o)
+        {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
         KadNode kadNode = (KadNode) o;
         return Objects.equals(nodeID, kadNode.nodeID); //dubbio
     }
@@ -50,10 +60,10 @@ public class KadNode implements Serializable
     @Override
     public String toString()
     {
-        return "KadNode{" +
-                "ip=" + ip +
-                ", UDPport=" + UDPport +
-                ", nodeID=" + nodeID +
-                '}';
+        return "KadNode{"
+                + "ip=" + ip
+                + ", UDPport=" + UDPport
+                + ", nodeID=" + nodeID
+                + '}';
     }
 }

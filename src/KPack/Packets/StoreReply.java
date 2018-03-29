@@ -4,26 +4,31 @@ import KPack.KadNode;
 import java.io.Serializable;
 import java.math.BigInteger;
 
-public class StoreReply implements Serializable
-{
+public class StoreReply implements Serializable {
+
     private final KadNode source;
     private final KadNode dest;
     private BigInteger idFileStore;
 
     public StoreReply(BigInteger idFileStore, KadNode source, KadNode dest)
     {
-        this.idFileStore=idFileStore;
+        this.idFileStore = idFileStore;
         this.source = source;
         this.dest = dest;
     }
 
-    public BigInteger getIdFileStore() {
+    public BigInteger getIdFileStore()
+    {
         return idFileStore;
     }
 
-    public KadNode getSourceKadNode() {
+    public KadNode getSourceKadNode()
+    {
         return source;
     }
 
-    public KadNode getDestKadNode() { return dest;}
+    public KadNode getDestKadNode()
+    {
+        return dest;
+    }
 }

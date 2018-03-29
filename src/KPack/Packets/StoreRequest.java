@@ -9,8 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class StoreRequest implements Serializable
-{
+public class StoreRequest implements Serializable {
+
     private BigInteger fileID;
     private String fileName;
     private KadNode source;
@@ -24,31 +24,39 @@ public class StoreRequest implements Serializable
         this.source = source;
         this.dest = dest;
 
-        Path path= Paths.get(kf.getPath());
-        try {
-            content= Files.readAllBytes(path);
+        Path path = Paths.get(kf.getPath());
+        try
+        {
+            content = Files.readAllBytes(path);
         }
-        catch (IOException e) {
+        catch (IOException e)
+        {
             e.printStackTrace();
         }
     }
 
-    public KadNode getSourceKadNode(){
+    public KadNode getSourceKadNode()
+    {
         return source;
     }
 
-    public KadNode getDestKadNode() { return dest;}
+    public KadNode getDestKadNode()
+    {
+        return dest;
+    }
 
-    public BigInteger getFileID() {
+    public BigInteger getFileID()
+    {
         return fileID;
     }
 
-    public String getFileName() {
+    public String getFileName()
+    {
         return fileName;
     }
 
-    public byte[] getContent(){
+    public byte[] getContent()
+    {
         return content;
     }
 }
-
