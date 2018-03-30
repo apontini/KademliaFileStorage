@@ -205,7 +205,7 @@ public class Kademlia implements KademliaInterf {
         ObjectOutputStream oos = null;
         try
         {
-            fout = new FileOutputStream(Kademlia.FILESPATH + "nodes");
+            fout = new FileOutputStream( "./nodes");
             oos = new ObjectOutputStream(fout);
             oos.writeObject(fixNodes);
         }
@@ -240,7 +240,7 @@ public class Kademlia implements KademliaInterf {
         FileInputStream fis = null;
         try
         {
-            fis = new FileInputStream(Kademlia.FILESPATH + "nodes");
+            fis = new FileInputStream("./nodes");
             ObjectInputStream ois = new ObjectInputStream(fis);
             //retFixNodes = new ArrayList<>();      ??
             while (true)
