@@ -850,12 +850,12 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof StoreRequest)
                     {
                         StoreRequest rq = (StoreRequest) received;
-                        //i file ridondanti vengono salvati con estensione .kad
+                        //i file ridondanti vengono salvati con estensione .FILEID.kad
                         System.out.println("Ho ricevuto uno store di " +rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                        File toStore = new File(FILESPATH+rq.getFileName()+".kad");
+                        File toStore = new File(FILESPATH+rq.getFileName()+"." + rq.getFileID() +".kad");
                         toStore.createNewFile();
                         Files.write(toStore.toPath(), rq.getContent());
-                        fileList.add(new KadFile(rq.getFileID(),true,rq.getFileName()+".kad", FILESPATH));
+                        fileList.add(new KadFile(rq.getFileID(),true,rq.getFileName()+"." + rq.getFileID() +".kad", FILESPATH));
                     }
                     else if (received instanceof DeleteRequest)
                     {
