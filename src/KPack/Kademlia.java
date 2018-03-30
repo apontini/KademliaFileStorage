@@ -738,10 +738,12 @@ public class Kademlia implements KademliaInterf {
         {
             if (i.getFileID().equals(id))
             {
-                fileList.remove(i);
+
 
                 DeleteRequest dr = null;
-                List<KadNode> closestK = new ArrayList<>();
+                List<KadNode> closestK = findNode_lookup(i.getFileID());
+
+                fileList.remove(i);
 
                 // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
                 for (KadNode k : closestK)

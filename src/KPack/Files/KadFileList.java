@@ -1,5 +1,6 @@
 package KPack.Files;
 
+import KPack.KadNode;
 import KPack.Kademlia;
 
 import java.io.*;
@@ -30,37 +31,43 @@ public class KadFileList implements Iterable<KadFile> {
 
     synchronized public void remove(KadFile file)
     {
-        for(KadFile i : fileList)
-            if(i.getFileID().equals(file.getFileID()))
-            {
-                fileList.remove(i);
-                if (file.isRedundant())
-                {
-                    new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
-                    return;
-                }
-                serializeList();
-                return;
-            }
+        KadFile temp = null;
 
+        for(KadFile i : fileList)
+        {
+            if (i.getFileID().equals(file.getFileID()))
+            {
+                temp = i;
+            }
+        }
+
+        fileList.remove(temp);
+
+        if (file.isRedundant())
+        {
+            new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
+        }
+        serializeList();
     }
 
     synchronized public void remove(BigInteger ID)
     {
+
+        KadFile temp = null;
         for(KadFile i : fileList)
-            if(i.getFileID().equals(ID))
+        {
+            if (i.getFileID().equals(ID))
             {
-                fileList.remove(i); //override di equals() per eliminare il nodo solo usando l'ID?
-                if (i.isRedundant())
-                {
-                    new File(i.getPath() + File.pathSeparator + i.getFileName()).delete();
-                    return;
-                }
-                serializeList();
-                return;
+                temp = i;
             }
-
-
+        }
+        if(temp == null) return;
+        fileList.remove(temp);
+        if (temp.isRedundant())
+        {
+            new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
+        }
+        serializeList();
     }
 
     synchronized public void clearAll()
