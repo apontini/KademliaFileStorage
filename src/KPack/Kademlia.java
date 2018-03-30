@@ -742,7 +742,7 @@ public class Kademlia implements KademliaInterf {
             if (i.getFileID().equals(id) && !(i.isRedundant()))
             {
 
-
+                temp = i;
                 DeleteRequest dr = null;
                 List<KadNode> closestK = findNode_lookup(i.getFileID());
                 for (KadNode k : closestK)
