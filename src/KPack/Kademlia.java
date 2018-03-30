@@ -34,7 +34,7 @@ public class Kademlia implements KademliaInterf {
     private ArrayList<KadNode> fixedNodesList = new ArrayList<>();
 
     //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
-    private final int pingTimeout = 15000;
+    private final int pingTimeout = 10000;
 
     public Kademlia()
     {
@@ -205,7 +205,7 @@ public class Kademlia implements KademliaInterf {
         ObjectOutputStream oos = null;
         try
         {
-            fout = new FileOutputStream( "./nodes");
+            fout = new FileOutputStream( "." + File.pathSeparator + "nodes");
             oos = new ObjectOutputStream(fout);
             oos.writeObject(fixNodes);
         }
@@ -240,7 +240,7 @@ public class Kademlia implements KademliaInterf {
         FileInputStream fis = null;
         try
         {
-            fis = new FileInputStream("./nodes");
+            fis = new FileInputStream("." + File.pathSeparator + "nodes");
             ObjectInputStream ois = new ObjectInputStream(fis);
             //retFixNodes = new ArrayList<>();      ??
             while (true)
