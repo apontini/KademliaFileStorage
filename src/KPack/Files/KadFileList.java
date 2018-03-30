@@ -3,6 +3,7 @@ package KPack.Files;
 import KPack.Kademlia;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,12 +30,33 @@ public class KadFileList implements Iterable<KadFile> {
 
     synchronized public void remove(KadFile file)
     {
-        fileList.remove(file); //override di equals() per eliminare il nodo solo usando l'ID?
-        if (file.isRedundant())
-        {
-            new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
-            return;
-        }
+        for(KadFile i : fileList)
+            if(i.getFileID().equals(file.getFileID()))
+            {
+                fileList.remove(i);
+                if (file.isRedundant())
+                {
+                    new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
+                    return;
+                }
+            }
+
+        serializeList();
+    }
+
+    synchronized public void remove(BigInteger ID)
+    {
+        for(KadFile i : fileList)
+            if(i.getFileID().equals(ID))
+            {
+                fileList.remove(i); //override di equals() per eliminare il nodo solo usando l'ID?
+                if (i.isRedundant())
+                {
+                    new File(i.getPath() + File.pathSeparator + i.getFileName()).delete();
+                    return;
+                }
+            }
+
         serializeList();
     }
 

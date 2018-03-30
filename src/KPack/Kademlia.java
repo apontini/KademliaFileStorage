@@ -12,6 +12,8 @@ import KPack.Exceptions.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
 import java.util.logging.Level;
@@ -23,7 +25,7 @@ public class Kademlia implements KademliaInterf {
     public final static int BITID = 8;
     public final static int K = 4;
     public final static int ALPHA = 2;
-    public final static String FILESPATH = "./storedFiles/";
+    public final static String FILESPATH = "." + File.pathSeparator + "storedFiles" + File.pathSeparator;
     public KadFileList fileList;
     private BigInteger nodeID;
     private RoutingTree routingTree;
@@ -105,12 +107,11 @@ public class Kademlia implements KademliaInterf {
         routingTree.add(thisNode); //Mi aggiungo
 
         new Thread(new ListenerThread()).start();
+
+        networkJoin();
+
         new Thread(new FileRefresh()).start();
 
-        if (!fixedNode())
-        {
-            networkJoin();
-        }
         //aggiungo nodi random, solo per testare il find node
         /*for (int i = 1; i < 6; i++)
         {
@@ -138,7 +139,7 @@ public class Kademlia implements KademliaInterf {
                 nodeID = new BigInteger("0");
                 return true;
             }
-            else if (hostname.toLowerCase().equals("Raspberry punto"))
+            else if (hostname.toLowerCase().equals("pintini"))
             {
                 nodeID = new BigInteger("1");
                 return true;
@@ -847,11 +848,15 @@ public class Kademlia implements KademliaInterf {
                     {
                         StoreRequest rq = (StoreRequest) received;
                         //i file ridondanti vengono salvati con estensione .kad
-
+                        File toStore = new File(FILESPATH+rq.getFileName()+".kad");
+                        toStore.createNewFile();
+                        Files.write(toStore.toPath(), rq.getContent());
+                        fileList.add(new KadFile(rq.getFileID(),true,rq.getFileName()+".kad", FILESPATH));
                     }
                     else if (received instanceof DeleteRequest)
                     {
-
+                        DeleteRequest dr = (DeleteRequest) received;
+                        fileList.remove(new KadFile(dr.getFileID(),true,dr.getFileName(),""));
                     }
                     else if (received instanceof PingRequest)
                     {
