@@ -39,9 +39,10 @@ public class KadFileList implements Iterable<KadFile> {
                     new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
                     return;
                 }
+                serializeList();
+                return;
             }
 
-        serializeList();
     }
 
     synchronized public void remove(BigInteger ID)
@@ -55,9 +56,11 @@ public class KadFileList implements Iterable<KadFile> {
                     new File(i.getPath() + File.pathSeparator + i.getFileName()).delete();
                     return;
                 }
+                serializeList();
+                return;
             }
 
-        serializeList();
+
     }
 
     synchronized public void clearAll()
