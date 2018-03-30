@@ -452,7 +452,7 @@ public class Kademlia implements KademliaInterf {
                 {
                     //seguo il percorso del targetID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
                     //tra quelli non ancora visitati
-                    while (n instanceof Bucket)
+                    while (!(n instanceof Bucket))
                     {
                         count++;
                         if (targetID.testBit((BITID - count) - 1))
