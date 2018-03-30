@@ -680,9 +680,8 @@ public class Kademlia implements KademliaInterf {
         return thisNode;
     }
 
-    public void store(String filepath) throws FileNotFoundException, InvalidParameterException //gestire eccezioni
+    public void store(String filepath) throws FileNotFoundException, InvalidParameterException
     {
-        //Funzione temporanea, non completa
         File temp = new File(filepath);
         if (!temp.exists())
         {
@@ -710,7 +709,7 @@ public class Kademlia implements KademliaInterf {
 
         StoreRequest sr = null;
 
-        List<KadNode> closestK = new ArrayList<>();
+        List<KadNode> closestK = findNode_lookup(fileID);
 
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
         for (KadNode i : closestK)
@@ -848,6 +847,7 @@ public class Kademlia implements KademliaInterf {
                     {
                         StoreRequest rq = (StoreRequest) received;
                         //i file ridondanti vengono salvati con estensione .kad
+                        System.out.println("Ho ricevuto uno store di " +rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
                         File toStore = new File(FILESPATH+rq.getFileName()+".kad");
                         toStore.createNewFile();
                         Files.write(toStore.toPath(), rq.getContent());
@@ -856,6 +856,7 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof DeleteRequest)
                     {
                         DeleteRequest dr = (DeleteRequest) received;
+                        System.out.println("Ho ricevuto un delete di " +dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
                         fileList.remove(new KadFile(dr.getFileID(),true,dr.getFileName(),""));
                     }
                     else if (received instanceof PingRequest)
