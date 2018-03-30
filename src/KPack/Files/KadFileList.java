@@ -166,7 +166,7 @@ public class KadFileList implements Iterable<KadFile> {
         }
 
         File localFiles = new File(thisNode.FILESPATH + "index");
-
+        System.out.println(localFiles.getPath());
         if (localFiles.exists())
         {
             FileInputStream fis = null;

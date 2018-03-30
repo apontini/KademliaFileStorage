@@ -25,7 +25,7 @@ public class Kademlia implements KademliaInterf {
     public final static int BITID = 8;
     public final static int K = 4;
     public final static int ALPHA = 2;
-    public final static String FILESPATH = "." + File.pathSeparator + "storedFiles" + File.pathSeparator;
+    public final static String FILESPATH = "." + File.separator + "storedFiles" + File.separator;
     public KadFileList fileList;
     private BigInteger nodeID;
     private RoutingTree routingTree;
@@ -207,7 +207,7 @@ public class Kademlia implements KademliaInterf {
         ObjectOutputStream oos = null;
         try
         {
-            fout = new FileOutputStream( "." + File.pathSeparator + "nodes");
+            fout = new FileOutputStream( "." + File.separator + "nodes");
             oos = new ObjectOutputStream(fout);
             oos.writeObject(fixNodes);
         }
@@ -242,7 +242,7 @@ public class Kademlia implements KademliaInterf {
         FileInputStream fis = null;
         try
         {
-            fis = new FileInputStream("." + File.pathSeparator + "nodes");
+            fis = new FileInputStream("." + File.separator + "nodes");
             ObjectInputStream ois = new ObjectInputStream(fis);
             //retFixNodes = new ArrayList<>();      ??
             while (true)
