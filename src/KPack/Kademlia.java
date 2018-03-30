@@ -29,6 +29,7 @@ public class Kademlia implements KademliaInterf {
     private RoutingTree routingTree;
     private KadNode thisNode;
     public short UDPPort = 1337;
+    private ArrayList<KadNode> fixedNodesList = new ArrayList<>();
 
     //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
     private final int pingTimeout = 15000;
@@ -73,13 +74,15 @@ public class Kademlia implements KademliaInterf {
 
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
-        //loadFixedNodesFromFile();
-        /*
-        fixedNodes.put(BigInteger.ONE, "79.6.223.119");   //aggiungo ID,IP alla mappa
-        fixedNodes.put(BigInteger.valueOf(2),"x.x.x.x");   //aggiungo ID,IP alla mappa
-        fixedNodes.put(BigInteger.valueOf(3),"x.x.x.x");   //aggiungo ID,IP alla mappa
-        fixedNodes.put(BigInteger.valueOf(4),"x.x.x.x");   //aggiungo ID,IP alla mappa
-         */
+        boolean first = true;
+        if(first)
+        {
+            writeFixedList();
+            first = false;
+        }
+
+        fixedNodesList = loadFixedNodesFromFile();
+
         boolean exists = true;
         do
         {
@@ -89,17 +92,15 @@ public class Kademlia implements KademliaInterf {
             }
 
             nodeID = new BigInteger(BITID, new Random());
-            /*if (!fixedNodes.containsKey(nodeID))     //controlla che non sia ID fisso
-            {*/
             exists = false;
-            /*}
-             */
+
             //Controllare se esiste
             //TODO
         }
         while (exists);
 
         thisNode = new KadNode(myIP, UDPPort, nodeID);
+
         routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
@@ -231,12 +232,46 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    private ArrayList<KadNode> loadFixedNodesFromFile()
+    private ArrayList<KadNode> loadFixedNodesFromFile() //va a leggere il file serializzato e restituisce la lista di KadNodes fissi.
     {
-        ArrayList<KadNode> ret = new ArrayList<>();
-        //TODO
-        //va a leggere il file serializzato e restituisce la lista di KadNodes fissi.
-        return ret;
+        ArrayList<KadNode> retFixNodes = new ArrayList<>();
+
+        FileInputStream fis = null;
+        try
+        {
+            fis = new FileInputStream(Kademlia.FILESPATH + "nodes");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            //retFixNodes = new ArrayList<>();      ??
+            while (true)
+            {
+                retFixNodes = ((ArrayList<KadNode>) ois.readObject());
+            }
+        }
+        catch (EOFException | FileNotFoundException | ClassNotFoundException e)
+        {
+            //Aspettate o impossibili
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
+        finally
+        {
+            try
+            {
+                if (fis != null)
+                {
+                    fis.close();
+                }
+            }
+            catch (IOException ioe)
+            {
+            } //Ignorata
+            finally
+            {
+                return retFixNodes;
+            }
+        }
     }
 
     /*  public InetAddress getIP()   //per il momento restituisce l'ip locale.
