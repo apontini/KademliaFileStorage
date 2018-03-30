@@ -158,8 +158,10 @@ public class Kademlia implements KademliaInterf {
         //Aggiungo all'alberto i nodi noti
         try
         {
-            KadNode Tavolino = new KadNode(InetAddress.getByName("tavolino.ddns.net").getHostAddress(), (short) 1336, BigInteger.valueOf(2));
-            routingTree.add(Tavolino);
+            KadNode tavolino = new KadNode(InetAddress.getByName("tavolino.ddns.net").getHostAddress(), (short) 1336, BigInteger.valueOf(2));
+            routingTree.add(tavolino);
+            KadNode pintini = new KadNode(InetAddress.getByName("pintini.ddns.net").getHostAddress(), (short) 1337, BigInteger.valueOf(2));
+            routingTree.add(pintini);
         }
         catch (UnknownHostException ex)
         {
