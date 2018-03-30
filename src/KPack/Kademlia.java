@@ -406,7 +406,7 @@ public class Kademlia implements KademliaInterf {
             }
         }
         TreeNode node = (TreeNode) bucket.getParent();
-        int count = depth;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
+        int count = depth-1;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
         while (count > 0 && lkn.size() < K)                      //ricerco altri nodi vicini al targetID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
         {
             //sono ad un certo TreeNode node dell'albero, se seguo il targetID, partendo da node, e vado nello stesso ramo che raggiungo seguendo il currentID (partendo da node),
