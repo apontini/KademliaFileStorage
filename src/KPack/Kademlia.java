@@ -393,6 +393,7 @@ public class Kademlia implements KademliaInterf {
     private List<KadNode> findNode_lookup(BigInteger targetID)
     {
         Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
+        KadNode targetKN = new KadNode("", (short) 0, targetID);
         BigInteger currentID = targetID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
         int depth = ((Node) bucket).getDepth();
         List<KadNode> lkn = new ArrayList<>();
@@ -475,6 +476,12 @@ public class Kademlia implements KademliaInterf {
                     }
                 }
             }
+        }
+        if(lkn.size()>K)
+        {
+            lkn.sort((o1, o2)
+                    -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN)));
+            lkn.removeAll(lkn.subList(K,lkn.size()));
         }
         return lkn;
     }
