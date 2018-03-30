@@ -735,19 +735,16 @@ public class Kademlia implements KademliaInterf {
 
     public void delete(BigInteger id) throws FileNotKnown
     {
-        //Funzione temporanea, non completa
+
+        KadFile temp = null;
         for (KadFile i : fileList)
         {
-            if (i.getFileID().equals(id))
+            if (i.getFileID().equals(id) && !(i.isRedundant()))
             {
 
 
                 DeleteRequest dr = null;
                 List<KadNode> closestK = findNode_lookup(i.getFileID());
-
-                fileList.remove(i);
-
-                // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
                 for (KadNode k : closestK)
                 {
                     dr = new DeleteRequest(i.getFileID(), thisNode, k);
@@ -760,27 +757,18 @@ public class Kademlia implements KademliaInterf {
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(dr);
                         outputStream.flush();
-
-                        InputStream is = s.getInputStream();
-                        ObjectInputStream inputStream = new ObjectInputStream(is);
-
-                        if (inputStream.readObject() instanceof FindNodeReply)
-                        {
-                            //Invio il file al nodo
-                        }
                     }
                     catch (IOException ioe)
                     {
                         ioe.printStackTrace(); //Gestire
                     }
-                    catch (ClassNotFoundException cnfe)
-                    {
-                        System.out.println("Risposta sconosciuta");
-                    }
                 }
+                break;
             }
         }
-        throw new FileNotKnown();
+
+        if(temp == null) throw new FileNotKnown();
+        else fileList.remove(temp);
     }
 
     private class ListenerThread implements Runnable {

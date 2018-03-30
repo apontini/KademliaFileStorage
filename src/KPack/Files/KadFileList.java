@@ -38,8 +38,10 @@ public class KadFileList implements Iterable<KadFile> {
             if (i.getFileID().equals(file.getFileID()))
             {
                 temp = i;
+                break;
             }
         }
+        if(temp == null) return;
 
         fileList.remove(temp);
 
@@ -59,6 +61,7 @@ public class KadFileList implements Iterable<KadFile> {
             if (i.getFileID().equals(ID))
             {
                 temp = i;
+                break;
             }
         }
         if(temp == null) return;
