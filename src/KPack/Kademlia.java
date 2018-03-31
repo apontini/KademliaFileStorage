@@ -60,9 +60,10 @@ public class Kademlia implements KademliaInterf {
             }
         });
 
+        System.out.println("WorkingDir: " + System.getProperty("user.dir"));
+
         loadSettings();
 
-        System.out.println("WorkingDir: " + System.getProperty("user.dir"));
         //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash della JVM
         File temp = new File(FILESPATH);
         if (temp.listFiles() != null)
@@ -157,7 +158,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             break;
                         default:
-                            throw new InvalidSettingsException("Parametro non valido: " + split[1]);
+                            throw new InvalidSettingsException("Parametro non valido: " + split[0]);
                     }
                 }
             }
