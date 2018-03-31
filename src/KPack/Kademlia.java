@@ -164,6 +164,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch(InvalidSettingsException ise)
         {
+            System.out.println(ise.getMessage());
             System.out.println("ABORT! ABORT!");
             System.exit(1);
         }
