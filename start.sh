@@ -2,4 +2,4 @@
 
 cd ./src/
 javac Main.java
-java -Duser.dir=../ Main.java
+java Main -Duser.dir=../
