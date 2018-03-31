@@ -12,7 +12,6 @@ import KPack.Exceptions.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -34,7 +33,7 @@ public class Kademlia implements KademliaInterf {
     private ArrayList<KadNode> fixedNodesList = new ArrayList<>();
 
     //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
-    private final int pingTimeout = 10000;
+    private final int timeout = 10000;
 
     public Kademlia()
     {
@@ -160,7 +159,7 @@ public class Kademlia implements KademliaInterf {
         {
             KadNode tavolino = new KadNode(InetAddress.getByName("tavolino.ddns.net").getHostAddress(), (short) 1336, BigInteger.valueOf(2));
             routingTree.add(tavolino);
-            KadNode pintini = new KadNode(InetAddress.getByName("pintini.ddns.net").getHostAddress(), (short) 1337, BigInteger.valueOf(1));
+            KadNode pintini = new KadNode(InetAddress.getByName("pintini.ddns.net").getHostAddress(), (short) 1336, BigInteger.valueOf(1));
             routingTree.add(pintini);
         }
         catch (UnknownHostException ex)
@@ -332,7 +331,7 @@ public class Kademlia implements KademliaInterf {
         try
         {
             Socket s = new Socket(node.getIp(), node.getUDPPort());
-            s.setSoTimeout(pingTimeout);
+            s.setSoTimeout(timeout);
 
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -357,7 +356,7 @@ public class Kademlia implements KademliaInterf {
                             return true;
                         }
                     }
-                    s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
+                    s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                 }
                 catch (ClassNotFoundException e)
                 {
@@ -572,7 +571,7 @@ public class Kademlia implements KademliaInterf {
                 try
                 {
                     Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
-                    s.setSoTimeout(pingTimeout);
+                    s.setSoTimeout(timeout);
 
                     OutputStream os = s.getOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -609,7 +608,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             if (state)
                             {
-                                s.setSoTimeout(((int) (pingTimeout - (System.currentTimeMillis() - timeInit))));
+                                s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                             }
                         }
                         catch (ClassNotFoundException e)
@@ -758,7 +757,7 @@ public class Kademlia implements KademliaInterf {
                     try
                     {
                         Socket s = new Socket(k.getIp(), k.getUDPPort());
-                        s.setSoTimeout(pingTimeout);
+                        s.setSoTimeout(timeout);
 
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -839,12 +838,17 @@ public class Kademlia implements KademliaInterf {
                         FindValueRequest fvr = (FindValueRequest) received;
                         new Thread(() ->
                         {
-                            routingTree.add(fvr.getKadNode());
+                            routingTree.add(fvr.getSourceKadNode());
                         }).start();
+                        //TODO
                     }
                     else if (received instanceof StoreRequest)
                     {
                         StoreRequest rq = (StoreRequest) received;
+                        new Thread(() ->
+                        {
+                            routingTree.add(rq.getSourceKadNode());
+                        }).start();
                         //i file ridondanti vengono salvati con estensione .FILEID.kad
                         System.out.println("Ho ricevuto uno store di " +rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
                         File toStore = new File(FILESPATH+rq.getFileName()+"." + rq.getFileID() +".kad");
@@ -855,6 +859,10 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof DeleteRequest)
                     {
                         DeleteRequest dr = (DeleteRequest) received;
+                        new Thread(() ->
+                        {
+                            routingTree.add(dr.getSourceKadNode());
+                        }).start();
                         System.out.println("Ho ricevuto un delete di " +dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
                         fileList.remove(new KadFile(dr.getFileID(),true,dr.getFileName(),""));
                     }
@@ -909,7 +917,7 @@ public class Kademlia implements KademliaInterf {
             {
                 try
                 {
-                    Thread.sleep(300000); //5 minuti
+                    Thread.sleep(10000); //5 minuti
                     for (KadFile i : fileList)
                     {
                         if (i.isRedundant())
@@ -917,23 +925,60 @@ public class Kademlia implements KademliaInterf {
                             List<KadNode> temp = findNode(i.getFileID());
                             for (KadNode n : temp)
                             {
-                                Socket tempS = new Socket();
-                                OutputStream os = tempS.getOutputStream();
-                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                outputStream.writeObject(new FindValueRequest(i.getFileID(), n, false));
-                                outputStream.flush();
+                                Socket tempS = null;
+                                try
+                                {
+                                    tempS = new Socket();
+                                    tempS.setSoTimeout(timeout);
+                                    OutputStream os = tempS.getOutputStream();
+                                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                    outputStream.writeObject(new FindValueRequest(i.getFileID(), thisNode, n, false));
+                                    outputStream.flush();
+
+                                    InputStream is = tempS.getInputStream();
+                                    ObjectInputStream ois = new ObjectInputStream(is);
+                                    try
+                                    {
+                                        while (true)
+                                        {
+                                            Object resp = ois.readObject();
+                                            if(resp instanceof FindNodeReply)
+                                            {
+                                                KadFile toSend = new KadFile(i.getFileID(), true, i.getFileName(), i.getPath());
+                                                outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                            }
+                                        }
+                                    }
+                                    catch(EOFException eofe)
+                                    {
+                                        //Aspettata, ignoro
+                                    }
+                                    catch(ClassNotFoundException cnfe)
+                                    {
+                                        cnfe.printStackTrace(); //TODO
+                                    }
+                                }
+                                catch(SocketException se)
+                                {
+                                    System.out.println("Impossibile aprire il socket verso " + n.getIp().toString());
+
+                                }
+                                catch (IOException ioe)
+                                {
+                                    ioe.printStackTrace();
+                                }
+                                finally
+                                {
+                                    try{ if(tempS != null) tempS.close(); }
+                                    catch(IOException ioe) { ioe.printStackTrace(); }
+                                }
                             }
                         }
                     }
-
                 }
                 catch (InterruptedException ie)
                 {
                     System.out.println("Thread di refresh dei file interrotto");
-                }
-                catch (IOException ioe)
-                {
-                    ioe.printStackTrace();
                 }
             }
         }

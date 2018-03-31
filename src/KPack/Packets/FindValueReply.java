@@ -17,12 +17,14 @@ public class FindValueReply implements Serializable {
     private BigInteger fileID;
     private byte[] content;
     private List<KadNode> lkn;
-    private KadNode kn;
+    private KadNode source;
+    private KadNode dest;
 
-    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf, KadNode kn)
+    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf, KadNode source, KadNode dest)
     {
         this.fileID = fileID;
-        this.kn = kn;
+        this.source = source;
+        this.dest = dest;
         this.lkn = lkn;
         if (kf == null)
         {
@@ -65,8 +67,10 @@ public class FindValueReply implements Serializable {
         return lkn;
     }
 
-    public KadNode getKadNode()
+    public KadNode getSourceKadNode()
     {
-        return kn;
+        return source;
     }
+
+    public KadNode getDestKadNode() { return dest; }
 }

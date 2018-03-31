@@ -6,21 +6,25 @@ import java.math.BigInteger;
 
 public class FindValueRequest implements Serializable {
 
-    private final KadNode kn;
+    private final KadNode source;
+    private final KadNode dest;
     private BigInteger fileID;
     private boolean contentRequested;
 
-    public FindValueRequest(BigInteger fileID, KadNode kn, boolean contentRequested)
+    public FindValueRequest(BigInteger fileID, KadNode source, KadNode dest, boolean contentRequested)
     {
         this.fileID = fileID;
-        this.kn = kn;
+        this.source = source;
+        this.dest = dest;
         this.contentRequested = contentRequested;
     }
 
-    public KadNode getKadNode()
+    public KadNode getSourceKadNode()
     {
-        return kn;
+        return source;
     }
+
+    public KadNode getDestKadNode() { return dest; }
 
     public BigInteger getFileID()
     {
