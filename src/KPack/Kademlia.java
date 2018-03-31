@@ -12,6 +12,7 @@ import KPack.Exceptions.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
@@ -29,10 +30,9 @@ public class Kademlia implements KademliaInterf {
     private BigInteger nodeID;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    public short UDPPort = 1337;
+    public short UDPPort; // default 1337
     private ArrayList<KadNode> fixedNodesList = new ArrayList<>();
 
-    //public HashMap<BigInteger, String> fixedNodes = new HashMap<>();
     private final int timeout = 10000;
 
     public Kademlia()
@@ -60,7 +60,10 @@ public class Kademlia implements KademliaInterf {
             }
         });
 
-        //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash
+        loadSettings();
+
+        System.out.println("WorkingDir: " + System.getProperty("user.dir"));
+        //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash della JVM
         File temp = new File(FILESPATH);
         if (temp.listFiles() != null)
         {
@@ -116,6 +119,58 @@ public class Kademlia implements KademliaInterf {
         {
             routingTree.add(new KadNode("192.168.1.20", (short) 1337, new BigInteger("" + i * 30)));
         }*/
+    }
+
+    private void loadSettings()
+    {
+        File temp = new File("./settings.properties");
+        try
+        {
+            if (!temp.exists()) throw new InvalidSettingsException("File di configurazione settings.properties non trovato");
+            for(String i : Files.readAllLines(temp.toPath(), StandardCharsets.UTF_8))
+            {
+                String sub = i.substring(0,1);
+                if(sub.equals("#"))
+                {
+                    continue;
+                }
+                else
+                {
+                    String[] split = i.split("=");
+                    switch(split[0])
+                    {
+                        case "port":
+                            if(!split[1].isEmpty())
+                            {
+                                if(Short.valueOf(split[1])>1024 && Short.valueOf(split[1])<65535)
+                                {
+                                    UDPPort = Short.valueOf(split[1]);
+                                }
+                                else
+                                {
+                                    throw new InvalidSettingsException("Porta non valida");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidSettingsException("Porta non valida");
+                            }
+                            break;
+                        default:
+                            throw new InvalidSettingsException("Parametro non valido: " + split[1]);
+                    }
+                }
+            }
+        }
+        catch(InvalidSettingsException ise)
+        {
+            System.out.println("ABORT! ABORT!");
+            System.exit(1);
+        }
+        catch (IOException ioe)
+        {
+            ioe.printStackTrace();
+        }
     }
 
     private boolean fixedNode()
