@@ -66,4 +66,10 @@ public class KadNode implements Serializable {
                 + ", nodeID=" + nodeID
                 + '}';
     }
+
+    @Override
+    protected Object clone()
+    {
+        return new KadNode(ip.getHostAddress(), UDPport, nodeID);
+    }
 }

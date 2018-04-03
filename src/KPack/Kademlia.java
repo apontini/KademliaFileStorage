@@ -196,7 +196,7 @@ public class Kademlia implements KademliaInterf {
         //Aggiungo all'alberto i nodi noti
         for (FixedKadNode fkn : fixedNodesList)
         {
-            routingTree.add(fkn);
+            routingTree.add(fkn.getKadNode());
         }
 
         //Faccio il findNode su me stesso

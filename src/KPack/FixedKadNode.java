@@ -16,4 +16,9 @@ public class FixedKadNode extends KadNode {
     {
         return name;
     }
+    
+    public KadNode getKadNode()
+    {
+        return (KadNode)super.clone();
+    }
 }
