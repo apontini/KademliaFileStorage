@@ -141,6 +141,28 @@ public class Main {
                         System.out.println("Please define an IP address and ID or IP,Port and ID");
                     }
                     break;
+                case "findvalue":  //TODO
+                    if (split.length > 1)
+                    {
+                        Object value= myNode.findValue(new BigInteger(split[1]));
+                        if(value instanceof List)
+                        {
+                            for (int i = 0; i < ((List)value).size(); i++)
+                            {
+                                System.out.println("******* " + ((List)value).get(i));
+                            }
+                        }
+                        else
+                        {
+                            //TODO
+                        }
+
+                    }
+                    else
+                    {
+                        System.out.println("Inserisci l'ID del nodo");
+                    }
+                    break;
 
                 case "exit":
                     break;

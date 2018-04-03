@@ -19,13 +19,15 @@ public class FindValueReply implements Serializable {
     private List<KadNode> lkn;
     private KadNode source;
     private KadNode dest;
+    private boolean present;
 
-    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf, KadNode source, KadNode dest)
+    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf, KadNode source, KadNode dest,boolean present)
     {
         this.fileID = fileID;
         this.source = source;
         this.dest = dest;
         this.lkn = lkn;
+        this.present=present;
         if (kf == null)
         {
             content = null;
@@ -73,4 +75,8 @@ public class FindValueReply implements Serializable {
     }
 
     public KadNode getDestKadNode() { return dest; }
+    public boolean isPresent()
+    {
+        return present;
+    }
 }

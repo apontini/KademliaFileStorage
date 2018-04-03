@@ -441,9 +441,311 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    public Object findValue(BigInteger fileID)
+    private boolean findValue_present(BigInteger fileID,KadNode kadNode)
     {
-        return null;
+        //TODO
+        return false;
+    }
+
+    private Object findValue_lookup(BigInteger fileID)    //Object può essere o una List<KadNode> oppure di tipo KadFile
+    {
+        //verifico se il file richiesto è contenuto nel nodo
+        Iterator<KadFile> itf = fileList.iterator();
+        while(itf.hasNext())
+        {
+            KadFile kf=itf.next();
+            //verifico anche se è ridondante, se è ridondante vuol dire che qualcuno mi ha fatto uno store per quel file, quindi coerente con il protocollo.
+            if(kf.isRedundant() && kf.getFileID().equals(fileID))
+                return kf;
+        }
+        //se non lo è procedo come per il findnode_lookup
+        Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, fileID));
+        KadNode target = new KadNode("", (short) 0, fileID);
+        BigInteger currentID = fileID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
+        int depth = ((Node) bucket).getDepth();
+        List<KadNode> lkn = new ArrayList<>();
+        Iterator<KadNode> it = null;
+        synchronized (bucket)//lista dei K nodi conosciuti più vicini al target
+        {
+            it = bucket.iterator();
+            while (it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a fileID che conosco)
+            {
+                lkn.add(it.next());
+            }
+        }
+        TreeNode node = (TreeNode) bucket.getParent();
+        int count = depth-1;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
+        while (count >= 0 && lkn.size() < K)                      //ricerco altri nodi vicini al fileID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
+        {
+            if (!(fileID.testBit((BITID - count) - 1) && currentID.testBit((BITID - count) - 1)
+                    || (!(fileID.testBit((BITID - count) - 1)) && !(currentID.testBit((BITID - count) - 1)))))
+            {
+                //qui ho già visitato entrambi i sottoalberi
+                node = (TreeNode) node.getParent();
+                count--;
+            }
+            else
+            {
+                //qui il sottoalbero fratello non l'ho ancora visitato
+                Node n;
+                if (fileID.testBit((BITID - count) - 1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
+                {
+                    n = node.getRight();
+                }
+                else
+                {
+                    n = node.getLeft();
+                }
+                //aggiorno currentID perchè il bit alla profondità del nodo fratello è diverso da quello del fileID, questo mi permette, quando risalgo,
+                //di ricordarmi se ho già visitato o meno quel sottoalbero
+                currentID = currentID.flipBit((BITID - count) - 1);
+                if (n instanceof Bucket)
+                {
+                    synchronized (n)
+                    {
+                        it = ((Bucket) n).iterator();
+                        while (it.hasNext())
+                        {
+                            lkn.add(it.next());
+                        }
+                    }
+                    node = (TreeNode) node.getParent();
+                    count--;
+                }
+                else
+                {
+                    //seguo il percorso del fileID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
+                    //tra quelli non ancora visitati
+                    while (!(n instanceof Bucket))
+                    {
+                        count++;
+                        if (fileID.testBit((BITID - count) - 1))
+                        {
+                            n = node.getLeft();
+                        }
+                        else
+                        {
+                            n = node.getRight();
+                        }
+                    }
+                    node = (TreeNode) n.getParent();
+                    synchronized (n)
+                    {
+                        it = ((Bucket) n).iterator();
+                        while (it.hasNext())
+                        {
+                            lkn.add(it.next());
+                        }
+                    }
+                }
+            }
+        }
+        if(lkn.size()>K)
+        {
+            lkn.sort((o1, o2)
+                    -> distanza(o1, target).compareTo(distanza(o2, target)));
+            lkn.removeAll(lkn.subList(K,lkn.size()));
+        }
+        return lkn;
+    }
+
+    public Object findValue(BigInteger fileID) //Object può essere di tipo List<KadNode> oppure di tipo byte[]
+    {
+        Bucket bucket = routingTree.findNodesBucket(thisNode);
+        KadNode target = new KadNode("", (short) 0, fileID);
+        int depth = ((Node) bucket).getDepth();
+        BigInteger prefix = thisNode.getNodeID().shiftRight(BITID - depth); // prendo il prefisso relativo al bucket
+        List<KadNode> lkn = new ArrayList<>();  // lista di tutti i nodi conosciuti
+        List<KadNode> alphaNode;
+        AbstractQueue<KadNode> queriedNode = new PriorityQueue<>((o1, o2)
+                -> distanza(o1, target).compareTo(distanza(o2, target))); // lista dei nodi interrogati
+        Iterator<KadNode> it = null;
+        synchronized (bucket)
+        {
+            it = bucket.iterator();
+            while (it.hasNext()) // inserisco l'intero bucket nella lista lkn
+            {
+                lkn.add(it.next());
+            }
+        }
+        TreeNode node = (TreeNode) bucket.getParent();
+        int count = depth;
+        //sfrutto il fatto che solo il bucket contente this node viene splittato, quindi risalendo l'albero ogni fratello è un bucket
+        while (count > 0 && lkn.size() < K)  // se il bucket non contiene K nodi, mi sposto negli altri bucket vicini per prendere i loro nodi fino a raggiungere K
+        {
+            if (prefix.testBit(depth - count))
+            {
+                bucket = (Bucket) node.getRight();
+            }
+            else
+            {
+                bucket = (Bucket) node.getLeft();
+            }
+            List<KadNode> list = new ArrayList<>();
+            synchronized (bucket)
+            {
+                it = bucket.iterator();
+
+                while (it.hasNext())
+                {
+                    list.add(it.next());
+                }
+            }
+            list.sort((o1, o2)
+                    -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
+            if (list.size() >= K - lkn.size())
+            {
+                for (KadNode kn : list.subList(0, K - lkn.size()))
+                {
+                    lkn.add(kn);
+                }
+            }
+            else
+            {
+                lkn.addAll(list);
+            }
+            node = (TreeNode) node.getParent();
+            count--;
+        }
+        lkn.sort((o1, o2)
+                -> distanza(o1, target).compareTo(distanza(o2, target)));
+        if (lkn.size() >= ALPHA)
+        {
+            alphaNode = new ArrayList<>();
+            for (KadNode kn : lkn.subList(0, ALPHA))
+            {
+                alphaNode.add(kn);
+            }
+
+        }
+        else
+        {
+            alphaNode = lkn;
+        }
+        //chiedo anche a me stesso
+        while (true)
+        {
+            int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
+            //ad ognuno degli alpha node vado a inviargli un findNode
+            // for (int i = 0; i < alphaNode.size(); i++)
+            for (KadNode akn : alphaNode)
+            {
+                KadNode kadNode = akn;
+                FindValueRequest fvr = new FindValueRequest(fileID,thisNode,kadNode,true);
+                try
+                {
+                    Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
+                    s.setSoTimeout(timeout);
+
+                    OutputStream os = s.getOutputStream();
+                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                    outputStream.writeObject(fvr);
+                    outputStream.flush();
+
+                    InputStream is = s.getInputStream();
+                    ObjectInputStream inputStream = new ObjectInputStream(is);
+
+                    long timeInit = System.currentTimeMillis();
+                    boolean state = true;
+                    while (state)
+                    {
+                        try
+                        {
+                            Object fvreply = inputStream.readObject();
+                            if (fvreply instanceof FindValueReply)
+                            {
+                                if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
+                                {
+                                    //se il file è presente e il contenuto è presente restituisco il contenuto
+                                    if(((FindValueReply) fvreply).isPresent() && ((FindValueReply) fvreply).getContent()!=null)
+                                        return ((FindValueReply) fvreply).getContent();
+                                    if(((FindValueReply) fvreply).getListKadNode()!=null)
+                                    {
+                                        it = ((FindValueReply) fvreply).getListKadNode().iterator();
+                                        while (it.hasNext())
+                                        {
+                                            KadNode k = it.next();
+                                            if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                            {
+                                                lkn.add(k);
+                                            }
+                                        }
+                                    }
+                                    is.close();
+                                    s.close();
+                                    state = false;
+                                }
+                            }
+                            if (state)
+                            {
+                                s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
+                            }
+                        }
+                        catch (ClassNotFoundException e)
+                        {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                catch (SocketTimeoutException soe)
+                {
+                    //soe.printStackTrace();
+                }
+                catch (ConnectException soe)
+                {
+                    //soe.printStackTrace();
+                }
+                catch (EOFException e)
+                {
+                    // e.printStackTrace();
+                }
+                catch (IOException ex)
+                {
+                    //ex.printStackTrace();
+                }
+            }
+            queriedNode.addAll(alphaNode);
+            lkn.sort((o1, o2)
+                    -> distanza(o1, target).compareTo(distanza(o2, target)));
+            if (lkn.size() < K)
+            {
+                if (queriedNode.containsAll(lkn))
+                {
+                    return lkn;
+                }
+            }
+            else
+            {
+                if (queriedNode.containsAll(lkn.subList(0, K)))
+                {
+                    List<KadNode> toRet = new ArrayList<>();
+                    for (KadNode kn : lkn.subList(0, K))
+                    {
+                        toRet.add(kn);
+                    }
+                    return toRet;
+                }
+            }
+            alphaNode.clear();
+            int alphaSize;
+            if (size == lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
+            {
+                alphaSize = K;
+            }
+            else
+            {
+                alphaSize = ALPHA;
+            }
+            int i = 0;
+            while (i < lkn.size() && alphaNode.size() < alphaSize)
+            {
+                if (!(queriedNode.contains(lkn.get(i))))
+                {
+                    alphaNode.add(lkn.get(i));
+                }
+                i++;
+            }
+        }
     }
 
     private List<KadNode> findNode_lookup(BigInteger targetID)
@@ -621,74 +923,90 @@ public class Kademlia implements KademliaInterf {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
             //ad ognuno degli alpha node vado a inviargli un findNode
             // for (int i = 0; i < alphaNode.size(); i++)
+            Thread[] threads = new Thread[alphaNode.size()];
             for (KadNode akn : alphaNode)
             {
                 KadNode kadNode = akn;
                 FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode);
-                try
-                {
-                    Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
-                    s.setSoTimeout(timeout);
-
-                    OutputStream os = s.getOutputStream();
-                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                    outputStream.writeObject(fnr);
-                    outputStream.flush();
-
-                    InputStream is = s.getInputStream();
-                    ObjectInputStream inputStream = new ObjectInputStream(is);
-
-                    long timeInit = System.currentTimeMillis();
-                    boolean state = true;
-                    while (state)
+                threads[1]=new Thread(() -> {
+                    try
                     {
-                        try
+                        Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
+                        s.setSoTimeout(timeout);
+
+                        OutputStream os = s.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(fnr);
+                        outputStream.flush();
+
+                        InputStream is = s.getInputStream();
+                        ObjectInputStream inputStream = new ObjectInputStream(is);
+
+                        long timeInit = System.currentTimeMillis();
+                        boolean state = true;
+                        while (state)
                         {
-                            Object fnreply = inputStream.readObject();
-                            if (fnreply instanceof FindNodeReply)
+                            try
                             {
-                                if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
+                                Object fnreply = inputStream.readObject();
+                                if (fnreply instanceof FindNodeReply)
                                 {
-                                    it = ((FindNodeReply) fnreply).getList().iterator();
-                                    while (it.hasNext())
+                                    if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
                                     {
-                                        KadNode k = it.next();
-                                        if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                        Iterator<KadNode> it1 = ((FindNodeReply) fnreply).getList().iterator();
+                                        while (it1.hasNext())
                                         {
-                                            lkn.add(k);
+                                            KadNode k = it1.next();
+                                            synchronized ((lkn))
+                                            {
+                                                if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                                {
+                                                    lkn.add(k);
+                                                }
+                                            }
                                         }
+                                        is.close();
+                                        s.close();
+                                        state = false;
                                     }
-                                    is.close();
-                                    s.close();
-                                    state = false;
                                 }
+                                if (state) {
+                                    s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
+                                }
+                            } catch (ClassNotFoundException e) {
+                                e.printStackTrace();
                             }
-                            if (state)
-                            {
-                                s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
-                            }
-                        }
-                        catch (ClassNotFoundException e)
-                        {
-                            e.printStackTrace();
                         }
                     }
-                }
-                catch (SocketTimeoutException soe)
+                    catch(SocketTimeoutException soe)
+                    {
+                        //soe.printStackTrace();
+                    }
+                    catch(ConnectException soe)
+                    {
+                        //soe.printStackTrace();
+                    }
+                    catch(EOFException e)
+                    {
+                        // e.printStackTrace();
+                    }
+                    catch(IOException ex)
+                    {
+                        //ex.printStackTrace();
+                    }
+                });
+                threads[1].start();
+            }
+            boolean state=true;
+            while(state)
+            {
+                int i=0;
+                state=false;
+                while(!state && i<alphaNode.size())
                 {
-                    //soe.printStackTrace();
-                }
-                catch (ConnectException soe)
-                {
-                    //soe.printStackTrace();
-                }
-                catch (EOFException e)
-                {
-                    // e.printStackTrace();
-                }
-                catch (IOException ex)
-                {
-                    //ex.printStackTrace();
+                    if(!(threads[i].getState().equals(threads[i].getState().TERMINATED)))
+                        state=true;
+                    i++;
                 }
             }
             queriedNode.addAll(alphaNode);
@@ -897,7 +1215,30 @@ public class Kademlia implements KademliaInterf {
                         {
                             routingTree.add(fvr.getSourceKadNode());
                         }).start();
-                        //TODO
+                        if(fvr.getDestKadNode().equals(thisNode))
+                        {
+                            if(fvr.isContentRequested())
+                            {
+                                Object value=findValue_lookup(fvr.getFileID());
+                                FindValueReply fvrep=null;
+                                if(value instanceof KadFile)
+                                    fvrep=new FindValueReply(fvr.getFileID(),null,(KadFile)value,thisNode,fvr.getSourceKadNode(),true);
+                                else
+                                    fvrep=new FindValueReply(fvr.getFileID(),(List<KadNode>)value,null,thisNode,fvr.getSourceKadNode(),false);
+
+                                OutputStream os = connection.getOutputStream();
+                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                outputStream.writeObject(fvrep);
+                                outputStream.flush();
+
+                                os.close();
+                            }
+                            else
+                            {
+                                //TODO
+                            }
+
+                        }
                     }
                     else if (received instanceof StoreRequest)
                     {
