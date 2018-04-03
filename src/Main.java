@@ -147,14 +147,14 @@ public class Main {
                         Object value= myNode.findValue(new BigInteger(split[1]));
                         if(value instanceof List)
                         {
-                            for (int i = 0; i < ((List)value).size(); i++)
+                            for (int i = 0; i < ((List<KadNode>)value).size(); i++)
                             {
-                                System.out.println("******* " + ((List)value).get(i));
+                                System.out.println("******* " + ((List<KadNode>)value).get(i));
                             }
                         }
                         else
                         {
-                            //TODO
+                            System.out.println("Il contenuto del file richiesto è stato trovato");
                         }
 
                     }
