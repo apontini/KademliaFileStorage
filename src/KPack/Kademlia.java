@@ -924,11 +924,11 @@ public class Kademlia implements KademliaInterf {
             //ad ognuno degli alpha node vado a inviargli un findNode
             // for (int i = 0; i < alphaNode.size(); i++)
             Thread[] threads = new Thread[alphaNode.size()];
-            for (KadNode akn : alphaNode)
+            for (int i=0; i<alphaNode.size();i++)
             {
-                KadNode kadNode = akn;
+                KadNode kadNode = alphaNode.get(i);
                 FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode);
-                threads[1]=new Thread(() -> {
+                threads[i]=new Thread(() -> {
                     try
                     {
                         Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
@@ -995,7 +995,7 @@ public class Kademlia implements KademliaInterf {
                         //ex.printStackTrace();
                     }
                 });
-                threads[1].start();
+                threads[i].start();
             }
             boolean state=true;
             while(state)
