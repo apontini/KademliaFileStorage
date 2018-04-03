@@ -1,24 +1,37 @@
 package KPack;
 
 import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 public class FixedKadNode extends KadNode {
 
     private String name;
+    private String indirizzo;
 
-    public FixedKadNode(String ipString, short port, BigInteger ID, String name)
+    public FixedKadNode(String indirizzo, short port, BigInteger ID, String name)
     {
-        super(ipString, port, ID);
+        super(indirizzo, port, ID);
         this.name = name;
+        this.indirizzo = indirizzo;
     }
 
     public String getName()
     {
         return name;
     }
-    
+
     public KadNode getKadNode()
     {
-        return (KadNode)super.clone();
+        try
+        {
+            InetAddress inAddr = InetAddress.getByName(indirizzo);
+            return new KadNode(inAddr.getHostAddress(), super.getUDPPort(), super.getNodeID());
+        }
+        catch (UnknownHostException ex)
+        {
+            return null;
+        }
+        
     }
 }

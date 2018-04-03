@@ -218,8 +218,8 @@ public class Kademlia implements KademliaInterf {
             InetAddress inAddrTavo = InetAddress.getByName("tavolino.ddns.net");
             String addressTavo = inAddrTavo.getHostAddress();
 
-            FixedKadNode Punto = new FixedKadNode(addressPunto, (short) 1336, BigInteger.ONE, "pintini");
-            FixedKadNode Tavolino = new FixedKadNode(addressTavo, (short) 1336, BigInteger.valueOf(2), "tavolino");
+            FixedKadNode Punto = new FixedKadNode("pintini.ddns.net", (short) 1336, BigInteger.ONE, "pintini");
+            FixedKadNode Tavolino = new FixedKadNode("tavolino.ddns.net", (short) 1336, BigInteger.valueOf(2), "tavolino");
 
             fixNodes.add(Punto);
             fixNodes.add(Tavolino);
