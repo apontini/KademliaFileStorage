@@ -656,8 +656,8 @@ public class Kademlia implements KademliaInterf {
                             {
                                 if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
                                 {
-                                    //se il file è presente e il contenuto è presente restituisco il contenuto
-                                    if(((FindValueReply) fvreply).isPresent() && ((FindValueReply) fvreply).getContent()!=null)
+                                    //se il contenuto è presente restituisco il contenuto
+                                    if(((FindValueReply) fvreply).getContent()!=null)
                                         return ((FindValueReply) fvreply).getContent();
                                     if(((FindValueReply) fvreply).getListKadNode()!=null)
                                     {
@@ -1222,9 +1222,9 @@ public class Kademlia implements KademliaInterf {
                                 Object value=findValue_lookup(fvr.getFileID());
                                 FindValueReply fvrep=null;
                                 if(value instanceof KadFile)
-                                    fvrep=new FindValueReply(fvr.getFileID(),null,(KadFile)value,thisNode,fvr.getSourceKadNode(),true);
+                                    fvrep=new FindValueReply(fvr.getFileID(),null,(KadFile)value,thisNode,fvr.getSourceKadNode());
                                 else
-                                    fvrep=new FindValueReply(fvr.getFileID(),(List<KadNode>)value,null,thisNode,fvr.getSourceKadNode(),false);
+                                    fvrep=new FindValueReply(fvr.getFileID(),(List<KadNode>)value,null,thisNode,fvr.getSourceKadNode());
 
                                 OutputStream os = connection.getOutputStream();
                                 ObjectOutputStream outputStream = new ObjectOutputStream(os);
