@@ -130,7 +130,7 @@ public class Main {
                         }
                         catch (NumberFormatException nfe)
                         {
-                            if (myNode.ping(new KadNode(split[1], myNode.UDPPort, new BigInteger(split[2]))))
+                            if (myNode.ping(new KadNode(split[1], myNode.getUDPPort(), new BigInteger(split[2]))))
                             {
                                 System.out.println("VIVO");
                             }
