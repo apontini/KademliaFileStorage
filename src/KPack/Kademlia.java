@@ -206,7 +206,7 @@ public class Kademlia implements KademliaInterf {
         }
 
         //Faccio il findNode su me stesso
-        List<KadNode> nearestNodes = findNode(nodeID);
+        List<KadNode> nearestNodes = findNode(nodeID,true);
         for (KadNode kn : nearestNodes)
         {
             routingTree.add(kn);
@@ -640,18 +640,23 @@ public class Kademlia implements KademliaInterf {
                                     //se il contenuto è presente restituisco il contenuto
                                     if (((FindValueReply) fvreply).getContent() != null)
                                     {
+                                        is.close();
+                                        s.close();
                                         return ((FindValueReply) fvreply).getContent();
                                     }
-                                    if (((FindValueReply) fvreply).getListKadNode() != null)
+                                }
+                            }
+                            else
+                            {
+                                if ((fvreply instanceof FindNodeReply) &&((FindNodeReply) fvreply).getSourceKN().equals(fvr.getDestKadNode()))
+                                {
+                                    it = ((FindNodeReply) fvreply).getList().iterator();
+                                    while (it.hasNext())
                                     {
-                                        it = ((FindValueReply) fvreply).getListKadNode().iterator();
-                                        while (it.hasNext())
+                                        KadNode k = it.next();
+                                        if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
                                         {
-                                            KadNode k = it.next();
-                                            if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
-                                            {
-                                                lkn.add(k);
-                                            }
+                                            lkn.add(k);
                                         }
                                     }
                                     is.close();
@@ -832,7 +837,7 @@ public class Kademlia implements KademliaInterf {
         return lkn;
     }
 
-    public List<KadNode> findNode(BigInteger targetID)
+    public List<KadNode> findNode(BigInteger targetID,boolean doNotTrack)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode targetKN = new KadNode("", (short) 0, targetID);
@@ -915,7 +920,7 @@ public class Kademlia implements KademliaInterf {
             for (int i = 0; i < alphaNode.size(); i++)
             {
                 KadNode kadNode = alphaNode.get(i);
-                FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode, false);
+                FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode, doNotTrack);
                 threads[i] = new Thread(() ->
                 {
                     try
@@ -1202,10 +1207,13 @@ public class Kademlia implements KademliaInterf {
                     if (received instanceof FindNodeRequest)
                     {
                         FindNodeRequest fnr = (FindNodeRequest) received;
-                        new Thread(() ->
+                        if(!fnr.toTrack())
                         {
-                            routingTree.add(fnr.getSourceKadNode());
-                        }).start();
+                            new Thread(() ->
+                            {
+                                routingTree.add(fnr.getSourceKadNode());
+                            }).start();
+                        }
 
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
 
@@ -1234,11 +1242,11 @@ public class Kademlia implements KademliaInterf {
                                 FindValueReply fvrep = null;
                                 if (value instanceof KadFile)
                                 {
-                                    fvrep = new FindValueReply(fvr.getFileID(), null, (KadFile) value, thisNode, fvr.getSourceKadNode());
+                                    fvrep = new FindValueReply(fvr.getFileID(), (KadFile) value, thisNode, fvr.getSourceKadNode());
                                 }
                                 else
                                 {
-                                    fvrep = new FindValueReply(fvr.getFileID(), (List<KadNode>) value, null, thisNode, fvr.getSourceKadNode());
+                                    fvrep = new FindValueReply(fvr.getFileID(),null, thisNode, fvr.getSourceKadNode());
                                 }
 
                                 OutputStream os = connection.getOutputStream();
@@ -1335,7 +1343,7 @@ public class Kademlia implements KademliaInterf {
                     {
                         if (i.isRedundant())
                         {
-                            List<KadNode> temp = findNode(i.getFileID());
+                            List<KadNode> temp = findNode(i.getFileID(),false);
                             for (KadNode n : temp)
                             {
                                 Socket tempS = null;

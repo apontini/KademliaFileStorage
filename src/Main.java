@@ -89,7 +89,7 @@ public class Main {
                 case "findnode":
                     if (split.length > 1)
                     {
-                        List<KadNode> l = myNode.findNode(new BigInteger(split[1]));
+                        List<KadNode> l = myNode.findNode(new BigInteger(split[1]),false);
                         for (int i = 0; i < l.size(); i++)
                         {
                             System.out.println("******* " + l.get(i));
