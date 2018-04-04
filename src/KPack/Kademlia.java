@@ -9,6 +9,7 @@ import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import KPack.Exceptions.*;
 
+import javax.sound.midi.SysexMessage;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
@@ -161,6 +162,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ioe)
         {
+            //TODO
             ioe.printStackTrace();
         }
     }
@@ -186,6 +188,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
+            //TODO
         }
 
         return false;
@@ -226,6 +229,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
+            //TODO
             uhe.printStackTrace();
         }
         //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
@@ -239,6 +243,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ioe)
         {
+            //TODO
             ioe.printStackTrace();
         }
         finally
@@ -256,6 +261,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
+                //TODO
                 ioe.printStackTrace();
             }
         }
@@ -282,6 +288,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ioe)
         {
+            //TODO
             ioe.printStackTrace();
         }
         finally
@@ -328,12 +335,13 @@ public class Kademlia implements KademliaInterf {
         }
         catch (MalformedURLException mue)
         {
-            mue.printStackTrace();
-            /////////////// DA GESTIRE
+            System.err.println("Errore nell'URL per l'IP: " + mue.getMessage());
+            System.exit(1);
         }
         catch (IOException ioe)
         {
-            ioe.printStackTrace();
+            System.err.println("Eccezione generale nel trovare l'IP del nodo: " + ioe.getMessage());
+            System.exit(1);
         }
         try
         {
@@ -341,8 +349,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException e)
         {
-            e.printStackTrace();
-            //DA GESTIRE
+            System.out.println("Host sconosciuto nel trovare l'IP: ");
             return null;
         }
     }
@@ -387,6 +394,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException e)
                 {
+                    //TODO
                     e.printStackTrace();
                 }
             }
@@ -403,18 +411,14 @@ public class Kademlia implements KademliaInterf {
         }
         catch (EOFException e)
         {
+            //TODO
             return false;
         }
         catch (IOException ex)
         {
+            //TODO
             return false;
         }
-    }
-
-    private boolean findValue_present(BigInteger fileID, KadNode kadNode)
-    {
-        //TODO
-        return false;
     }
 
     private Object findValue_lookup(BigInteger fileID)    //Object può essere o una List<KadNode> oppure di tipo KadFile
@@ -657,24 +661,29 @@ public class Kademlia implements KademliaInterf {
                         }
                         catch (ClassNotFoundException e)
                         {
+                            //TODO
                             e.printStackTrace();
                         }
                     }
                 }
                 catch (SocketTimeoutException soe)
                 {
+                    //TODO
                     //soe.printStackTrace();
                 }
                 catch (ConnectException soe)
                 {
+                    //TODO
                     //soe.printStackTrace();
                 }
                 catch (EOFException e)
                 {
+                    //TODO
                     // e.printStackTrace();
                 }
                 catch (IOException ex)
                 {
+                    //TODO
                     //ex.printStackTrace();
                 }
             }
@@ -953,23 +962,28 @@ public class Kademlia implements KademliaInterf {
                             catch (ClassNotFoundException e)
                             {
                                 e.printStackTrace();
+                                //TODO
                             }
                         }
                     }
                     catch (SocketTimeoutException soe)
                     {
+                        //TODO
                         //soe.printStackTrace();
                     }
                     catch (ConnectException soe)
                     {
+                        //TODO
                         //soe.printStackTrace();
                     }
                     catch (EOFException e)
                     {
+                        //TODO
                         // e.printStackTrace();
                     }
                     catch (IOException ex)
                     {
+                        //TODO
                         //ex.printStackTrace();
                     }
                 });
@@ -1094,7 +1108,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-                ioe.printStackTrace(); //Gestire
+                System.err.println("Errore generale nell'eseguire lo store: " + ioe.getMessage());
             }
         }
     }
@@ -1126,7 +1140,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ioe)
                     {
-                        ioe.printStackTrace(); //Gestire
+                        System.err.println("Errore generale nell'eseguire il delete: " + ioe.getMessage());
                     }
                 }
                 break;
@@ -1157,8 +1171,8 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ex)
             {
-                ex.printStackTrace();
-                ////////// DA GESTIRE
+                System.err.println("Errore nell'apertura del socket del Thread Server: " + ex.getMessage())
+                System.exit(1);
             }
 
             Socket connection;
@@ -1290,13 +1304,13 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (IOException ex)
                 {
+                    System.err.println("Errore nel thread server: " + ex.getMessage());
                     ex.printStackTrace();
-                    ////// GESTIREE
                 }
                 catch (ClassNotFoundException ex)
                 {
+                    System.err.println("Errore nel thread server: " + ex.getMessage());
                     ex.printStackTrace();
-                    //// GESTIREEEEE
                 }
             }
         }
@@ -1348,17 +1362,19 @@ public class Kademlia implements KademliaInterf {
                                     }
                                     catch (ClassNotFoundException cnfe)
                                     {
-                                        cnfe.printStackTrace(); //TODO
+                                        System.err.println("Errore nella risposta durante il refresh: " + cnfe.getMessage());
+                                        //Gli invio comunque il file
+                                        KadFile toSend = new KadFile(i.getFileID(), true, i.getFileName(), i.getPath());
+                                        outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                     }
                                 }
                                 catch (SocketException se)
                                 {
-                                    System.out.println("Impossibile aprire il socket verso " + n.getIp().toString());
-
+                                    System.err.println("Impossibile aprire il socket verso " + n.getIp().toString());
                                 }
                                 catch (IOException ioe)
                                 {
-                                    ioe.printStackTrace();
+                                    System.err.println("Errore generale nel refresh: " + ioe.getMessage());
                                 }
                                 finally
                                 {
@@ -1371,7 +1387,7 @@ public class Kademlia implements KademliaInterf {
                                     }
                                     catch (IOException ioe)
                                     {
-                                        ioe.printStackTrace();
+                                        System.err.println("Errore generale nel chiudere il socket del refresh: " + ioe.getMessage());
                                     }
                                 }
                             }
@@ -1380,7 +1396,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (InterruptedException ie)
                 {
-                    System.out.println("Thread di refresh dei file interrotto");
+                    System.err.println("Thread di refresh dei file interrotto");
                 }
             }
         }
