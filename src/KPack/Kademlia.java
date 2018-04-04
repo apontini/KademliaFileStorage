@@ -650,7 +650,7 @@ public class Kademlia implements KademliaInterf {
                             {
                                 if ((fvreply instanceof FindNodeReply) &&((FindNodeReply) fvreply).getSourceKN().equals(fvr.getDestKadNode()))
                                 {
-                                    it = ((FindValueReply) fvreply).getListKadNode().iterator();
+                                    it = ((FindNodeReply) fvreply).getList().iterator();
                                     while (it.hasNext())
                                     {
                                         KadNode k = it.next();
