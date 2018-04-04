@@ -165,6 +165,7 @@ public class Main {
                     break;
 
                 case "exit":
+                    System.exit(0);
                     break;
                 default:
                     System.out.println("Say what?");
