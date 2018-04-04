@@ -33,7 +33,7 @@ public class KadFileList implements Iterable<KadFile> {
     {
         KadFile temp = null;
 
-        for(KadFile i : fileList)
+        for (KadFile i : fileList)
         {
             if (i.getFileID().equals(file.getFileID()))
             {
@@ -41,7 +41,10 @@ public class KadFileList implements Iterable<KadFile> {
                 break;
             }
         }
-        if(temp == null) return;
+        if (temp == null)
+        {
+            return;
+        }
 
         fileList.remove(temp);
 
@@ -56,7 +59,7 @@ public class KadFileList implements Iterable<KadFile> {
     {
 
         KadFile temp = null;
-        for(KadFile i : fileList)
+        for (KadFile i : fileList)
         {
             if (i.getFileID().equals(ID))
             {
@@ -64,7 +67,10 @@ public class KadFileList implements Iterable<KadFile> {
                 break;
             }
         }
-        if(temp == null) return;
+        if (temp == null)
+        {
+            return;
+        }
         fileList.remove(temp);
         if (temp.isRedundant())
         {
@@ -161,7 +167,6 @@ public class KadFileList implements Iterable<KadFile> {
     {
 
         ArrayList<KadFile> ret = new ArrayList<>();
-
         File temp = new File(thisNode.FILESPATH);
         if (!(temp.exists()))
         {
@@ -176,7 +181,6 @@ public class KadFileList implements Iterable<KadFile> {
             {
                 fis = new FileInputStream(thisNode.FILESPATH + "index");
                 ObjectInputStream ois = new ObjectInputStream(fis);
-                ret = new ArrayList<>();
                 while (true)
                 {
                     ret = ((ArrayList<KadFile>) ois.readObject());
