@@ -20,7 +20,7 @@ public class FindValueReply implements Serializable {
     private KadNode source;
     private KadNode dest;
 
-    public FindValueReply(BigInteger fileID, List<KadNode> lkn, KadFileInterf kf, KadNode source, KadNode dest)
+    public FindValueReply(BigInteger fileID, KadFileInterf kf, KadNode source, KadNode dest)
     {
         this.fileID = fileID;
         this.source = source;
