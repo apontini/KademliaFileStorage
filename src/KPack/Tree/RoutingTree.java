@@ -6,6 +6,7 @@ import KPack.UserInterface.TreeUI;
 import java.awt.HeadlessException;
 
 import java.math.BigInteger;
+import java.util.Iterator;
 
 public class RoutingTree {
 
@@ -121,5 +122,45 @@ public class RoutingTree {
     public Node getRoot()
     {
         return root;
+    }
+
+    private class RefreshThread implements Runnable
+    {
+        @Override
+        public void run()
+        {
+            Node curNode = root;
+
+           /* while (!(curNode instanceof Bucket))
+            {
+                if (node.getNodeID().testBit(i--))
+                {
+                    curNode = ((TreeNode) curNode).getLeft();
+                }
+                else
+                {
+                    curNode = ((TreeNode) curNode).getRight();
+                }
+            }
+            */
+        }
+        private void refreshBucket(Node node)
+        {
+            if (node instanceof Bucket)
+            {
+                Bucket nodeBucket = (Bucket)node;
+                synchronized (nodeBucket)
+                {
+                    Iterator<KadNode> nodeIterator= nodeBucket.iterator();
+                }
+
+            }
+            else
+            {
+                TreeNode intNode = (TreeNode)node;
+                refreshBucket(intNode.getLeft());
+                refreshBucket(intNode.getRight());
+            }
+        }
     }
 }
