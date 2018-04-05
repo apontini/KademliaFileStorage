@@ -1212,7 +1212,7 @@ public class Kademlia implements KademliaInterf {
                             }).start();
                         }
 
-                        System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode().toString());
+                        //System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode().toString());
 
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
 
