@@ -405,22 +405,20 @@ public class Kademlia implements KademliaInterf {
         }
         catch (SocketTimeoutException soe)
         {
-            System.err.println("Timeout");
+            System.err.println("Timeout exception: " + soe.getMessage());
             return false;
         }
         catch (ConnectException soe)
         {
-            System.err.println("Non c'è risposta");
+            System.err.println("Connect Exception: " + soe.getMessage());
             return false;
         }
         catch (EOFException e)
         {
-            //TODO
             return false;
         }
         catch (IOException ex)
         {
-            //TODO
             return false;
         }
     }
