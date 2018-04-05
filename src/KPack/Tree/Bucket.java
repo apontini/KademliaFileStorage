@@ -58,6 +58,8 @@ public class Bucket extends Node implements Iterable {
         return true; //l'albero non deve gestire niente
     }
 
+    public synchronized void removeFromBucket (KadNode kn) {  listaNodi.remove(kn); }
+
     public synchronized int size()
     {
         return listaNodi.size();

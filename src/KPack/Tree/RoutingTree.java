@@ -152,6 +152,19 @@ public class RoutingTree {
                 synchronized (nodeBucket)
                 {
                     Iterator<KadNode> nodeIterator= nodeBucket.iterator();
+                    while(nodeIterator.hasNext())
+                    {
+                        KadNode current = nodeIterator.next();
+                        if(!thisNode.ping(current)) //nodo è morto
+                        {
+                            nodeBucket.removeFromBucket(current);
+                        }
+                        else
+                        {
+                            //decidere se rimuovere e reinserire oppure non fare nulla
+                        }
+
+                    }
                 }
 
             }
