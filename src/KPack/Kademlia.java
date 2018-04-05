@@ -78,27 +78,29 @@ public class Kademlia implements KademliaInterf {
         fileList = new KadFileList(this);
         String myIP = getIP().getHostAddress().toString();
 
+        routingTree = new RoutingTree(this);
+
         fixedNodesList = loadFixedNodesFromFile();
 
-        boolean exists = true;
-        do
+        //Aggiungo all'alberto i nodi noti
+        for (FixedKadNode fkn : fixedNodesList)
         {
-            if (isFixedNode())
-            {
-                break;
-            }
-
-            nodeID = new BigInteger(BITID, new Random());
-            exists = false;
-
-            //Controllare se esiste
-            //TODO
+            routingTree.add(fkn.getKadNode());
         }
-        while (exists);
+
+        if (!isFixedNode())
+        {
+            do
+            {
+                nodeID = new BigInteger(BITID, new Random());
+                System.out.println("ID generato: " + nodeID);
+            }
+            while (!isUniqueID());
+        }
+        System.out.println("ID ottenuto: " + nodeID);
 
         thisNode = new KadNode(myIP, UDPPort, nodeID);
 
-        routingTree = new RoutingTree(this);
         routingTree.add(thisNode); //Mi aggiungo
 
         new Thread(new ListenerThread()).start();
@@ -107,6 +109,19 @@ public class Kademlia implements KademliaInterf {
 
         new Thread(new FileRefresh()).start();
 
+    }
+
+    private boolean isUniqueID()
+    {
+        List<KadNode> nodes = findNode(nodeID, true);       //richiamo il findnode utilizzando il mio ID
+        for (KadNode kn : nodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+        {
+            if (kn.getNodeID().equals(nodeID))              //ho trovato un nodo con il mio stesso ID
+            {
+                return false;
+            }
+        }
+        return true;                                        //non ci sono altri nodi con il mio ID, quindi è unico!
     }
 
     private void loadSettings()
@@ -198,14 +213,8 @@ public class Kademlia implements KademliaInterf {
 
     private void networkJoin()
     {
-        //Aggiungo all'alberto i nodi noti
-        for (FixedKadNode fkn : fixedNodesList)
-        {
-            routingTree.add(fkn.getKadNode());
-        }
-
         //Faccio il findNode su me stesso
-        List<KadNode> nearestNodes = findNode(nodeID,true);
+        List<KadNode> nearestNodes = findNode(nodeID, false);
         for (KadNode kn : nearestNodes)
         {
             routingTree.add(kn);
@@ -281,13 +290,13 @@ public class Kademlia implements KademliaInterf {
                 retFixNodes = ((ArrayList<FixedKadNode>) ois.readObject());
             }
         }
-        catch (EOFException | FileNotFoundException | ClassNotFoundException e)
+        catch (EOFException e)
         {
-            //Aspettate o impossibili
+
         }
-        catch (IOException ioe)
+        catch (IOException | ClassNotFoundException ioe)
         {
-            System.err.println("Errore nella scrittura dei nodi fissi: " + ioe.getMessage());
+            System.err.println("Errore nella lettura dei nodi fissi: " + ioe.getMessage());
             System.err.println("ABORT! ABORT!");
             System.exit(1);
         }
@@ -310,19 +319,6 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    /*  public InetAddress getIP()   //per il momento restituisce l'ip locale.
-    {
-        try
-        {
-            return InetAddress.getByName(InetAddress.getLocalHost().getHostAddress());
-        }
-        catch (UnknownHostException ex)
-        {
-            ex.printStackTrace();
-            /////////////// DA GESTIRE
-        }
-        return null;
-    }*/
     public InetAddress getIP()
     {
         String publicIP = null;
@@ -645,7 +641,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             else
                             {
-                                if ((fvreply instanceof FindNodeReply) &&((FindNodeReply) fvreply).getSourceKN().equals(fvr.getDestKadNode()))
+                                if ((fvreply instanceof FindNodeReply) && ((FindNodeReply) fvreply).getSourceKN().equals(fvr.getDestKadNode()))
                                 {
                                     it = ((FindNodeReply) fvreply).getList().iterator();
                                     while (it.hasNext())
@@ -834,12 +830,12 @@ public class Kademlia implements KademliaInterf {
         return lkn;
     }
 
-    public List<KadNode> findNode(BigInteger targetID,boolean doNotTrack)
+    public List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode targetKN = new KadNode("", (short) 0, targetID);
         int depth = ((Node) bucket).getDepth();
-        BigInteger prefix = thisNode.getNodeID().shiftRight(BITID - depth); // prendo il prefisso relativo al bucket
+        BigInteger prefix = getNodeID().shiftRight(BITID - depth); // prendo il prefisso relativo al bucket
         List<KadNode> lkn = new ArrayList<>();  // lista di tutti i nodi conosciuti
         List<KadNode> alphaNode;
         AbstractQueue<KadNode> queriedNode = new PriorityQueue<>((o1, o2)
@@ -1183,10 +1179,10 @@ public class Kademlia implements KademliaInterf {
                 System.exit(1);
             }
 
-            Socket connection;
+            
             while (true)
             {
-
+                Socket connection; 
                 try
                 {
                     System.out.println("Waiting for connection");
@@ -1204,18 +1200,20 @@ public class Kademlia implements KademliaInterf {
                     if (received instanceof FindNodeRequest)
                     {
                         FindNodeRequest fnr = (FindNodeRequest) received;
-                        if(!fnr.toTrack())
+                        if (!fnr.toTrack())
                         {
                             new Thread(() ->
                             {
                                 routingTree.add(fnr.getSourceKadNode());
                             }).start();
                         }
-
+                        
+                        System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode().toString());
+                        
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
 
                         FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
-
+                        
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(fnrep);
@@ -1243,7 +1241,7 @@ public class Kademlia implements KademliaInterf {
                                 }
                                 else
                                 {
-                                    fvrep = new FindValueReply(fvr.getFileID(),null, thisNode, fvr.getSourceKadNode());
+                                    fvrep = new FindValueReply(fvr.getFileID(), null, thisNode, fvr.getSourceKadNode());
                                 }
 
                                 OutputStream os = connection.getOutputStream();
@@ -1313,12 +1311,7 @@ public class Kademlia implements KademliaInterf {
 
                     connection.close();
                 }
-                catch (IOException ex)
-                {
-                    System.err.println("Errore nel thread server: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-                catch (ClassNotFoundException ex)
+                catch (ClassNotFoundException | IOException ex)
                 {
                     System.err.println("Errore nel thread server: " + ex.getMessage());
                     ex.printStackTrace();
@@ -1340,7 +1333,7 @@ public class Kademlia implements KademliaInterf {
                     {
                         if (i.isRedundant())
                         {
-                            List<KadNode> temp = findNode(i.getFileID(),false);
+                            List<KadNode> temp = findNode(i.getFileID(), false);
                             for (KadNode n : temp)
                             {
                                 Socket tempS = null;

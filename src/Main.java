@@ -1,4 +1,3 @@
-
 import KPack.Exceptions.FileNotKnown;
 import KPack.Files.KadFile;
 import KPack.KadNode;
@@ -13,7 +12,6 @@ public class Main {
 
     public static void main(String[] args)
     {
-        System.out.println("Cerco un ID valido..");
         Kademlia myNode = new Kademlia();
         boolean keep = true;
         String in = null;
@@ -89,7 +87,7 @@ public class Main {
                 case "findnode":
                     if (split.length > 1)
                     {
-                        List<KadNode> l = myNode.findNode(new BigInteger(split[1]),false);
+                        List<KadNode> l = myNode.findNode(new BigInteger(split[1]), false);
                         for (int i = 0; i < l.size(); i++)
                         {
                             System.out.println("******* " + l.get(i));
@@ -144,12 +142,12 @@ public class Main {
                 case "findvalue":  //TODO
                     if (split.length > 1)
                     {
-                        Object value= myNode.findValue(new BigInteger(split[1]));
-                        if(value instanceof List)
+                        Object value = myNode.findValue(new BigInteger(split[1]));
+                        if (value instanceof List)
                         {
-                            for (int i = 0; i < ((List<KadNode>)value).size(); i++)
+                            for (int i = 0; i < ((List<KadNode>) value).size(); i++)
                             {
-                                System.out.println("******* " + ((List<KadNode>)value).get(i));
+                                System.out.println("******* " + ((List<KadNode>) value).get(i));
                             }
                         }
                         else
