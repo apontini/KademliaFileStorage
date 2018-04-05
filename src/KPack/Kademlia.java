@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -734,7 +736,7 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    private List<KadNode> findNode_lookup(BigInteger targetID)
+    private synchronized List<KadNode> findNode_lookup(BigInteger targetID)
     {
         Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, targetID));
         KadNode targetKN = new KadNode("", (short) 0, targetID);
@@ -1179,16 +1181,18 @@ public class Kademlia implements KademliaInterf {
                 System.exit(1);
             }
 
-            
             while (true)
             {
-                Socket connection; 
+                Socket connection = null;
                 try
                 {
                     System.out.println("Waiting for connection");
 
                     connection = listener.accept();
+                    
                     System.out.println("Connection received from " + connection.getInetAddress().getHostAddress());
+
+                    Object responseObject = null;
 
                     //Analizzo la richiesta ricevuta
                     InputStream is = connection.getInputStream();
@@ -1207,19 +1211,14 @@ public class Kademlia implements KademliaInterf {
                                 routingTree.add(fnr.getSourceKadNode());
                             }).start();
                         }
-                        
+
                         System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode().toString());
-                        
+
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
 
                         FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
-                        
-                        OutputStream os = connection.getOutputStream();
-                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                        outputStream.writeObject(fnrep);
-                        outputStream.flush();
 
-                        os.close();
+                        responseObject = fnrep;
 
                     }
                     else if (received instanceof FindValueRequest)
@@ -1244,12 +1243,7 @@ public class Kademlia implements KademliaInterf {
                                     fvrep = new FindValueReply(fvr.getFileID(), null, thisNode, fvr.getSourceKadNode());
                                 }
 
-                                OutputStream os = connection.getOutputStream();
-                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                outputStream.writeObject(fvrep);
-                                outputStream.flush();
-
-                                os.close();
+                                responseObject = fvrep;
                             }
                             else
                             {
@@ -1301,20 +1295,39 @@ public class Kademlia implements KademliaInterf {
 
                         PingReply reply = new PingReply(thisNode, sourceKadNode);
 
-                        OutputStream os = connection.getOutputStream();
-                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                        outputStream.writeObject(reply);
-                        outputStream.flush();
-
-                        os.close();
+                        responseObject = reply;
                     }
 
+                    if (responseObject != null)
+                    {
+                        OutputStream os = connection.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(responseObject);
+                        outputStream.flush();
+                        os.close();
+                    }
                     connection.close();
+
                 }
                 catch (ClassNotFoundException | IOException ex)
                 {
                     System.err.println("Errore nel thread server: " + ex.getMessage());
                     ex.printStackTrace();
+                }
+                finally
+                {
+                    try
+                    {
+                        if (connection != null)
+                        {
+                            connection.close();
+                        }
+                    }
+                    catch (IOException ex)
+                    {
+                        System.err.println("Errore nel thread server: " + ex.getMessage());
+                        ex.printStackTrace();
+                    }
                 }
             }
         }
