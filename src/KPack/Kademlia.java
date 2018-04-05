@@ -495,6 +495,7 @@ public class Kademlia implements KademliaInterf {
                     while (!(n instanceof Bucket))
                     {
                         count++;
+                        node=(TreeNode)n;
                         if (fileID.testBit((BITID - count) - 1))
                         {
                             n = node.getLeft();
@@ -504,7 +505,6 @@ public class Kademlia implements KademliaInterf {
                             n = node.getRight();
                         }
                     }
-                    node = (TreeNode) n.getParent();
                     synchronized (n)
                     {
                         it = ((Bucket) n).iterator();
@@ -802,6 +802,7 @@ public class Kademlia implements KademliaInterf {
                     while (!(n instanceof Bucket))
                     {
                         count++;
+                        node=(TreeNode)n;
                         if (targetID.testBit((BITID - count) - 1))
                         {
                             n = node.getLeft();
@@ -811,7 +812,6 @@ public class Kademlia implements KademliaInterf {
                             n = node.getRight();
                         }
                     }
-                    node = (TreeNode) n.getParent();
                     synchronized (n)
                     {
                         it = ((Bucket) n).iterator();
