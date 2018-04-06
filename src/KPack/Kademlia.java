@@ -525,7 +525,7 @@ public class Kademlia implements KademliaInterf {
         return lkn;
     }
 
-    public Object findValue(BigInteger fileID) //Object può essere di tipo List<KadNode> oppure di tipo byte[]
+    public Object findValue(BigInteger fileID, boolean returnContent) //Object può essere di tipo List<KadNode> oppure di tipo byte[]
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode target = new KadNode("", (short) 0, fileID);
@@ -607,7 +607,7 @@ public class Kademlia implements KademliaInterf {
             for (KadNode akn : alphaNode)
             {
                 KadNode kadNode = akn;
-                FindValueRequest fvr = new FindValueRequest(fileID, thisNode, kadNode, true);
+                FindValueRequest fvr = new FindValueRequest(fileID, thisNode, kadNode, returnContent);
                 try
                 {
                     Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
@@ -1081,16 +1081,14 @@ public class Kademlia implements KademliaInterf {
 
         //Genero un ID per il file e controllo se esiste
         BigInteger fileID = null;
-        boolean exists = true;
         do
         {
             fileID = new BigInteger(BITID, new Random());
-            //Controllare se esiste
-            //TODO
-            exists = false;
+            System.out.println("Cerco se esistono file con ID: " + fileID + "...");
         }
-        while (exists);
+        while ((findValue(fileID, false)) instanceof FindValueReply);
 
+        System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileList.add(tempfile);
 
@@ -1230,26 +1228,26 @@ public class Kademlia implements KademliaInterf {
                         }).start();
                         if (fvr.getDestKadNode().equals(thisNode))
                         {
-                            if (fvr.isContentRequested())
+
+                            Object value = findValue_lookup(fvr.getFileID());
+                            FindValueReply fvrep = null;
+                            if (value instanceof KadFile)
                             {
-                                Object value = findValue_lookup(fvr.getFileID());
-                                FindValueReply fvrep = null;
-                                if (value instanceof KadFile)
+                                if (fvr.isContentRequested())
                                 {
                                     fvrep = new FindValueReply(fvr.getFileID(), (KadFile) value, thisNode, fvr.getSourceKadNode());
                                 }
                                 else
                                 {
                                     fvrep = new FindValueReply(fvr.getFileID(), null, thisNode, fvr.getSourceKadNode());
-                                }
 
+                                }
                                 responseObject = fvrep;
                             }
                             else
                             {
-                                //TODO
+                                responseObject = value; //Che dovrebbe essere una lista di KadNode tornata da findnode_lookup
                             }
-
                         }
                     }
                     else if (received instanceof StoreRequest)

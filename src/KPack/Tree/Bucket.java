@@ -80,7 +80,7 @@ public class Bucket extends Node implements Iterable {
         return listaNodi.iterator();
     }
 
-    public String toString()
+    public synchronized String toString()
     {
         String bu = "{\n";
         for (KadNode k : listaNodi)

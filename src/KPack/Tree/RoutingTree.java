@@ -4,7 +4,9 @@ import KPack.KadNode;
 import KPack.Kademlia;
 import KPack.UserInterface.TreeUI;
 import java.awt.HeadlessException;
-
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.math.BigInteger;
 import java.util.Iterator;
 
@@ -14,6 +16,9 @@ public class RoutingTree {
     private static boolean instance = false;
     private Kademlia thisNode = null;
     private int bucketsDim;
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+    private final Lock readLock = readWriteLock.readLock();
+    private final Lock writeLock = readWriteLock.writeLock();
 
     public RoutingTree(Kademlia thisNode)
     {
@@ -21,6 +26,7 @@ public class RoutingTree {
         {
             return;
         }
+        instance = true;
         bucketsDim = Kademlia.K;
         if (bucketsDim <= 0)
         {
@@ -38,10 +44,11 @@ public class RoutingTree {
         }
     }
 
-    public synchronized void add(KadNode nodo)
+    public void add(KadNode nodo)
     {
-        Bucket tempBuck;
-        while (!((tempBuck = findNodesBucket(nodo)).add(nodo)))
+        writeLock.lock();
+        Bucket toSplitBucket;
+        while (!((toSplitBucket = findNodesBucket(nodo)).add(nodo)))
         {
             TreeNode temp = new TreeNode();
             Bucket bucketSx = new Bucket(thisNode, false);
@@ -52,55 +59,57 @@ public class RoutingTree {
             bucketSx.setParent(temp);
             bucketDx.setParent(temp);
 
-            Node tempBuckParent = tempBuck.getParent();
-            temp.setParent(tempBuckParent);
-            //SOLO ORA vado a modificare il nodo che dev'essere splittato
-            if (tempBuckParent == null)  //il genitore di tempBuck è null, quindi tempBuck è la radice
+            int tempDepth = toSplitBucket.getDepth();
+            synchronized (toSplitBucket)
             {
-                root = temp;
-            }
-            else
-            {
-                TreeNode tempBuckParentCast = (TreeNode) tempBuckParent;
-                //Ora il nodo originale che devo sostituire
-                //temp diventa nodo destro o sinistro di tempBuckParent?
-                if (tempBuckParentCast.getLeft().equals(tempBuck))
+                for (int i = 0; i < toSplitBucket.size(); i++)
                 {
-                    tempBuckParentCast.setLeft(temp);
+                    BigInteger tempNodeID = toSplitBucket.get(i).getNodeID();
+                    if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
+                    {
+                        bucketSx.add(toSplitBucket.get(i));
+                    } else
+                    {
+                        bucketDx.add(toSplitBucket.get(i));
+                    }
+                }
+                Node tempBuckParent = toSplitBucket.getParent();
+                temp.setParent(tempBuckParent);
+                //SOLO ORA vado a modificare il nodo che dev'essere splittato
+                if (tempBuckParent == null)  //il genitore di toSplitBucket è null, quindi toSplitBucket è la radice
+                {
+                    root = temp;
                 }
                 else
                 {
-                    tempBuckParentCast.setRight(temp);
+                    TreeNode tempBuckParentCast = (TreeNode) tempBuckParent;
+                    //Ora il nodo originale che devo sostituire
+                    //temp diventa nodo destro o sinistro di tempBuckParent?
+                    if (tempBuckParentCast.getLeft().equals(toSplitBucket))
+                    {
+                        tempBuckParentCast.setLeft(temp);
+                    } else
+                    {
+                        tempBuckParentCast.setRight(temp);
+                    }
                 }
-            }
 
-            int tempDepth = tempBuck.getDepth();
-            for (int i = 0; i < tempBuck.size(); i++)
-            {
-                BigInteger tempNodeID = tempBuck.get(i).getNodeID();
-                if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
+                //aggiorno il flag splittable
+                if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
                 {
-                    bucketSx.add(tempBuck.get(i));
-                }
-                else
+                    bucketSx.setSplittable(true);
+                } else
                 {
-                    bucketDx.add(tempBuck.get(i));
+                    bucketDx.setSplittable(true);
                 }
-            }
-            //aggiorno il flag splittable
-            if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
-            {
-                bucketSx.setSplittable(true);
-            }
-            else
-            {
-                bucketDx.setSplittable(true);
             }
         }
+        writeLock.unlock();
     }
 
-    public synchronized Bucket findNodesBucket(KadNode node)
+    public Bucket findNodesBucket(KadNode node)
     {
+        readLock.lock();
         //preghiamo gli dei del java e li ringraziamo per la loro benevolenza per la classe BigInteger
         Node curNode = root;
         int i = Kademlia.BITID - 1;
@@ -116,6 +125,7 @@ public class RoutingTree {
                 curNode = ((TreeNode) curNode).getRight();
             }
         }
+        readLock.unlock();
         return (Bucket) curNode;
     }
 

@@ -99,12 +99,15 @@ public class TreeUI extends javax.swing.JFrame {
         {
             Bucket b = (Bucket) n;
             //System.out.println(b.toString());
-            Iterator<KadNode> ikn = b.iterator();
-            while (ikn.hasNext())
+            synchronized (b)
             {
-                KadNode kn = ikn.next();
-                DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()));
-                dmt.add(treeNode);
+                Iterator<KadNode> ikn = b.iterator();
+                while (ikn.hasNext())
+                {
+                    KadNode kn = ikn.next();
+                    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" +kn.getNodeID() +") from: " + kn.getIp().toString());
+                    dmt.add(treeNode);
+                }
             }
         }
         else

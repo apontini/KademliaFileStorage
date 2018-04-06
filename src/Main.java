@@ -40,7 +40,7 @@ public class Main {
                             {
                                 if (i.getFileName().equals(split[1]))
                                 {
-                                    myNode.findValue(i.getFileID());
+                                    myNode.findValue(i.getFileID(), true);
                                     break;
                                 }
                             }
@@ -142,7 +142,7 @@ public class Main {
                 case "findvalue":  //TODO
                     if (split.length > 1)
                     {
-                        Object value = myNode.findValue(new BigInteger(split[1]));
+                        Object value = myNode.findValue(new BigInteger(split[1]), false);
                         if (value instanceof List)
                         {
                             for (int i = 0; i < ((List<KadNode>) value).size(); i++)

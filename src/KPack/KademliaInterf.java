@@ -16,7 +16,7 @@ public interface KademliaInterf {
 
     boolean ping(KadNode node);
 
-    Object findValue(BigInteger fileID);
+    Object findValue(BigInteger fileID, boolean returnContent);
 
     List<KadNode> findNode(BigInteger nodeID, boolean doNotTrack);
 
