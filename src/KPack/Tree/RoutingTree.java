@@ -139,21 +139,24 @@ public class RoutingTree {
         @Override
         public void run()
         {
-            Node curNode = root;
-
-           /* while (!(curNode instanceof Bucket))
+            long totTime = 0;
+            while(true)
             {
-                if (node.getNodeID().testBit(i--))
-                {
-                    curNode = ((TreeNode) curNode).getLeft();
+                Node curNode = root;
+                try {
+                    Thread.sleep(5*60*1000-totTime);        //Problema: se totTime maggiore dei 5 min
+                    long timeStart = System.currentTimeMillis();
+                    refreshBucket(curNode);
+                    long timeEnd = System.currentTimeMillis();
+                    totTime = timeEnd - timeStart;
                 }
-                else
+                catch (InterruptedException ie)
                 {
-                    curNode = ((TreeNode) curNode).getRight();
+                    System.err.println("Il thread di refresh dei bucket è stato interrotto");
                 }
             }
-            */
         }
+
         private void refreshBucket(Node node)
         {
             if (node instanceof Bucket)
