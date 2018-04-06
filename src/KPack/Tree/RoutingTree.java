@@ -144,7 +144,11 @@ public class RoutingTree {
             {
                 Node curNode = root;
                 try {
-                    Thread.sleep(5*60*1000-totTime);        //Problema: se totTime maggiore dei 5 min
+                    if (5*60*1000-totTime <= 0)
+                    {
+                        throw new java.lang.IllegalArgumentException("Attenzione: tempo per refreshBucket maggiore di 5 minuti!!");
+                    }
+                    Thread.sleep(5*60*1000-totTime);                            
                     long timeStart = System.currentTimeMillis();
                     refreshBucket(curNode);
                     long timeEnd = System.currentTimeMillis();
