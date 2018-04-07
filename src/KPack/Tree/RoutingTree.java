@@ -187,7 +187,7 @@ public class RoutingTree {
 
                     int randomIndex = (int )(Math.random() * sizeBucket + 1);
                     KadNode randomNode = nodeBucket.get(randomIndex);      //prendo un nodo random
-                    List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID(),false);    //faccio il findNode e mi restituisce una lista
+                    List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
                     //devo controllare che current ci sia in lista
                     for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
                     {
