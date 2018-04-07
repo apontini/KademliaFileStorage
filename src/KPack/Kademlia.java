@@ -61,6 +61,7 @@ public class Kademlia implements KademliaInterf {
         System.out.println("WorkingDir: " + System.getProperty("user.dir"));
 
         loadSettings();
+        System.out.println("Timeout socket: " + timeout);
 
         //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash della JVM
         File temp = new File(FILESPATH);
@@ -110,6 +111,8 @@ public class Kademlia implements KademliaInterf {
         new Thread(new FileRefresh(fileRefreshWait)).start();
 
     }
+
+
 
     private boolean isUniqueID()
     {
@@ -558,7 +561,7 @@ public class Kademlia implements KademliaInterf {
                 {
                     Socket s = new Socket();
                     s.setSoTimeout(timeout);
-                    s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
+                    s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()),timeout);
 
                     OutputStream os = s.getOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -608,6 +611,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             if (state)
                             {
+                                System.out.println("******Aggiorno il timeout");
                                 s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                             }
                         }
@@ -874,7 +878,7 @@ public class Kademlia implements KademliaInterf {
                     {
                         Socket s = new Socket();
                         s.setSoTimeout(timeout);
-                        s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
+                        s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()),timeout);
 
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -935,6 +939,7 @@ public class Kademlia implements KademliaInterf {
                                 }
                                 if (state)
                                 {
+                                    System.out.println("******Aggiorno il timeout");
                                     s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                                     //ds.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                                 }
@@ -1170,6 +1175,7 @@ public class Kademlia implements KademliaInterf {
                     System.out.println("Waiting for connection");
 
                     connection = listener.accept();
+                    connection.setSoTimeout(timeout);
                     
                     System.out.println("Connection received from " + connection.getInetAddress().getHostAddress());
 
@@ -1342,6 +1348,7 @@ public class Kademlia implements KademliaInterf {
                                 {
                                     tempS = new Socket();
                                     tempS.setSoTimeout(timeout);
+                                    tempS.connect(new InetSocketAddress(n.getIp(),n.getUDPPort()), timeout);
                                     OutputStream os = tempS.getOutputStream();
                                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
                                     outputStream.writeObject(new FindValueRequest(i.getFileID(), thisNode, n, false));
