@@ -50,8 +50,10 @@ public class RoutingTree {
     {
         writeLock.lock();
         Bucket toSplitBucket;
+        long now = System.currentTimeMillis();
         while (!((toSplitBucket = findNodesBucket(nodo)).add(nodo)))
         {
+            toSplitBucket.setTimeVisited(now);
             TreeNode temp = new TreeNode();
             Bucket bucketSx = new Bucket(thisNode, false);
             Bucket bucketDx = new Bucket(thisNode, false);
@@ -184,22 +186,27 @@ public class RoutingTree {
                         {   }
                     }
                     */
-
-                    int randomIndex = (int )(Math.random() * sizeBucket + 1);
-                    KadNode randomNode = nodeBucket.get(randomIndex);      //prendo un nodo random
-                    List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
-                    //devo controllare che current ci sia in lista
-                    for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                    if(nodeBucket.getTimeVisited()<= 5*60*1000)
                     {
-                        if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
-                        {
-                            notDead = true;
-                        }
+                        return;
                     }
-                    //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
-                    if(!notDead)
+                    else
                     {
-                        nodeBucket.removeFromBucket(randomNode);
+                        int randomIndex = (int) (Math.random() * sizeBucket + 1);
+                        KadNode randomNode = nodeBucket.get(randomIndex);      //prendo un nodo random
+                        List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
+                        //devo controllare che current ci sia in lista
+                        for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                        {
+                            if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
+                            {
+                                notDead = true;
+                            }
+                        }
+                        //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
+                        if (!notDead) {
+                            nodeBucket.removeFromBucket(randomNode);
+                        }
                     }
                 }
 

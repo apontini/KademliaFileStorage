@@ -14,6 +14,7 @@ public class Bucket extends Node implements Iterable {
     private List<KadNode> listaNodi;
     private boolean splittable;
     private Kademlia thisKadNode;
+    private long timeVisited;
 
     public Bucket(Kademlia thisKadNode, boolean splittable)
     {
@@ -79,6 +80,10 @@ public class Bucket extends Node implements Iterable {
     {
         return listaNodi.iterator();
     }
+
+    public synchronized void setTimeVisited(long now) { timeVisited=now; }
+
+    public synchronized long getTimeVisited() { return timeVisited; }
 
     public synchronized String toString()
     {
