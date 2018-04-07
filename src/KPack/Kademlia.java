@@ -774,7 +774,17 @@ public class Kademlia implements KademliaInterf {
         return lkn;
     }
 
-    public List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
+    public List<KadNode> findNode(BigInteger targetID)
+    {
+        return findNodeMethod(targetID, false);
+    }
+
+    private List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
+    {
+        return findNodeMethod(targetID, doNotTrack);
+    }
+
+    private List<KadNode> findNodeMethod(BigInteger targetID, boolean doNotTrack)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode targetKN = new KadNode("", (short) 0, targetID);
