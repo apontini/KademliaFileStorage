@@ -366,8 +366,9 @@ public class Kademlia implements KademliaInterf {
         PingRequest pr = new PingRequest(thisNode, node);
         try
         {
-            Socket s = new Socket(node.getIp(), node.getUDPPort());
+            Socket s = new Socket();
             s.setSoTimeout(timeout);
+            s.connect(new InetSocketAddress(node.getIp(), node.getUDPPort()));
 
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -435,94 +436,7 @@ public class Kademlia implements KademliaInterf {
             }
         }
         //se non lo è procedo come per il findnode_lookup
-        Bucket bucket = routingTree.findNodesBucket(new KadNode("", (short) 0, fileID));
-        KadNode target = new KadNode("", (short) 0, fileID);
-        BigInteger currentID = fileID;                      //mi serve per tenere traccia del percorso che ho fatto nell'albero
-        int depth = ((Node) bucket).getDepth();
-        List<KadNode> lkn = new ArrayList<>();
-        Iterator<KadNode> it = null;
-        synchronized (bucket)//lista dei K nodi conosciuti più vicini al target
-        {
-            it = bucket.iterator();
-            while (it.hasNext())                                 //inserisco l'intero bucket nella lista lkn (lkn conterrà i nodi (<=K) più vicini a fileID che conosco)
-            {
-                lkn.add(it.next());
-            }
-        }
-        TreeNode node = (TreeNode) bucket.getParent();
-        int count = depth - 1;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
-        while (count >= 0 && lkn.size() < K)                      //ricerco altri nodi vicini al fileID finche non arrivo a K o non ho guardato tutti i nodi nell'albero
-        {
-            if (!(fileID.testBit((BITID - count) - 1) && currentID.testBit((BITID - count) - 1)
-                    || (!(fileID.testBit((BITID - count) - 1)) && !(currentID.testBit((BITID - count) - 1)))))
-            {
-                //qui ho già visitato entrambi i sottoalberi
-                node = (TreeNode) node.getParent();
-                count--;
-            }
-            else
-            {
-                //qui il sottoalbero fratello non l'ho ancora visitato
-                Node n;
-                if (fileID.testBit((BITID - count) - 1))    //individuo se sono figlio destro o sinistro di node, poi mi sposto nel fratello per visitarlo
-                {
-                    n = node.getRight();
-                }
-                else
-                {
-                    n = node.getLeft();
-                }
-                //aggiorno currentID perchè il bit alla profondità del nodo fratello è diverso da quello del fileID, questo mi permette, quando risalgo,
-                //di ricordarmi se ho già visitato o meno quel sottoalbero
-                currentID = currentID.flipBit((BITID - count) - 1);
-                if (n instanceof Bucket)
-                {
-                    synchronized (n)
-                    {
-                        it = ((Bucket) n).iterator();
-                        while (it.hasNext())
-                        {
-                            lkn.add(it.next());
-                        }
-                    }
-                    node = (TreeNode) node.getParent();
-                    count--;
-                }
-                else
-                {
-                    //seguo il percorso del fileID a partire da n fino ad arrivare ad un bucket. Questo conterrà i nodi più vicini al target
-                    //tra quelli non ancora visitati
-                    while (!(n instanceof Bucket))
-                    {
-                        count++;
-                        node=(TreeNode)n;
-                        if (fileID.testBit((BITID - count) - 1))
-                        {
-                            n = node.getLeft();
-                        }
-                        else
-                        {
-                            n = node.getRight();
-                        }
-                    }
-                    synchronized (n)
-                    {
-                        it = ((Bucket) n).iterator();
-                        while (it.hasNext())
-                        {
-                            lkn.add(it.next());
-                        }
-                    }
-                }
-            }
-        }
-        if (lkn.size() > K)
-        {
-            lkn.sort((o1, o2)
-                    -> distanza(o1, target).compareTo(distanza(o2, target)));
-            lkn.removeAll(lkn.subList(K, lkn.size()));
-        }
-        return lkn;
+        return findNode_lookup(fileID);
     }
 
     public Object findValue(BigInteger fileID, boolean returnContent) //Object può essere di tipo List<KadNode> oppure di tipo byte[]
@@ -610,8 +524,9 @@ public class Kademlia implements KademliaInterf {
                 FindValueRequest fvr = new FindValueRequest(fileID, thisNode, kadNode, returnContent);
                 try
                 {
-                    Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
+                    Socket s = new Socket();
                     s.setSoTimeout(timeout);
+                    s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
 
                     OutputStream os = s.getOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -666,30 +581,25 @@ public class Kademlia implements KademliaInterf {
                         }
                         catch (ClassNotFoundException e)
                         {
-                            //TODO
-                            e.printStackTrace();
+                            System.err.println("Errore nella risposta ricevuta: " + e.getMessage());
                         }
                     }
                 }
                 catch (SocketTimeoutException soe)
                 {
-                    //TODO
-                    //soe.printStackTrace();
+                    //Un nodo interrogato non ha risposto in tempo pazienza
                 }
                 catch (ConnectException soe)
                 {
-                    //TODO
-                    //soe.printStackTrace();
+                    //System.err.println("Connect Exception: " + soe.getMessage());
                 }
                 catch (EOFException e)
                 {
-                    //TODO
-                    // e.printStackTrace();
+                    //impossibile
                 }
                 catch (IOException ex)
                 {
-                    //TODO
-                    //ex.printStackTrace();
+                    System.err.println("IOException " + ex.getMessage());
                 }
             }
             queriedNode.addAll(alphaNode);
@@ -920,8 +830,9 @@ public class Kademlia implements KademliaInterf {
                 {
                     try
                     {
-                        Socket s = new Socket(kadNode.getIp(), kadNode.getUDPPort());
+                        Socket s = new Socket();
                         s.setSoTimeout(timeout);
+                        s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
 
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -931,6 +842,18 @@ public class Kademlia implements KademliaInterf {
                         InputStream is = s.getInputStream();
                         ObjectInputStream inputStream = new ObjectInputStream(is);
 
+                        /*DatagramSocket ds=new DatagramSocket();
+                        ds.setSoTimeout(timeout);
+                        ds.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
+
+                        ByteArrayOutputStream baos=new ByteArrayOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(baos);
+                        outputStream.writeObject(fnr);
+                        outputStream.flush();
+                        byte[] buffer=baos.toByteArray();
+                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,kadNode.getIp(), kadNode.getUDPPort());
+                        ds.send(packet);
+                        */
                         long timeInit = System.currentTimeMillis();
                         boolean state = true;
                         while (state)
@@ -938,6 +861,13 @@ public class Kademlia implements KademliaInterf {
                             try
                             {
                                 Object fnreply = inputStream.readObject();
+                                /*buffer=new byte[65536];
+                                DatagramPacket recv = new DatagramPacket(buffer, buffer.length);
+                                ds.receive(recv);
+
+                                ByteArrayInputStream bais=new ByteArrayInputStream(buffer);
+                                ObjectInputStream inputStream=new ObjectInputStream(bais);
+                                Object fnreply = inputStream.readObject();*/
                                 if (fnreply instanceof FindNodeReply)
                                 {
                                     if (((FindNodeReply) fnreply).getSourceKN().equals(fnr.getDestKadNode()))
@@ -956,40 +886,38 @@ public class Kademlia implements KademliaInterf {
                                         }
                                         is.close();
                                         s.close();
+                                        //inputStream.close();
+                                        //ds.close();
                                         state = false;
                                     }
                                 }
                                 if (state)
                                 {
                                     s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
+                                    //ds.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                                 }
                             }
                             catch (ClassNotFoundException e)
                             {
-                                e.printStackTrace();
-                                //TODO
+                                System.err.println("Errore nella risposta ricevuta: " + e.getMessage());
                             }
                         }
                     }
                     catch (SocketTimeoutException soe)
                     {
-                        //TODO
-                        //soe.printStackTrace();
+                        //Un nodo interrogato non ha risposto in tempo pazienza
                     }
                     catch (ConnectException soe)
                     {
-                        //TODO
-                        //soe.printStackTrace();
+                        //System.err.println("Connect Exception: " + soe.getMessage());
                     }
                     catch (EOFException e)
                     {
-                        //TODO
-                        // e.printStackTrace();
+                        //impossibile
                     }
                     catch (IOException ex)
                     {
-                        //TODO
-                        //ex.printStackTrace();
+                        System.err.println("IOException " + ex.getMessage());
                     }
                 });
                 threads[i].start();
@@ -1086,7 +1014,7 @@ public class Kademlia implements KademliaInterf {
             fileID = new BigInteger(BITID, new Random());
             System.out.println("Cerco se esistono file con ID: " + fileID + "...");
         }
-        while ((findValue(fileID, false)) instanceof FindValueReply);
+        while ((findValue(fileID, false)) instanceof byte[]);
 
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
@@ -1133,13 +1061,26 @@ public class Kademlia implements KademliaInterf {
                     dr = new DeleteRequest(i.getFileID(), thisNode, k);
                     try
                     {
-                        Socket s = new Socket(k.getIp(), k.getUDPPort());
+                        Socket s = new Socket();
                         s.setSoTimeout(timeout);
+                        s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
 
                         OutputStream os = s.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(dr);
                         outputStream.flush();
+
+                        /*DatagramSocket ds=new DatagramSocket();
+                        ds.setSoTimeout(timeout);
+                        ds.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
+
+                        ByteArrayOutputStream baos=new ByteArrayOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(baos);
+                        outputStream.writeObject(dr);
+                        outputStream.flush();
+                        byte[] buffer=baos.toByteArray();
+                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getUDPPort());
+                        ds.send(packet);*/
                     }
                     catch (IOException ioe)
                     {
@@ -1244,9 +1185,9 @@ public class Kademlia implements KademliaInterf {
                                 }
                                 responseObject = fvrep;
                             }
-                            else
+                            else        //È una lista di KadNode tornata da findnode_lookup
                             {
-                                responseObject = value; //Che dovrebbe essere una lista di KadNode tornata da findnode_lookup
+                                responseObject = new FindNodeReply(fvr.getFileID(),thisNode,fvr.getSourceKadNode(),(List<KadNode>)value);
                             }
                         }
                     }

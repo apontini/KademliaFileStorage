@@ -139,7 +139,7 @@ public class Main {
                         System.out.println("Please define an IP address and ID or IP,Port and ID");
                     }
                     break;
-                case "findvalue":  //TODO
+                case "findvalue":
                     if (split.length > 1)
                     {
                         Object value = myNode.findValue(new BigInteger(split[1]), false);
