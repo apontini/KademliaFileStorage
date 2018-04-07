@@ -4,6 +4,8 @@ import KPack.KadNode;
 import KPack.Kademlia;
 import KPack.UserInterface.TreeUI;
 import java.awt.HeadlessException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -148,7 +150,7 @@ public class RoutingTree {
                     {
                         throw new java.lang.IllegalArgumentException("Attenzione: tempo per refreshBucket maggiore di 5 minuti!!");
                     }
-                    Thread.sleep(5*60*1000-totTime);        
+                    Thread.sleep(5*60*1000-totTime);
                     long timeStart = System.currentTimeMillis();
                     refreshBucket(curNode);
                     long timeEnd = System.currentTimeMillis();
@@ -166,9 +168,11 @@ public class RoutingTree {
             if (node instanceof Bucket)
             {
                 Bucket nodeBucket = (Bucket)node;
+                int sizeBucket = nodeBucket.size();
+                boolean notDead = false;
                 synchronized (nodeBucket)
                 {
-                    Iterator<KadNode> nodeIterator= nodeBucket.iterator();
+                    /*Iterator<KadNode> nodeIterator= nodeBucket.iterator();
                     while(nodeIterator.hasNext())
                     {
                         KadNode current = nodeIterator.next();
@@ -177,10 +181,25 @@ public class RoutingTree {
                             nodeBucket.removeFromBucket(current);
                         }
                         else
-                        {
-                            //decidere se rimuovere e reinserire oppure non fare nulla
-                        }
+                        {   }
+                    }
+                    */
 
+                    int randomIndex = (int )(Math.random() * sizeBucket + 1);
+                    KadNode randomNode = nodeBucket.get(randomIndex);      //prendo un nodo random
+                    List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID(),false);    //faccio il findNode e mi restituisce una lista
+                    //devo controllare che current ci sia in lista
+                    for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                    {
+                        if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
+                        {
+                            notDead = true;
+                        }
+                    }
+                    //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
+                    if(!notDead)
+                    {
+                        nodeBucket.removeFromBucket(randomNode);
                     }
                 }
 
