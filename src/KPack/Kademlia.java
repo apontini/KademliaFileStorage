@@ -16,8 +16,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -30,10 +28,10 @@ public class Kademlia implements KademliaInterf {
     private BigInteger nodeID;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    private short UDPPort; // default 1337
+    private short UDPPort=1337; // default 1337
+    private int fileRefreshWait=10000;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
-
-    private final int timeout = 10000;
+    private int timeout=10000;
 
     public Kademlia()
     {
@@ -109,7 +107,7 @@ public class Kademlia implements KademliaInterf {
 
         networkJoin();
 
-        new Thread(new FileRefresh()).start();
+        new Thread(new FileRefresh(fileRefreshWait)).start();
 
     }
 
@@ -162,6 +160,40 @@ public class Kademlia implements KademliaInterf {
                             else
                             {
                                 throw new InvalidSettingsException("Porta non valida");
+                            }
+                            break;
+                        case "fileRefreshWait":
+                            if (!split[1].isEmpty())
+                            {
+                                try
+                                {
+                                    fileRefreshWait = Integer.parseInt(split[1]);
+                                }
+                                catch(NumberFormatException | NullPointerException e)
+                                {
+                                    throw new InvalidSettingsException("Tempo di refresh non valido");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidSettingsException("Tempo di refresh non valido");
+                            }
+                            break;
+                        case "socketTimeout":
+                            if (!split[1].isEmpty())
+                            {
+                                try
+                                {
+                                    timeout = Integer.parseInt(split[1]);
+                                }
+                                catch(NumberFormatException | NullPointerException e)
+                                {
+                                    throw new InvalidSettingsException("Timeout non valido");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidSettingsException("Timeout non valido");
                             }
                             break;
                         default:
@@ -742,7 +774,17 @@ public class Kademlia implements KademliaInterf {
         return lkn;
     }
 
-    public List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
+    public List<KadNode> findNode(BigInteger targetID)
+    {
+        return findNodeMethod(targetID, false);
+    }
+
+    private List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
+    {
+        return findNodeMethod(targetID, doNotTrack);
+    }
+
+    private List<KadNode> findNodeMethod(BigInteger targetID, boolean doNotTrack)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode targetKN = new KadNode("", (short) 0, targetID);
@@ -1272,7 +1314,14 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    private class FileRefresh implements Runnable {
+    private class FileRefresh implements Runnable
+    {
+        private int sleep;
+
+        public FileRefresh(int sleep)
+        {
+            this.sleep = sleep;
+        }
 
         public void run()
         {
@@ -1280,7 +1329,7 @@ public class Kademlia implements KademliaInterf {
             {
                 try
                 {
-                    Thread.sleep(10000); //5 minuti
+                    Thread.sleep(sleep); //5 minuti
                     for (KadFile i : fileList)
                     {
                         if (i.isRedundant())

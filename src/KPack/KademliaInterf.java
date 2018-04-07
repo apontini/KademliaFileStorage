@@ -18,7 +18,7 @@ public interface KademliaInterf {
 
     Object findValue(BigInteger fileID, boolean returnContent);
 
-    List<KadNode> findNode(BigInteger nodeID, boolean doNotTrack);
+    List<KadNode> findNode(BigInteger nodeID);
 
     void store(String filepath) throws FileNotFoundException, InvalidParameterException;
 
