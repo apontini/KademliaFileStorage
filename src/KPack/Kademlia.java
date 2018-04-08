@@ -474,7 +474,7 @@ public class Kademlia implements KademliaInterf {
         return findNode_lookup(fileID);
     }
 
-    public Object findValue(BigInteger fileID, boolean returnContent) //Object può essere di tipo List<KadNode> oppure di tipo byte[]
+    public Object findValue(BigInteger fileID, boolean returnContent) //Object può essere di tipo List<KadNode> oppure di tipo byte[] (null se returnContent=false)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode target = new KadNode("", (short) 0, fileID);
@@ -582,13 +582,10 @@ public class Kademlia implements KademliaInterf {
                             {
                                 if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
                                 {
-                                    //se il contenuto è presente restituisco il contenuto
-                                    if (((FindValueReply) fvreply).getContent() != null)
-                                    {
-                                        is.close();
-                                        s.close();
-                                        return ((FindValueReply) fvreply).getContent();
-                                    }
+                                    //restituisco il contenuto
+                                    is.close();
+                                    s.close();
+                                    return ((FindValueReply) fvreply).getContent();
                                 }
                             }
                             else
