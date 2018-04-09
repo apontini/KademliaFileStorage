@@ -1,52 +1,43 @@
 package KPack.Files;
 
-import KPack.KadNode;
 import KPack.Kademlia;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
-public class KadFileList implements Iterable<KadFile> {
+public class KadFileMap implements KadFileMapInterf {
 
-    private List<KadFile> fileList;
+    private ConcurrentHashMap<BigInteger,KadFile> fileMap;
     private Kademlia thisNode;
 
-    public KadFileList(Kademlia thisNode)
+    public KadFileMap(Kademlia thisNode)
     {
-        fileList = loadListFromFile();
+        fileMap = loadListFromFile();
         this.thisNode = thisNode;
     }
 
-    synchronized public void add(KadFile file)
+    public void add(KadFile file)
     {
-        fileList.add(file);
+        fileMap.put(file.getFileID(),file);
         if (!file.isRedundant())
         {
             serializeList();
         }
     }
 
-    synchronized public void remove(KadFile file)
+    public void remove(KadFile file)
     {
-        KadFile temp = null;
+        KadFile temp = fileMap.get(file.getFileID());
 
-        for (KadFile i : fileList)
-        {
-            if (i.getFileID().equals(file.getFileID()))
-            {
-                temp = i;
-                break;
-            }
-        }
         if (temp == null)
         {
             return;
         }
 
-        fileList.remove(temp);
+        fileMap.remove(temp);
 
         if (file.isRedundant())
         {
@@ -55,23 +46,16 @@ public class KadFileList implements Iterable<KadFile> {
         serializeList();
     }
 
-    synchronized public void remove(BigInteger ID)
+    public void remove(BigInteger ID)
     {
 
-        KadFile temp = null;
-        for (KadFile i : fileList)
-        {
-            if (i.getFileID().equals(ID))
-            {
-                temp = i;
-                break;
-            }
-        }
+        KadFile temp = fileMap.get(ID);
+
         if (temp == null)
         {
             return;
         }
-        fileList.remove(temp);
+        fileMap.remove(temp);
         if (temp.isRedundant())
         {
             new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
@@ -79,43 +63,36 @@ public class KadFileList implements Iterable<KadFile> {
         serializeList();
     }
 
-    synchronized public void clearAll()
+    public void forEach(BiConsumer<BigInteger, KadFile> function)
     {
-        for (KadFile i : fileList)
-        {
-            this.remove(i);
-        }
+        fileMap.forEach(function);
     }
 
-    synchronized public void clearRedundants()
+    public void clearAll()
     {
-        for (KadFile i : fileList)
-        {
-            if (i.isRedundant())
-            {
-                this.remove(i);
-            }
-        }
+        fileMap.clear();
     }
 
-    synchronized public KadFile get(int i)
+    public void clearRedundants()
     {
-        return fileList.get(i);
+        fileMap.forEach((k,v)->
+                {
+                    if (v.isRedundant())
+                    {
+                        this.remove(k);
+                    }
+                }
+        );
     }
 
-    synchronized public int indexOf(KadFile file)
+    public KadFile get(BigInteger i)
     {
-        return fileList.indexOf(file);
+        return fileMap.get(i);
     }
 
-    public Iterator<KadFile> iterator()
+    public int size()
     {
-        return fileList.listIterator();
-    }
-
-    synchronized public int size()
-    {
-        return fileList.size();
+        return fileMap.size();
     }
 
     private void serializeList()
@@ -137,7 +114,7 @@ public class KadFileList implements Iterable<KadFile> {
 
             fout = new FileOutputStream(thisNode.FILESPATH + "index");
             oos = new ObjectOutputStream(fout);
-            oos.writeObject(fileList);
+            oos.writeObject(fileMap);
         }
         catch (IOException e)
         {
@@ -163,10 +140,10 @@ public class KadFileList implements Iterable<KadFile> {
         }
     }
 
-    private ArrayList<KadFile> loadListFromFile()
+    private ConcurrentHashMap<BigInteger, KadFile> loadListFromFile()
     {
 
-        ArrayList<KadFile> ret = new ArrayList<>();
+        ConcurrentHashMap<BigInteger, KadFile> ret = new ConcurrentHashMap<>();
         File temp = new File(thisNode.FILESPATH);
         if (!(temp.exists()))
         {
@@ -183,7 +160,7 @@ public class KadFileList implements Iterable<KadFile> {
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 while (true)
                 {
-                    ret = ((ArrayList<KadFile>) ois.readObject());
+                    ret = ((ConcurrentHashMap<BigInteger, KadFile>) ois.readObject());
                 }
             }
             catch (EOFException | FileNotFoundException | ClassNotFoundException e)

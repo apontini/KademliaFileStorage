@@ -1,7 +1,7 @@
 package KPack;
 
 import KPack.Files.KadFile;
-import KPack.Files.KadFileList;
+import KPack.Files.KadFileMap;
 import KPack.Packets.*;
 import KPack.Tree.Bucket;
 import KPack.Tree.Node;
@@ -24,7 +24,7 @@ public class Kademlia implements KademliaInterf {
     public final static int K = 4;
     public final static int ALPHA = 2;
     public final static String FILESPATH = "." + File.separator + "storedFiles" + File.separator;
-    private KadFileList fileList;
+    private KadFileMap fileMap;
     private BigInteger nodeID;
     private RoutingTree routingTree;
     private KadNode thisNode;
@@ -76,7 +76,7 @@ public class Kademlia implements KademliaInterf {
             }
         }
 
-        fileList = new KadFileList(this);
+        fileMap = new KadFileMap(this);
         String myIP = getIP().getHostAddress().toString();
 
         routingTree = new RoutingTree(this);
@@ -460,18 +460,11 @@ public class Kademlia implements KademliaInterf {
     private Object findValue_lookup(BigInteger fileID)    //Object può essere o una List<KadNode> oppure di tipo KadFile
     {
         //verifico se il file richiesto è contenuto nel nodo
-        Iterator<KadFile> itf = fileList.iterator();
-        while (itf.hasNext())
-        {
-            KadFile kf = itf.next();
-            //verifico anche se è ridondante, se è ridondante vuol dire che qualcuno mi ha fatto uno store per quel file, quindi coerente con il protocollo.
-            if (kf.isRedundant() && kf.getFileID().equals(fileID))
-            {
-                return kf;
-            }
-        }
-        //se non lo è procedo come per il findnode_lookup
-        return findNode_lookup(fileID);
+        KadFile temp = fileMap.get(fileID);
+        if(temp != null && temp.isRedundant())
+            return temp;
+        else
+            return findNode_lookup(fileID); //se non lo è procedo come per il findnode_lookup
     }
 
     public Object findValue(BigInteger fileID, boolean returnContent) //Object può essere di tipo List<KadNode> oppure di tipo byte[] (null se returnContent=false)
@@ -1024,9 +1017,11 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    public KadFileList getFileList()
+    public List<KadFile> getFileList()
     {
-        return fileList;
+        List<KadFile> temp = new ArrayList<>();
+        fileMap.forEach((k,v)->temp.add(v));
+        return temp;
     }
 
     public KadNode getMyNode()
@@ -1062,7 +1057,7 @@ public class Kademlia implements KademliaInterf {
 
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
-        fileList.add(tempfile);
+        fileMap.add(tempfile);
 
         StoreRequest sr = null;
 
@@ -1088,60 +1083,51 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    public void delete(BigInteger id) throws FileNotKnown
+    public void delete(BigInteger id) throws FileNotKnownException
     {
 
-        KadFile temp = null;
-        for (KadFile i : fileList)
+        KadFile temp = fileMap.get(id);
+
+        if(temp != null && !(temp.isRedundant()))
         {
-            if (i.getFileID().equals(id) && !(i.isRedundant()))
+            DeleteRequest dr = null;
+            List<KadNode> closestK = findNode_lookup(temp.getFileID());
+            for (KadNode k : closestK)
             {
-
-                temp = i;
-                DeleteRequest dr = null;
-                List<KadNode> closestK = findNode_lookup(i.getFileID());
-                for (KadNode k : closestK)
+                dr = new DeleteRequest(temp.getFileID(), thisNode, k);
+                try
                 {
-                    dr = new DeleteRequest(i.getFileID(), thisNode, k);
-                    try
-                    {
-                        Socket s = new Socket();
-                        s.setSoTimeout(timeout);
-                        s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
+                    Socket s = new Socket();
+                    s.setSoTimeout(timeout);
+                    s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
 
-                        OutputStream os = s.getOutputStream();
-                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                        outputStream.writeObject(dr);
-                        outputStream.flush();
+                    OutputStream os = s.getOutputStream();
+                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                    outputStream.writeObject(dr);
+                    outputStream.flush();
 
-                        /*DatagramSocket ds=new DatagramSocket();
-                        ds.setSoTimeout(timeout);
-                        ds.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
+                    /*DatagramSocket ds=new DatagramSocket();
+                    ds.setSoTimeout(timeout);
+                    ds.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
 
-                        ByteArrayOutputStream baos=new ByteArrayOutputStream();
-                        ObjectOutputStream outputStream = new ObjectOutputStream(baos);
-                        outputStream.writeObject(dr);
-                        outputStream.flush();
-                        byte[] buffer=baos.toByteArray();
-                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getUDPPort());
-                        ds.send(packet);*/
-                    }
-                    catch (IOException ioe)
-                    {
-                        System.err.println("Errore generale nell'eseguire il delete: " + ioe.getMessage());
-                    }
+                    ByteArrayOutputStream baos=new ByteArrayOutputStream();
+                    ObjectOutputStream outputStream = new ObjectOutputStream(baos);
+                    outputStream.writeObject(dr);
+                    outputStream.flush();
+                    byte[] buffer=baos.toByteArray();
+                    DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getUDPPort());
+                    ds.send(packet);*/
                 }
-                break;
+                catch (IOException ioe)
+                {
+                    System.err.println("Errore generale nell'eseguire il delete: " + ioe.getMessage());
+                }
             }
-        }
-
-        if (temp == null)
-        {
-            throw new FileNotKnown();
+            fileMap.remove(temp);
         }
         else
         {
-            fileList.remove(temp);
+            throw new FileNotKnownException();
         }
     }
 
@@ -1248,7 +1234,7 @@ public class Kademlia implements KademliaInterf {
                         File toStore = new File(FILESPATH + rq.getFileName() + "." + rq.getFileID() + ".kad");
                         toStore.createNewFile();
                         Files.write(toStore.toPath(), rq.getContent());
-                        fileList.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
+                        fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
                     }
                     else if (received instanceof DeleteRequest)
                     {
@@ -1258,7 +1244,7 @@ public class Kademlia implements KademliaInterf {
                             routingTree.add(dr.getSourceKadNode());
                         }).start();
                         System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
-                        fileList.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
+                        fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
                     }
                     else if (received instanceof PingRequest)
                     {
@@ -1333,11 +1319,12 @@ public class Kademlia implements KademliaInterf {
                 try
                 {
                     Thread.sleep(sleep); //5 minuti
-                    for (KadFile i : fileList)
+                    System.out.println("******Inizio il refresh dei file..");
+                    fileMap.forEach((k,v)->
                     {
-                        if (i.isRedundant())
+                        if (v.isRedundant())
                         {
-                            List<KadNode> temp = findNode(i.getFileID(), false);
+                            List<KadNode> temp = findNode(v.getFileID(), false);
                             for (KadNode n : temp)
                             {
                                 Socket tempS = null;
@@ -1345,10 +1332,10 @@ public class Kademlia implements KademliaInterf {
                                 {
                                     tempS = new Socket();
                                     tempS.setSoTimeout(timeout);
-                                    tempS.connect(new InetSocketAddress(n.getIp(),n.getUDPPort()), timeout);
+                                    tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
                                     OutputStream os = tempS.getOutputStream();
                                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                    outputStream.writeObject(new FindValueRequest(i.getFileID(), thisNode, n, false));
+                                    outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
                                     outputStream.flush();
 
                                     InputStream is = tempS.getInputStream();
@@ -1360,7 +1347,7 @@ public class Kademlia implements KademliaInterf {
                                             Object resp = ois.readObject();
                                             if (resp instanceof FindNodeReply)
                                             {
-                                                KadFile toSend = new KadFile(i.getFileID(), true, i.getFileName(), i.getPath());
+                                                KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
                                                 outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                             }
                                         }
@@ -1373,7 +1360,7 @@ public class Kademlia implements KademliaInterf {
                                     {
                                         System.err.println("Errore nella risposta durante il refresh: " + cnfe.getMessage());
                                         //Gli invio comunque il file
-                                        KadFile toSend = new KadFile(i.getFileID(), true, i.getFileName(), i.getPath());
+                                        KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
                                         outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                     }
                                 }
@@ -1393,15 +1380,15 @@ public class Kademlia implements KademliaInterf {
                                         {
                                             tempS.close();
                                         }
-                                    }
-                                    catch (IOException ioe)
+                                    } catch (IOException ioe)
                                     {
                                         System.err.println("Errore generale nel chiudere il socket del refresh: " + ioe.getMessage());
                                     }
                                 }
                             }
                         }
-                    }
+                    });
+                    System.out.println("******Refresh dei file finito");
                 }
                 catch (InterruptedException ie)
                 {
