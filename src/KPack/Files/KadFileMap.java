@@ -4,13 +4,12 @@ import KPack.Kademlia;
 
 import java.io.*;
 import java.math.BigInteger;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.HashMap;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 public class KadFileMap implements KadFileMapInterf {
 
-    private ConcurrentHashMap<BigInteger,KadFile> fileMap;
+    private HashMap<BigInteger,KadFile> fileMap;
     private Kademlia thisNode;
 
     public KadFileMap(Kademlia thisNode)
@@ -19,16 +18,16 @@ public class KadFileMap implements KadFileMapInterf {
         this.thisNode = thisNode;
     }
 
-    public void add(KadFile file)
+    synchronized public void add(KadFile file)
     {
         fileMap.put(file.getFileID(),file);
         if (!file.isRedundant())
         {
-            serializeList();
+            serializeMap();
         }
     }
 
-    public void remove(KadFile file)
+    synchronized public void remove(KadFile file)
     {
         KadFile temp = fileMap.get(file.getFileID());
 
@@ -43,10 +42,10 @@ public class KadFileMap implements KadFileMapInterf {
         {
             new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
         }
-        serializeList();
+        serializeMap();
     }
 
-    public void remove(BigInteger ID)
+    synchronized public void remove(BigInteger ID)
     {
 
         KadFile temp = fileMap.get(ID);
@@ -60,20 +59,20 @@ public class KadFileMap implements KadFileMapInterf {
         {
             new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
         }
-        serializeList();
+        serializeMap();
     }
 
-    public void forEach(BiConsumer<BigInteger, KadFile> function)
+    public void forEach(BiConsumer<BigInteger, KadFile> function) //Prendere il lock per usare questo metodo!
     {
         fileMap.forEach(function);
     }
 
-    public void clearAll()
+    synchronized public void clearAll()
     {
         fileMap.clear();
     }
 
-    public void clearRedundants()
+    synchronized public void clearRedundants()
     {
         fileMap.forEach((k,v)->
                 {
@@ -85,17 +84,17 @@ public class KadFileMap implements KadFileMapInterf {
         );
     }
 
-    public KadFile get(BigInteger i)
+    synchronized public KadFile get(BigInteger i)
     {
         return fileMap.get(i);
     }
 
-    public int size()
+    synchronized public int size()
     {
         return fileMap.size();
     }
 
-    private void serializeList()
+    private void serializeMap()
     {
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
@@ -140,10 +139,10 @@ public class KadFileMap implements KadFileMapInterf {
         }
     }
 
-    private ConcurrentHashMap<BigInteger, KadFile> loadListFromFile()
+    private HashMap<BigInteger, KadFile> loadListFromFile()
     {
 
-        ConcurrentHashMap<BigInteger, KadFile> ret = new ConcurrentHashMap<>();
+        HashMap<BigInteger, KadFile> ret = new HashMap<>();
         File temp = new File(thisNode.FILESPATH);
         if (!(temp.exists()))
         {
@@ -160,7 +159,7 @@ public class KadFileMap implements KadFileMapInterf {
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 while (true)
                 {
-                    ret = ((ConcurrentHashMap<BigInteger, KadFile>) ois.readObject());
+                    ret = ((HashMap<BigInteger, KadFile>) ois.readObject());
                 }
             }
             catch (EOFException | FileNotFoundException | ClassNotFoundException e)

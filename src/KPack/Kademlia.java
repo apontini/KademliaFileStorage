@@ -1020,7 +1020,10 @@ public class Kademlia implements KademliaInterf {
     public List<KadFile> getFileList()
     {
         List<KadFile> temp = new ArrayList<>();
-        fileMap.forEach((k,v)->temp.add(v));
+        synchronized (fileMap)
+        {
+            fileMap.forEach((k, v) -> temp.add(v));
+        }
         return temp;
     }
 
@@ -1320,74 +1323,83 @@ public class Kademlia implements KademliaInterf {
                 {
                     Thread.sleep(sleep); //5 minuti
                     System.out.println("******Inizio il refresh dei file..");
-                    fileMap.forEach((k,v)->
+                    synchronized (fileMap)
                     {
-                        if (v.isRedundant())
+                        fileMap.forEach((k, v) ->
                         {
-                            List<KadNode> temp = findNode(v.getFileID(), false);
-                            for (KadNode n : temp)
+                            if (v.isRedundant())
                             {
-                                Socket tempS = null;
-                                try
+                                List<KadNode> temp = findNode(v.getFileID(), false);
+                                for (KadNode n : temp)
                                 {
-                                    tempS = new Socket();
-                                    tempS.setSoTimeout(timeout);
-                                    tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
-                                    OutputStream os = tempS.getOutputStream();
-                                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                    outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
-                                    outputStream.flush();
+                                    Socket tempS = null;
+                                    try
+                                    {
+                                        tempS = new Socket();
+                                        tempS.setSoTimeout(timeout);
+                                        tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
+                                        OutputStream os = tempS.getOutputStream();
+                                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                        outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
+                                        outputStream.flush();
 
-                                    InputStream is = tempS.getInputStream();
-                                    ObjectInputStream ois = new ObjectInputStream(is);
-                                    try
-                                    {
-                                        while (true)
+                                        InputStream is = tempS.getInputStream();
+                                        ObjectInputStream ois = new ObjectInputStream(is);
+                                        try
                                         {
-                                            Object resp = ois.readObject();
-                                            if (resp instanceof FindNodeReply)
+                                            while (true)
                                             {
-                                                KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                                Object resp = ois.readObject();
+                                                if (resp instanceof FindNodeReply)
+                                                {
+                                                    KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                                    outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                                }
                                             }
-                                        }
-                                    }
-                                    catch (EOFException eofe)
-                                    {
-                                        //Aspettata, ignoro
-                                    }
-                                    catch (ClassNotFoundException cnfe)
-                                    {
-                                        System.err.println("Errore nella risposta durante il refresh: " + cnfe.getMessage());
-                                        //Gli invio comunque il file
-                                        KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                        outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
-                                    }
-                                }
-                                catch (SocketException se)
-                                {
-                                    System.err.println("Impossibile aprire il socket verso " + n.getIp().toString());
-                                }
-                                catch (IOException ioe)
-                                {
-                                    System.err.println("Errore generale nel refresh: " + ioe.getMessage());
-                                }
-                                finally
-                                {
-                                    try
-                                    {
-                                        if (tempS != null)
+                                        } catch (EOFException eofe)
                                         {
-                                            tempS.close();
+                                            //Aspettata, ignoro
+                                        } catch (ClassNotFoundException cnfe)
+                                        {
+                                            System.err.println("Errore nella risposta durante il refresh: " + cnfe.getMessage());
+                                            //Gli invio comunque il file
+                                            KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                            outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                         }
+                                    } catch (SocketException se)
+                                    {
+                                        System.err.println("Impossibile aprire il socket verso " + n.getIp().toString());
                                     } catch (IOException ioe)
                                     {
-                                        System.err.println("Errore generale nel chiudere il socket del refresh: " + ioe.getMessage());
+                                        System.err.println("Errore generale nel refresh: " + ioe.getMessage());
+                                    } finally
+                                    {
+                                        try
+                                        {
+                                            if (tempS != null)
+                                            {
+                                                tempS.close();
+                                            }
+                                        } catch (IOException ioe)
+                                        {
+                                            System.err.println("Errore generale nel chiudere il socket del refresh: " + ioe.getMessage());
+                                        }
                                     }
                                 }
+                                //Se non sono tra i K nodi, elimino il file da me
+                                boolean state = false;
+                                for (KadNode i : temp)
+                                {
+                                    if (thisNode.getNodeID().equals(i.getNodeID()))
+                                    {
+                                        state = true;
+                                        break;
+                                    }
+                                }
+                                if (!state) fileMap.remove(v.getFileID());
                             }
-                        }
-                    });
+                        });
+                    }
                     System.out.println("******Refresh dei file finito");
                 }
                 catch (InterruptedException ie)
