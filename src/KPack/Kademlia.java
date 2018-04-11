@@ -1245,27 +1245,33 @@ public class Kademlia implements KademliaInterf {
                     }
                     else if (received instanceof StoreRequest)
                     {
-                        StoreRequest rq = (StoreRequest) received;
-                        new Thread(() ->
+                        synchronized (fileMap)
                         {
-                            routingTree.add(rq.getSourceKadNode());
-                        }).start();
-                        //i file ridondanti vengono salvati con estensione .FILEID.kad
-                        System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                        File toStore = new File(FILESPATH + rq.getFileName() + "." + rq.getFileID() + ".kad");
-                        toStore.createNewFile();
-                        Files.write(toStore.toPath(), rq.getContent());
-                        fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
+                            StoreRequest rq = (StoreRequest) received;
+                            new Thread(() ->
+                            {
+                                routingTree.add(rq.getSourceKadNode());
+                            }).start();
+                            //i file ridondanti vengono salvati con estensione .FILEID.kad
+                            System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
+                            File toStore = new File(FILESPATH + rq.getFileName() + "." + rq.getFileID() + ".kad");
+                            toStore.createNewFile();
+                            Files.write(toStore.toPath(), rq.getContent());
+                            fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
+                        }
                     }
                     else if (received instanceof DeleteRequest)
                     {
-                        DeleteRequest dr = (DeleteRequest) received;
-                        new Thread(() ->
+                        synchronized (fileMap)
                         {
-                            routingTree.add(dr.getSourceKadNode());
-                        }).start();
-                        System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
-                        fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
+                            DeleteRequest dr = (DeleteRequest) received;
+                            new Thread(() ->
+                            {
+                                routingTree.add(dr.getSourceKadNode());
+                            }).start();
+                            System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
+                            fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
+                        }
                     }
                     else if (received instanceof PingRequest)
                     {
