@@ -1091,7 +1091,7 @@ public class Kademlia implements KademliaInterf {
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
         for (KadNode i : closestK)
         {
-            sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), filepath), thisNode, i);
+            sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
             try
             {
                 Socket s = new Socket(i.getIp(), i.getUDPPort());
@@ -1185,8 +1185,6 @@ public class Kademlia implements KademliaInterf {
                     connection = listener.accept();
                     connection.setSoTimeout(timeout);
 
-                    System.out.println("Connection received from " + connection.getInetAddress().getHostAddress());
-
                     Object responseObject = null;
 
                     //Analizzo la richiesta ricevuta
@@ -1194,6 +1192,7 @@ public class Kademlia implements KademliaInterf {
                     ObjectInputStream inStream = new ObjectInputStream(is);
 
                     Object received = inStream.readObject();
+                    System.out.println(received.getClass() + " received from " + connection.getInetAddress().getHostAddress());
 
                     //Elaboro la risposta
                     if (received instanceof FindNodeRequest)
@@ -1308,6 +1307,7 @@ public class Kademlia implements KademliaInterf {
                     {
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " con una " + responseObject.getClass());
                         outputStream.writeObject(responseObject);
                         outputStream.flush();
                         os.close();
@@ -1317,7 +1317,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException | IOException ex)
                 {
-                    System.err.println("Errore nel thread server: " + ex.getMessage());
+                    System.err.println("ClassNotFound nel thread server: " + ex.getMessage());
                     ex.printStackTrace();
                 }
                 finally
@@ -1331,7 +1331,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("Errore nel thread server: " + ex.getMessage());
+                        System.err.println("IOException nel thread server: " + ex.getMessage());
                         ex.printStackTrace();
                     }
                 }
@@ -1367,12 +1367,13 @@ public class Kademlia implements KademliaInterf {
                                 List<KadNode> temp = findNode(v.getFileID(), false);
                                 for (KadNode n : temp)
                                 {
+                                    System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ")");
+                                    if(n.getNodeID().equals(thisNode.getNodeID())) continue;
                                     Socket tempS = null;
                                     try
                                     {
                                         tempS = new Socket();
                                         tempS.setSoTimeout(timeout);
-                                        System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ")");
                                         tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
                                         OutputStream os = tempS.getOutputStream();
                                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -1389,6 +1390,7 @@ public class Kademlia implements KademliaInterf {
                                                 if (resp instanceof FindNodeReply)
                                                 {
                                                     KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                                    System.out.println("++++Il file completo è ");
                                                     System.out.println("++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ")");
                                                     outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                                 }

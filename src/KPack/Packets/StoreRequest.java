@@ -2,6 +2,8 @@ package KPack.Packets;
 
 import KPack.Files.KadFileInterf;
 import KPack.KadNode;
+
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
@@ -23,10 +25,12 @@ public class StoreRequest implements Serializable {
         this.fileName = kf.getFileName();
         this.source = source;
         this.dest = dest;
-
-        Path path = Paths.get(kf.getPath());
         try
         {
+            //Orribile ma temporanea
+            if(!((new File(kf.getPath())).isDirectory())) throw new IOException("Errore nella composizione del KadFile, nel path");
+            if((new File(kf.getPath()+File.separator+kf.getFileName())).isDirectory()) throw new IOException("Errore nella composizione del KadFile, il file è una directory");
+            Path path = Paths.get(kf.getPath()+ File.separator+kf.getFileName());
             content = Files.readAllBytes(path);
         }
         catch (IOException e)
