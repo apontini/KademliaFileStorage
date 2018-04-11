@@ -1,3 +1,4 @@
+
 import KPack.Exceptions.FileNotKnownException;
 import KPack.Files.KadFile;
 import KPack.KadNode;
@@ -155,7 +156,9 @@ public class Main {
                         System.out.println("Inserisci l'ID del nodo");
                     }
                     break;
-
+                case "printtree":
+                    myNode.printTree();
+                    break;
                 case "exit":
                     System.exit(0);
                     break;

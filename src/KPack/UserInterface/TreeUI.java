@@ -105,7 +105,7 @@ public class TreeUI extends javax.swing.JFrame {
                 while (ikn.hasNext())
                 {
                     KadNode kn = ikn.next();
-                    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" +kn.getNodeID() +") from: " + kn.getIp().toString());
+                    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" +kn.getNodeID() +") from: " + kn.getIp().toString()+":"+kn.getUDPPort());
                     dmt.add(treeNode);
                 }
             }
