@@ -48,7 +48,7 @@ public class RoutingTree {
 
     public void add(KadNode nodo)
     {
-        System.out.println("Prendo il lock dell'add dell'albero");
+        //System.out.println("Prendo il lock dell'add dell'albero");
         writeLock.lock();
         Bucket toSplitBucket;
         long now = System.currentTimeMillis();
@@ -109,13 +109,13 @@ public class RoutingTree {
                 }
             }
         }
-        System.out.println("Rilascio il lock dell'add dell'albero");
+        //System.out.println("Rilascio il lock dell'add dell'albero");
         writeLock.unlock();
     }
 
     public Bucket findNodesBucket(KadNode node)
     {
-        System.out.println("Prendo il lock del findNodesBucket dell'albero");
+        //System.out.println("Prendo il lock del findNodesBucket dell'albero");
         readLock.lock();
         //preghiamo gli dei del java e li ringraziamo per la loro benevolenza per la classe BigInteger
         Node curNode = root;
@@ -132,7 +132,7 @@ public class RoutingTree {
                 curNode = ((TreeNode) curNode).getRight();
             }
         }
-        System.out.println("Rilascio il lock del findNodesBucket dell'albero");
+        //System.out.println("Rilascio il lock del findNodesBucket dell'albero");
         readLock.unlock();
         return (Bucket) curNode;
     }

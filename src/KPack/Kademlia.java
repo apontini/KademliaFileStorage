@@ -478,7 +478,7 @@ public class Kademlia implements KademliaInterf {
         AbstractQueue<KadNode> queriedNode = new PriorityQueue<>((o1, o2)
                 -> distanza(o1, target).compareTo(distanza(o2, target))); // lista dei nodi interrogati
         Iterator<KadNode> it = null;
-        System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
+        //System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
         synchronized (bucket)
         {
             it = bucket.iterator();
@@ -486,7 +486,7 @@ public class Kademlia implements KademliaInterf {
             {
                 lkn.add(it.next());
             }
-            System.out.println("<<<<Rilascio il lock del bucket " + bucket.getDepth());
+            //System.out.println("<<<<Rilascio il lock del bucket " + bucket.getDepth());
         }
         TreeNode node = (TreeNode) bucket.getParent();
         int count = depth;
@@ -502,7 +502,7 @@ public class Kademlia implements KademliaInterf {
                 bucket = (Bucket) node.getLeft();
             }
             List<KadNode> list = new ArrayList<>();
-            System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
+            //System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
             synchronized (bucket)
             {
                 it = bucket.iterator();
@@ -511,7 +511,7 @@ public class Kademlia implements KademliaInterf {
                 {
                     list.add(it.next());
                 }
-                System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
+                //System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
             }
             list.sort((o1, o2)
                     -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
@@ -684,7 +684,7 @@ public class Kademlia implements KademliaInterf {
         int depth = ((Node) bucket).getDepth();
         List<KadNode> lkn = new ArrayList<>();
         Iterator<KadNode> it = null;
-        System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
+        //System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
         synchronized (bucket)//lista dei K nodi conosciuti più vicini al target
         {
             it = bucket.iterator();
@@ -692,7 +692,7 @@ public class Kademlia implements KademliaInterf {
             {
                 lkn.add(it.next());
             }
-            System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
+            //System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
         }
         TreeNode node = (TreeNode) bucket.getParent();
         int count = depth - 1;                                    //count rappresenta la profondità del nodo in cui sono ad ogni istante.
@@ -726,7 +726,7 @@ public class Kademlia implements KademliaInterf {
                 currentID = currentID.flipBit((BITID - count) - 1);
                 if (n instanceof Bucket)
                 {
-                    System.out.println("****Prendo il lock del bucket " + n.getDepth());
+                    //System.out.println("****Prendo il lock del bucket " + n.getDepth());
                     synchronized (n)
                     {
                         it = ((Bucket) n).iterator();
@@ -734,7 +734,7 @@ public class Kademlia implements KademliaInterf {
                         {
                             lkn.add(it.next());
                         }
-                        System.out.println("<<<<Lascio il lock del bucket " + n.getDepth());
+                        //System.out.println("<<<<Lascio il lock del bucket " + n.getDepth());
                     }
                     node = (TreeNode) node.getParent();
                     count--;
@@ -756,7 +756,7 @@ public class Kademlia implements KademliaInterf {
                             n = node.getRight();
                         }
                     }
-                    System.out.println("****Prendo il lock del bucket " + n.getDepth());
+                    //System.out.println("****Prendo il lock del bucket " + n.getDepth());
                     synchronized (n)
                     {
                         it = ((Bucket) n).iterator();
@@ -764,7 +764,7 @@ public class Kademlia implements KademliaInterf {
                         {
                             lkn.add(it.next());
                         }
-                        System.out.println("<<<<Lascio il lock del bucket " + n.getDepth());
+                        //System.out.println("<<<<Lascio il lock del bucket " + n.getDepth());
                     }
                 }
             }
@@ -799,7 +799,7 @@ public class Kademlia implements KademliaInterf {
         AbstractQueue<KadNode> queriedNode = new PriorityQueue<>((o1, o2)
                 -> distanza(o1, targetKN).compareTo(distanza(o2, targetKN))); // lista dei nodi interrogati
         Iterator<KadNode> it = null;
-        System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
+        //System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
         synchronized (bucket)
         {
             it = bucket.iterator();
@@ -807,7 +807,7 @@ public class Kademlia implements KademliaInterf {
             {
                 lkn.add(it.next());
             }
-            System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
+            //System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
         }
         TreeNode node = (TreeNode) bucket.getParent();
         int count = depth;
@@ -823,7 +823,7 @@ public class Kademlia implements KademliaInterf {
                 bucket = (Bucket) node.getLeft();
             }
             List<KadNode> list = new ArrayList<>();
-            System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
+            //System.out.println("****Prendo il lock del bucket " + bucket.getDepth());
             synchronized (bucket)
             {
                 it = bucket.iterator();
@@ -832,7 +832,7 @@ public class Kademlia implements KademliaInterf {
                 {
                     list.add(it.next());
                 }
-                System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
+                //System.out.println("<<<<Lascio il lock del bucket " + bucket.getDepth());
             }
             list.sort((o1, o2)
                     -> distanza(o1, thisNode).compareTo(distanza(o2, thisNode)));
@@ -926,14 +926,14 @@ public class Kademlia implements KademliaInterf {
                                         while (it1.hasNext())
                                         {
                                             KadNode k = it1.next();
-                                            System.out.println("****Prendo il lock nella lista del findNode ");
+                                            //System.out.println("****Prendo il lock nella lista del findNode ");
                                             synchronized ((lkn))
                                             {
                                                 if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
                                                 {
                                                     lkn.add(k);
                                                 }
-                                                System.out.println("<<<<Lascio il lock nella lista del findNode ");
+                                                //System.out.println("<<<<Lascio il lock nella lista del findNode ");
                                             }
                                         }
                                         is.close();
@@ -1245,6 +1245,8 @@ public class Kademlia implements KademliaInterf {
                     }
                     else if (received instanceof StoreRequest)
                     {
+                        System.out.println("****Prendo il lock della mappa");
+
                         synchronized (fileMap)
                         {
                             StoreRequest rq = (StoreRequest) received;
@@ -1258,10 +1260,13 @@ public class Kademlia implements KademliaInterf {
                             toStore.createNewFile();
                             Files.write(toStore.toPath(), rq.getContent());
                             fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
+                            System.out.println("<<<<Lascio il lock della mappa");
+
                         }
                     }
                     else if (received instanceof DeleteRequest)
                     {
+                        System.out.println("****Prendo il lock della mappa");
                         synchronized (fileMap)
                         {
                             DeleteRequest dr = (DeleteRequest) received;
@@ -1271,6 +1276,7 @@ public class Kademlia implements KademliaInterf {
                             }).start();
                             System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
                             fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
+                            System.out.println("<<<<Prendo il lock della mappa");
                         }
                     }
                     else if (received instanceof PingRequest)
@@ -1345,8 +1351,8 @@ public class Kademlia implements KademliaInterf {
             {
                 try
                 {
-                    Thread.sleep(sleep); //5 minuti
-                    System.out.println("******Inizio il refresh dei file..");
+                    Thread.sleep(sleep);
+                    System.out.println("Inizio il refresh dei file..");
                     System.out.println("****Prendo il lock della mappa");
                     synchronized (fileMap)
                     {
@@ -1354,6 +1360,7 @@ public class Kademlia implements KademliaInterf {
                         {
                             if (v.isRedundant())
                             {
+                                System.out.println("++++Refresho " + v.getFileName());
                                 List<KadNode> temp = findNode(v.getFileID(), false);
                                 for (KadNode n : temp)
                                 {
@@ -1362,6 +1369,7 @@ public class Kademlia implements KademliaInterf {
                                     {
                                         tempS = new Socket();
                                         tempS.setSoTimeout(timeout);
+                                        System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":"+ n.getUDPPort() +")");
                                         tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
                                         OutputStream os = tempS.getOutputStream();
                                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -1378,6 +1386,7 @@ public class Kademlia implements KademliaInterf {
                                                 if (resp instanceof FindNodeReply)
                                                 {
                                                     KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                                    System.out.println("++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":"+ n.getUDPPort() +")");
                                                     outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                                 }
                                             }
@@ -1391,13 +1400,16 @@ public class Kademlia implements KademliaInterf {
                                             KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
                                             outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                         }
-                                    } catch (SocketException se)
+                                    }
+                                    catch (SocketException se)
                                     {
                                         System.err.println("Impossibile aprire il socket verso " + n.getIp().toString());
-                                    } catch (IOException ioe)
+                                    }
+                                    catch (IOException ioe)
                                     {
                                         System.err.println("Errore generale nel refresh: " + ioe.getMessage());
-                                    } finally
+                                    }
+                                    finally
                                     {
                                         try
                                         {
@@ -1426,7 +1438,7 @@ public class Kademlia implements KademliaInterf {
                         });
                         System.out.println("<<<<Lascio il lock della mappa");
                     }
-                    System.out.println("******Refresh dei file finito");
+                    System.out.println("Refresh dei file finito");
                 }
                 catch (InterruptedException ie)
                 {
