@@ -110,10 +110,6 @@ public class Kademlia implements KademliaInterf {
 
         new Thread(new FileRefresh(fileRefreshWait)).start();
 
-        for(int i=0;i<10;i++)
-        {
-            routingTree.add(new KadNode("255.255.255.255", (short)1, new BigInteger(8,new Random())));
-        }
     }
 
     private boolean isUniqueID()
