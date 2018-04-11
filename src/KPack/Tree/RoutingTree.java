@@ -4,14 +4,11 @@ import KPack.KadNode;
 import KPack.Kademlia;
 import KPack.UserInterface.TreeUI;
 import java.awt.HeadlessException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.Random;
 
 public class RoutingTree {
 

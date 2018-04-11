@@ -1089,7 +1089,9 @@ public class Kademlia implements KademliaInterf {
         StoreRequest sr = null;
 
         List<KadNode> closestK = findNode_lookup(fileID);
-
+        System.out.println("Invio il file a: ");
+        for (KadNode i : closestK)
+            System.out.println(i.getNodeID() + " (Distanza: " + distanza(thisNode,i) +")");
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
         for (KadNode i : closestK)
         {
