@@ -52,7 +52,9 @@ public class RoutingTree {
         long now = System.currentTimeMillis();
         while (!((toSplitBucket = findNodesBucket(nodo)).add(nodo)))
         {
-            toSplitBucket.setTimeVisited(now);
+            //toSplitBucket.setTimeVisited(now);
+            toSplitBucket.refreshStop();
+            
             TreeNode temp = new TreeNode();
             Bucket bucketSx = new Bucket(thisNode, false);
             Bucket bucketDx = new Bucket(thisNode, false);
@@ -105,6 +107,8 @@ public class RoutingTree {
                 {
                     bucketDx.setSplittable(true);
                 }
+                bucketSx.refreshStart();
+                bucketDx.refreshStart();
             }
         }
         //System.out.println("Rilascio il lock dell'add dell'albero");
@@ -149,7 +153,7 @@ public class RoutingTree {
 
     }
 
-    private class RefreshThread implements Runnable
+   /* private class RefreshThread implements Runnable
     {
         @Override
         public void run()
@@ -174,9 +178,9 @@ public class RoutingTree {
                     System.err.println("Il thread di refresh dei bucket è stato interrotto");
                 }
             }
-        }
+        }*/
 
-        private void refreshBucket(Node node)
+        /*private void refreshBucket(Node node)
         {
             if (node instanceof Bucket)
             {
@@ -197,13 +201,13 @@ public class RoutingTree {
                         {   }
                     }
                     */
-                    if(nodeBucket.getTimeVisited()<= 5*60*1000)
+                    /*if(nodeBucket.getTimeVisited()<= 5*60*1000)
                     {
                         return;
                     }
                     else
                     {
-                        int randomIndex = (int) (Math.random() * sizeBucket + 1);
+                        int randomIndex = (int) (Math.random() * sizeBucket);
                         KadNode randomNode = nodeBucket.get(randomIndex);      //prendo un nodo random
                         List<KadNode> knowedNodes = thisNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
                         //devo controllare che current ci sia in lista
@@ -228,6 +232,6 @@ public class RoutingTree {
                 refreshBucket(intNode.getLeft());
                 refreshBucket(intNode.getRight());
             }
-        }
-    }
+        }*/
+   // }
 }
