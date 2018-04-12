@@ -2,6 +2,7 @@ package KPack.Packets;
 
 import KPack.Files.KadFileInterf;
 import KPack.KadNode;
+import org.omg.CORBA.DynAnyPackage.Invalid;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidParameterException;
 
 public class StoreRequest implements Serializable {
 
@@ -19,24 +21,17 @@ public class StoreRequest implements Serializable {
     private KadNode dest;
     private byte[] content;
 
-    public StoreRequest(KadFileInterf kf, KadNode source, KadNode dest)
+    public StoreRequest(KadFileInterf kf, KadNode source, KadNode dest) throws IOException
     {
         this.fileID = kf.getFileID();
         this.fileName = kf.getFileName();
         this.source = source;
         this.dest = dest;
-        try
-        {
-            //Orribile ma temporanea
-            if(!((new File(kf.getPath())).isDirectory())) throw new IOException("Errore nella composizione del KadFile, nel path");
-            if((new File(kf.getPath()+File.separator+kf.getFileName())).isDirectory()) throw new IOException("Errore nella composizione del KadFile, il file è una directory");
-            Path path = Paths.get(kf.getPath()+ File.separator+kf.getFileName());
-            content = Files.readAllBytes(path);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        //Orribile ma temporanea
+        if(!((new File(kf.getPath())).isDirectory())) throw new InvalidParameterException("Errore nella composizione del KadFile, nel path");
+        if((new File(kf.getPath()+File.separator+kf.getFileName())).isDirectory()) throw new InvalidParameterException("Errore nella composizione del KadFile, il file è una directory");
+        Path path = Paths.get(kf.getPath()+ File.separator+kf.getFileName());
+        content = Files.readAllBytes(path);
     }
 
     public KadNode getSourceKadNode()

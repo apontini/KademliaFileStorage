@@ -1,5 +1,5 @@
 
-import KPack.Exceptions.FileNotKnownException;
+import KPack.Exceptions.AlreadyInstancedException;
 import KPack.Files.KadFile;
 import KPack.KadNode;
 import KPack.Kademlia;
@@ -13,7 +13,15 @@ public class Main {
 
     public static void main(String[] args)
     {
-        Kademlia myNode = new Kademlia();
+        Kademlia myNode = null;
+        try
+        {
+            myNode = new Kademlia();
+        }
+        catch(AlreadyInstancedException aie)
+        {
+            System.exit(1);
+        }
         boolean keep = true;
         String in = null;
         Scanner reader = new Scanner(System.in);
@@ -100,7 +108,7 @@ public class Main {
                         {
                             myNode.delete(new BigInteger(split[1]));
                         }
-                        catch (FileNotKnownException fnk)
+                        catch (AlreadyInstancedException fnk)
                         {
                             System.out.println("Il file non esiste o non ne sei il proprietario");
                         }
@@ -123,7 +131,7 @@ public class Main {
                         }
                         catch (NumberFormatException nfe)
                         {
-                            if (myNode.ping(new KadNode(split[1], myNode.getUDPPort(), new BigInteger(split[2]))))
+                            if (myNode.ping(new KadNode(split[1], myNode.getPort(), new BigInteger(split[2]))))
                             {
                                 System.out.println("VIVO");
                             }
@@ -157,7 +165,7 @@ public class Main {
                     }
                     break;
                 case "printtree":
-                    myNode.printTree();
+                    System.out.println(myNode.printTree());
                     break;
                 case "exit":
                     System.exit(0);

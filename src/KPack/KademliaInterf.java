@@ -1,6 +1,6 @@
 package KPack;
 
-import KPack.Exceptions.FileNotKnownException;
+import KPack.Exceptions.AlreadyInstancedException;
 import KPack.Files.KadFile;
 
 import java.io.FileNotFoundException;
@@ -8,7 +8,8 @@ import java.math.BigInteger;
 import java.security.InvalidParameterException;
 import java.util.List;
 
-public interface KademliaInterf {
+public interface KademliaInterf
+{
 
     BigInteger getNodeID();
 
@@ -22,7 +23,7 @@ public interface KademliaInterf {
 
     void store(String filepath) throws FileNotFoundException, InvalidParameterException;
 
-    void delete(BigInteger ID) throws FileNotKnownException;
+    void delete(BigInteger ID) throws AlreadyInstancedException;
 
     KadNode getMyNode();
 }

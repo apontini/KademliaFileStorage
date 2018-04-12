@@ -9,7 +9,7 @@ public class FixedKadNode extends KadNode {
     private String name;
     private String indirizzo;
 
-    public FixedKadNode(String indirizzo, short port, BigInteger ID, String name)
+    public FixedKadNode(String indirizzo, int port, BigInteger ID, String name)
     {
         super(indirizzo, port, ID);
         this.name = name;

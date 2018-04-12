@@ -28,16 +28,16 @@ public class Kademlia implements KademliaInterf {
     private BigInteger nodeID;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    private short UDPPort = 1337; // default 1337
+    private int port = 1337; // default 1337
     private int fileRefreshWait = 10000;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
     private int timeout = 10000;
 
-    public Kademlia()
+    public Kademlia() throws AlreadyInstancedException
     {
         if (instance)
         {
-            return; //Aggiungere un'eccezione tipo AlreadyInstanced
+            throw new AlreadyInstancedException();
         }
         instance = true;
         Runtime.getRuntime().addShutdownHook(new Thread() { //Hook per eliminare i file ridondanti allo spegnimento
@@ -62,6 +62,8 @@ public class Kademlia implements KademliaInterf {
 
         loadSettings();
         System.out.println("Timeout socket: " + timeout);
+        System.out.println("Refresh Time: " + fileRefreshWait);
+
 
         //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash della JVM
         File temp = new File(FILESPATH);
@@ -100,15 +102,15 @@ public class Kademlia implements KademliaInterf {
         }
         System.out.println("ID ottenuto: " + nodeID);
 
-        thisNode = new KadNode(myIP, UDPPort, nodeID);
+        thisNode = new KadNode(myIP, port, nodeID);
 
         routingTree.add(thisNode); //Mi aggiungo
 
-        new Thread(new ListenerThread()).start();
+        new Thread(new ListenerThread(), "Listener").start();
 
         networkJoin();
 
-        new Thread(new FileRefresh(fileRefreshWait)).start();
+        new Thread(new FileRefresh(fileRefreshWait), "FileRefresh").start();
 
     }
 
@@ -149,9 +151,9 @@ public class Kademlia implements KademliaInterf {
                         case "port":
                             if (!split[1].isEmpty())
                             {
-                                if (Short.valueOf(split[1]) > 1024 && Short.valueOf(split[1]) < 65535)
+                                if (Integer.valueOf(split[1]) > 1024 && Integer.valueOf(split[1]) < 65535)
                                 {
-                                    UDPPort = Short.valueOf(split[1]);
+                                    port = Integer.valueOf(split[1]);
                                 }
                                 else
                                 {
@@ -231,7 +233,7 @@ public class Kademlia implements KademliaInterf {
                 if (fkn.getName().toLowerCase().equals(hostname.toLowerCase()))
                 {
                     nodeID = fkn.getNodeID();
-                    UDPPort = fkn.getUDPPort();
+                    port = fkn.getUDPPort();
                     return true;
                 }
             }
@@ -267,8 +269,8 @@ public class Kademlia implements KademliaInterf {
             InetAddress inAddrTavo = InetAddress.getByName("tavolino.ddns.net");
             String addressTavo = inAddrTavo.getHostAddress();
 
-            FixedKadNode Punto = new FixedKadNode("pintini.ddns.net", (short) 1336, BigInteger.ONE, "pintini");
-            FixedKadNode Tavolino = new FixedKadNode("tavolino.ddns.net", (short) 1336, BigInteger.valueOf(2), "tavolino");
+            FixedKadNode Punto = new FixedKadNode("pintini.ddns.net", (int) 1336, BigInteger.ONE, "pintini");
+            FixedKadNode Tavolino = new FixedKadNode("tavolino.ddns.net", (int) 1336, BigInteger.valueOf(2), "tavolino");
 
             fixNodes.add(Punto);
             fixNodes.add(Tavolino);
@@ -382,7 +384,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException e)
         {
-            System.err.println("Host sconosciuto nel trovare l'IP: ");
+            System.err.println("Host sconosciuto nel trovare l'IP: " + e.getMessage());
             System.err.println("ABORT! ABORT!");
             System.exit(1);
             return null;
@@ -430,8 +432,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException e)
                 {
-                    //TODO
-                    e.printStackTrace();
+                    System.err.println("Il nodo pingato mi ha risposto con qualcosa che non conosco");
                 }
             }
         }
@@ -658,7 +659,7 @@ public class Kademlia implements KademliaInterf {
             }
             alphaNode.clear();
             int alphaSize;
-            if (size == lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno dei alpha node mi da nuovi nodi
+            if (size == lkn.size()) //caso in cui il round di find nodes fallisce, cioè nessuno degli alpha node mi da nuovi nodi
             {
                 alphaSize = K;
             }
@@ -896,14 +897,14 @@ public class Kademlia implements KademliaInterf {
 
                         /*DatagramSocket ds=new DatagramSocket();
                         ds.setSoTimeout(timeout);
-                        ds.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getUDPPort()));
+                        ds.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getPort()));
 
                         ByteArrayOutputStream baos=new ByteArrayOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(baos);
                         outputStream.writeObject(fnr);
                         outputStream.flush();
                         byte[] buffer=baos.toByteArray();
-                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,kadNode.getIp(), kadNode.getUDPPort());
+                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,kadNode.getIp(), kadNode.getPort());
                         ds.send(packet);
                          */
                         long timeInit = System.currentTimeMillis();
@@ -1038,11 +1039,12 @@ public class Kademlia implements KademliaInterf {
     public List<KadFile> getFileList()
     {
         List<KadFile> temp = new ArrayList<>();
-        System.out.println("****Prendo il lock della mappa");
+        System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
         synchronized (fileMap)
         {
+            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
             fileMap.forEach((k, v) -> temp.add(v));
-            System.out.println("<<<<Lascio il lock della mappa");
+            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
         }
         return temp;
     }
@@ -1052,9 +1054,9 @@ public class Kademlia implements KademliaInterf {
         return thisNode;
     }
 
-    public short getUDPPort()
+    public int getPort()
     {
-        return UDPPort;
+        return port;
     }
 
     public void store(String filepath) throws FileNotFoundException, InvalidParameterException
@@ -1091,11 +1093,11 @@ public class Kademlia implements KademliaInterf {
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
         for (KadNode i : closestK)
         {
-            sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
             try
             {
+                sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
+                System.out.println("Contatto " + i.getNodeID() + "(" + i.getIp() + ") per lo store");
                 Socket s = new Socket(i.getIp(), i.getUDPPort());
-
                 OutputStream os = s.getOutputStream();
                 ObjectOutputStream outputStream = new ObjectOutputStream(os);
                 outputStream.writeObject(sr);
@@ -1103,12 +1105,13 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-                System.err.println("Errore generale nell'eseguire lo store: " + ioe.getMessage());
+
+                System.err.println("Errore nell'eseguire lo store: " + ioe.getMessage());
             }
         }
     }
 
-    public void delete(BigInteger id) throws FileNotKnownException
+    public void delete(BigInteger id) throws AlreadyInstancedException
     {
 
         KadFile temp = fileMap.get(id);
@@ -1117,11 +1120,15 @@ public class Kademlia implements KademliaInterf {
         {
             DeleteRequest dr = null;
             List<KadNode> closestK = findNode_lookup(temp.getFileID());
+            System.out.println("Elimino il file da: ");
+            for (KadNode i : closestK)
+                System.out.println(i.getNodeID() + " (Distanza: " + distanza(thisNode,i) +")");
             for (KadNode k : closestK)
             {
                 dr = new DeleteRequest(temp.getFileID(), thisNode, k);
                 try
                 {
+                    System.out.println("Contatto " + k.getNodeID() + "(" + k.getIp() + ") per il delete");
                     Socket s = new Socket();
                     s.setSoTimeout(timeout);
                     s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
@@ -1133,14 +1140,14 @@ public class Kademlia implements KademliaInterf {
 
                     /*DatagramSocket ds=new DatagramSocket();
                     ds.setSoTimeout(timeout);
-                    ds.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
+                    ds.connect(new InetSocketAddress(k.getIp(), k.getPort()));
 
                     ByteArrayOutputStream baos=new ByteArrayOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(baos);
                     outputStream.writeObject(dr);
                     outputStream.flush();
                     byte[] buffer=baos.toByteArray();
-                    DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getUDPPort());
+                    DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getPort());
                     ds.send(packet);*/
                 }
                 catch (IOException ioe)
@@ -1152,7 +1159,7 @@ public class Kademlia implements KademliaInterf {
         }
         else
         {
-            throw new FileNotKnownException();
+            throw new AlreadyInstancedException();
         }
     }
 
@@ -1165,8 +1172,8 @@ public class Kademlia implements KademliaInterf {
         {
             try
             {
-                listener = new ServerSocket(UDPPort);
-                System.out.println("Thread Server avviato\n" + "IP: " + getIP() + "\nPorta: " + UDPPort);
+                listener = new ServerSocket(port);
+                System.out.println("Thread Server avviato\n" + "IP: " + getIP() + "\nPorta: " + port);
             }
             catch (IOException ex)
             {
@@ -1180,8 +1187,6 @@ public class Kademlia implements KademliaInterf {
                 Socket connection = null;
                 try
                 {
-                    System.out.println("Waiting for connection");
-
                     connection = listener.accept();
                     connection.setSoTimeout(timeout);
 
@@ -1247,10 +1252,12 @@ public class Kademlia implements KademliaInterf {
                     }
                     else if (received instanceof StoreRequest)
                     {
-                        System.out.println("****Prendo il lock della mappa");
+                        System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
 
                         synchronized (fileMap)
                         {
+                            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
                             StoreRequest rq = (StoreRequest) received;
                             new Thread(() ->
                             {
@@ -1262,15 +1269,17 @@ public class Kademlia implements KademliaInterf {
                             toStore.createNewFile();
                             Files.write(toStore.toPath(), rq.getContent());
                             fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
-                            System.out.println("<<<<Lascio il lock della mappa");
+                            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
 
                         }
                     }
                     else if (received instanceof DeleteRequest)
                     {
-                        System.out.println("****Prendo il lock della mappa");
+                        System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
                         synchronized (fileMap)
                         {
+                            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
                             DeleteRequest dr = (DeleteRequest) received;
                             new Thread(() ->
                             {
@@ -1278,7 +1287,7 @@ public class Kademlia implements KademliaInterf {
                             }).start();
                             System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
                             fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
-                            System.out.println("<<<<Prendo il lock della mappa");
+                            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         }
                     }
                     else if (received instanceof PingRequest)
@@ -1312,8 +1321,6 @@ public class Kademlia implements KademliaInterf {
                         outputStream.flush();
                         os.close();
                     }
-                    connection.close();
-
                 }
                 catch (ClassNotFoundException | IOException ex)
                 {
@@ -1335,6 +1342,7 @@ public class Kademlia implements KademliaInterf {
                         ex.printStackTrace();
                     }
                 }
+                System.out.println("Connessione conclusa");
             }
         }
     }
@@ -1356,9 +1364,10 @@ public class Kademlia implements KademliaInterf {
                 {
                     Thread.sleep(sleep);
                     System.out.println("Inizio il refresh dei file..");
-                    System.out.println("****Prendo il lock della mappa");
+                    System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
                     synchronized (fileMap)
                     {
+                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
                         fileMap.forEach((k, v) ->
                         {
                             if (v.isRedundant())
@@ -1414,7 +1423,7 @@ public class Kademlia implements KademliaInterf {
                                     }
                                     catch (IOException ioe)
                                     {
-                                        System.err.println("Errore generale nel refresh: " + ioe.getMessage());
+                                        System.err.println("Errore nel refresh: " + ioe.getMessage());
                                     }
                                     finally
                                     {
@@ -1431,7 +1440,7 @@ public class Kademlia implements KademliaInterf {
                                         }
                                     }
                                 }
-                                //Se non sono tra i K nodi, elimino il file da me
+                                //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
                                 boolean state = false;
                                 for (KadNode i : temp)
                                 {
@@ -1447,7 +1456,7 @@ public class Kademlia implements KademliaInterf {
                                 }
                             }
                         });
-                        System.out.println("<<<<Lascio il lock della mappa");
+                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                     }
                     System.out.println("Refresh dei file finito");
                 }
@@ -1474,11 +1483,11 @@ public class Kademlia implements KademliaInterf {
         return num;
     }
 
-    public void printTree()
+    public String printTree()
     {
         StringBuilder sb = new StringBuilder();
         printTree(routingTree.getRoot(),0,sb);
-        System.out.println(sb.toString());
+        return sb.toString();
     }
     
     private void printTree(Node n, int indent, StringBuilder sb)

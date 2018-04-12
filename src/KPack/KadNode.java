@@ -9,10 +9,10 @@ import java.util.Objects;
 public class KadNode implements Serializable {
 
     private InetAddress ip;
-    private short UDPport;
+    private int port;
     private BigInteger nodeID;
 
-    public KadNode(String ipString, short port, BigInteger ID)
+    public KadNode(String ipString, int port, BigInteger ID)
     {
         try
         {
@@ -23,8 +23,8 @@ public class KadNode implements Serializable {
             uoe.printStackTrace();
         }
 
-        UDPport = port;
-        nodeID = ID;
+        this.port = port;
+        this.nodeID = ID;
     }
 
     public InetAddress getIp()
@@ -32,9 +32,9 @@ public class KadNode implements Serializable {
         return ip;
     }
 
-    public short getUDPPort()
+    public int getUDPPort()
     {
-        return UDPport;
+        return port;
     }
 
     public BigInteger getNodeID()
@@ -54,7 +54,7 @@ public class KadNode implements Serializable {
             return false;
         }
         KadNode kadNode = (KadNode) o;
-        return Objects.equals(nodeID, kadNode.nodeID); //dubbio
+        return Objects.equals(nodeID, kadNode.nodeID);
     }
 
     @Override
@@ -62,7 +62,7 @@ public class KadNode implements Serializable {
     {
         return "KadNode{"
                 + "ip=" + ip
-                + ", UDPport=" + UDPport
+                + ", UDPport=" + port
                 + ", nodeID=" + nodeID
                 + '}';
     }
