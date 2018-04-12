@@ -1206,6 +1206,11 @@ public class Kademlia implements KademliaInterf {
                     if (!(received instanceof Packet) || !((Packet) received).getDestKadNode().equals(thisNode))
                     {
                         System.out.println("@@@@@@@@@@@@@@ Pacchetto ricevuto non valito @@@@@@@@@@@@@@");
+                        if(received instanceof Packet)
+                        {
+                            System.out.println("@@@@@@@@@@@@@@ received: "+((Packet)received).getDestKadNode()+" @@@@@@@@@@@@@@");
+                            System.out.println("@@@@@@@@@@@@@@ this: "+thisNode+" @@@@@@@@@@@@@@");
+                        }
                         connection.close();
                         continue;
                     }
