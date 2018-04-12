@@ -11,20 +11,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class FindValueReply implements Serializable {
+public class FindValueReply extends Packet implements Serializable {
 
     private final String fileName;
     private BigInteger fileID;
     private byte[] content;
     private List<KadNode> lkn;
-    private KadNode source;
-    private KadNode dest;
 
     public FindValueReply(BigInteger fileID, KadFileInterf kf, KadNode source, KadNode dest)
     {
+        super(source, dest);
         this.fileID = fileID;
-        this.source = source;
-        this.dest = dest;
         this.lkn = lkn;
         if (kf == null)
         {
@@ -66,11 +63,4 @@ public class FindValueReply implements Serializable {
     {
         return lkn;
     }
-
-    public KadNode getSourceKadNode()
-    {
-        return source;
-    }
-
-    public KadNode getDestKadNode() { return dest; }
 }

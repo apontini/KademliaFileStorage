@@ -3,24 +3,10 @@ package KPack.Packets;
 import KPack.KadNode;
 import java.io.Serializable;
 
-public class PingRequest implements Serializable {
-
-    private KadNode source;
-    private KadNode dest;
+public class PingRequest extends Packet implements Serializable {
 
     public PingRequest(KadNode source, KadNode dest)
     {
-        this.source = source;
-        this.dest = dest;
-    }
-
-    public KadNode getSourceKadNode()
-    {
-        return source;
-    }
-
-    public KadNode getDestKadNode()
-    {
-        return dest;
+        super(source, dest);
     }
 }
