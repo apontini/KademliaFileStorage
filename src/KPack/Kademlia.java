@@ -1224,12 +1224,8 @@ public class Kademlia implements KademliaInterf {
                     if (received instanceof FindNodeRequest)
                     {
                         FindNodeRequest fnr = (FindNodeRequest) received;
-                        /* if (!fnr.toTrack())
-                        {
 
-                        }*/
-
-                        System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode().toString());
+                        System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode());
 
                         List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
 
