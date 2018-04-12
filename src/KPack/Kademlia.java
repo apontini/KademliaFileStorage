@@ -1253,7 +1253,6 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof StoreRequest)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-
                         synchronized (fileMap)
                         {
                             System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
@@ -1368,6 +1367,7 @@ public class Kademlia implements KademliaInterf {
                     synchronized (fileMap)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+                        List<KadFile> toBeDeleted = new ArrayList<>();
                         fileMap.forEach((k, v) ->
                         {
                             if (v.isRedundant())
@@ -1441,21 +1441,19 @@ public class Kademlia implements KademliaInterf {
                                     }
                                 }
                                 //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
-                                boolean state = false;
                                 for (KadNode i : temp)
                                 {
                                     if (thisNode.getNodeID().equals(i.getNodeID()))
                                     {
-                                        state = true;
+                                        toBeDeleted.add(v);
                                         break;
                                     }
                                 }
-                                if (!state)
-                                {
-                                    fileMap.remove(v.getFileID());
-                                }
                             }
                         });
+                        //Elimino qua i file per evitare ConcurrentModificationExceptions
+                        for(KadFile i : toBeDeleted)
+                            fileMap.remove(i.getFileID());
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                     }
                     System.out.println("Refresh dei file finito");
