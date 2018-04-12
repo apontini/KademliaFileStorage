@@ -403,7 +403,7 @@ public class Kademlia implements KademliaInterf {
         {
             Socket s = new Socket();
             s.setSoTimeout(timeout);
-            s.connect(new InetSocketAddress(node.getIp(), node.getUDPPort()));
+            s.connect(new InetSocketAddress(node.getIp(), node.getUDPPort()), timeout);
 
             OutputStream os = s.getOutputStream();
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -1089,7 +1089,7 @@ public class Kademlia implements KademliaInterf {
         List<KadNode> closestK = findNode_lookup(fileID);
         System.out.println("Invio il file a: ");
         for (KadNode i : closestK)
-            System.out.println(i.getNodeID() + " (Distanza: " + distanza(thisNode,i) +")");
+            System.out.println(i.getNodeID() + " (Distanza: " + distanza(new KadNode("0.0.0.0",0,fileID),i) +")");
         // List<KadNode> closestK = findNode_lookup(fileID); togliere il commento per i test veri
         for (KadNode i : closestK)
         {
@@ -1111,7 +1111,7 @@ public class Kademlia implements KademliaInterf {
         }
     }
 
-    public void delete(BigInteger id) throws AlreadyInstancedException
+    public void delete(BigInteger id) throws FileNotKnownException
     {
 
         KadFile temp = fileMap.get(id);
@@ -1120,18 +1120,18 @@ public class Kademlia implements KademliaInterf {
         {
             DeleteRequest dr = null;
             List<KadNode> closestK = findNode_lookup(temp.getFileID());
-            System.out.println("Elimino il file da: ");
+            System.out.println("Elimino il file " + temp.getFileName() +" da: ");
             for (KadNode i : closestK)
                 System.out.println(i.getNodeID() + " (Distanza: " + distanza(thisNode,i) +")");
             for (KadNode k : closestK)
             {
-                dr = new DeleteRequest(temp.getFileID(), thisNode, k);
+                dr = new DeleteRequest(temp, thisNode, k);
                 try
                 {
                     System.out.println("Contatto " + k.getNodeID() + "(" + k.getIp() + ") per il delete");
                     Socket s = new Socket();
                     s.setSoTimeout(timeout);
-                    s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()));
+                    s.connect(new InetSocketAddress(k.getIp(), k.getUDPPort()), timeout);
 
                     OutputStream os = s.getOutputStream();
                     ObjectOutputStream outputStream = new ObjectOutputStream(os);
@@ -1159,7 +1159,7 @@ public class Kademlia implements KademliaInterf {
         }
         else
         {
-            throw new AlreadyInstancedException();
+            throw new FileNotKnownException();
         }
     }
 
@@ -1285,8 +1285,8 @@ public class Kademlia implements KademliaInterf {
                             {
                                 routingTree.add(dr.getSourceKadNode());
                             }).start();
-                            System.out.println("Ho ricevuto un delete di " + dr.getFileName() + " da  " + dr.getSourceKadNode().getIp());
-                            fileMap.remove(new KadFile(dr.getFileID(), true, dr.getFileName(), ""));
+                            System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " da  " + dr.getSourceKadNode().getIp());
+                            fileMap.remove(dr.getFile());
                             System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         }
                     }

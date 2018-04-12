@@ -1,6 +1,7 @@
 package KPack;
 
 import KPack.Exceptions.AlreadyInstancedException;
+import KPack.Exceptions.FileNotKnownException;
 import KPack.Files.KadFile;
 
 import java.io.FileNotFoundException;
@@ -23,7 +24,7 @@ public interface KademliaInterf
 
     void store(String filepath) throws FileNotFoundException, InvalidParameterException;
 
-    void delete(BigInteger ID) throws AlreadyInstancedException;
+    void delete(BigInteger ID) throws FileNotKnownException;
 
     KadNode getMyNode();
 }

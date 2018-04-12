@@ -1,5 +1,6 @@
 
 import KPack.Exceptions.AlreadyInstancedException;
+import KPack.Exceptions.FileNotKnownException;
 import KPack.Files.KadFile;
 import KPack.KadNode;
 import KPack.Kademlia;
@@ -108,7 +109,7 @@ public class Main {
                         {
                             myNode.delete(new BigInteger(split[1]));
                         }
-                        catch (AlreadyInstancedException fnk)
+                        catch (FileNotKnownException fnk)
                         {
                             System.out.println("Il file non esiste o non ne sei il proprietario");
                         }

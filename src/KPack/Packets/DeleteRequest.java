@@ -1,5 +1,6 @@
 package KPack.Packets;
 
+import KPack.Files.KadFile;
 import KPack.Files.KadFileInterf;
 import KPack.KadNode;
 import java.io.Serializable;
@@ -9,24 +10,18 @@ public class DeleteRequest implements Serializable {
 
     private final KadNode source;
     private final KadNode dest;
-    private BigInteger fileID;
-    private String fileName;
+    private KadFile kf;
 
-    public DeleteRequest(BigInteger id, KadNode source, KadNode dest)
+    public DeleteRequest(KadFile kf, KadNode source, KadNode dest)
     {
-        this.fileID = id;
+        this.kf = kf;
         this.source = source;
         this.dest = dest;
     }
 
-    public BigInteger getFileID()
+    public KadFile getFile()
     {
-        return fileID;
-    }
-
-    public String getFileName()
-    {
-        return fileName;
+        return kf;
     }
 
     public KadNode getSourceKadNode()

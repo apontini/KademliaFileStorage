@@ -29,18 +29,11 @@ public class KadFileMap implements KadFileMapInterf {
 
     synchronized public void remove(KadFile file)
     {
-        KadFile temp = fileMap.get(file.getFileID());
+        KadFile temp = fileMap.remove(file.getFileID());
 
-        if (temp == null)
+        if (temp.isRedundant())
         {
-            return;
-        }
-
-        fileMap.remove(temp);
-
-        if (file.isRedundant())
-        {
-            new File(file.getPath() + File.pathSeparator + file.getFileName()).delete();
+            new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
         }
         serializeMap();
     }
@@ -48,13 +41,7 @@ public class KadFileMap implements KadFileMapInterf {
     synchronized public void remove(BigInteger ID)
     {
 
-        KadFile temp = fileMap.get(ID);
-
-        if (temp == null)
-        {
-            return;
-        }
-        fileMap.remove(temp);
+        KadFile temp = fileMap.remove(ID);
         if (temp.isRedundant())
         {
             new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
