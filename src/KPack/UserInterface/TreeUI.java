@@ -16,11 +16,12 @@ public class TreeUI extends javax.swing.JFrame {
 
     private JTree tree;
     private RoutingTree routingTree;
+    private Kademlia thisNode;
 
-    public TreeUI(RoutingTree rt)
+    public TreeUI(RoutingTree rt, Kademlia thisNode)
     {
         routingTree = rt;
-
+        this.thisNode = thisNode;
         Node rootNode = routingTree.getRoot();
         DefaultMutableTreeNode rootTree = new DefaultMutableTreeNode("");
         recursiveTree(rootNode, rootTree);
@@ -105,7 +106,15 @@ public class TreeUI extends javax.swing.JFrame {
                 while (ikn.hasNext())
                 {
                     KadNode kn = ikn.next();
-                    DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" +kn.getNodeID() +") from: " + kn.getIp().toString()+":"+kn.getUDPPort());
+                    DefaultMutableTreeNode treeNode = null;
+                    try
+                    {
+                        treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" + kn.getNodeID() + ") from: " + kn.getIp().toString() + ":" + kn.getUDPPort() + "(Dist: " + thisNode.distanza(thisNode.getMyNode(), kn) + ")");
+                    }
+                    catch(NullPointerException e)
+                    {
+                        treeNode = new DefaultMutableTreeNode(Kademlia.intToBinary(kn.getNodeID()) + " (" + kn.getNodeID() + ") from: " + kn.getIp().toString() + ":" + kn.getUDPPort() + "(Dist: /)");
+                    }
                     dmt.add(treeNode);
                 }
             }

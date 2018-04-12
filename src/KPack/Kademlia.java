@@ -1507,7 +1507,7 @@ public class Kademlia implements KademliaInterf {
 
                 sb.append("+  ");
                 KadNode kn = ikn.next();
-                sb.append(Kademlia.intToBinary(kn.getNodeID()) + " (" + kn.getNodeID() + ") from: " + kn.getIp().toString() + ":" + kn.getUDPPort());
+                sb.append(Kademlia.intToBinary(kn.getNodeID()) + " (" + kn.getNodeID() + ") from: " + kn.getIp().toString() + ":" + kn.getUDPPort() + "(Dist: " + distanza(thisNode,kn) + ")");
                 sb.append("\n");
             }
             return;

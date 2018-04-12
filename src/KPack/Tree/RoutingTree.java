@@ -37,7 +37,7 @@ public class RoutingTree {
 
         try
         {
-            new TreeUI(this);
+            new TreeUI(this, thisNode);
         }
         catch (HeadlessException he) //per dispositivi senza schermo
         {
