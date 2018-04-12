@@ -1205,6 +1205,7 @@ public class Kademlia implements KademliaInterf {
                     //se non ho ricevuto un pacchetto o non sono io il destinatario, chiudo la connessione
                     if (!(received instanceof Packet) || !((Packet) received).getDestKadNode().equals(thisNode))
                     {
+                        System.out.println("@@@@@@@@@@@@@@ Pacchetto ricevuto non valito @@@@@@@@@@@@@@");
                         connection.close();
                         continue;
                     }
