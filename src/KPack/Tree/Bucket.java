@@ -149,26 +149,29 @@ public class Bucket extends Node implements Iterable {
                         break;
                     }
                 }
-                lastUse.set(System.currentTimeMillis());
-                System.out.println("Eseguo il refresh del bucket" + hashCode());
-                boolean notDead = false;
-                int randomIndex = (int) (Math.random() * size());
-                KadNode randomNode = get(randomIndex);      //prendo un nodo random
-                List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
-                //devo controllare che current ci sia in lista
-                for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                synchronized (Bucket.this)
                 {
-                    if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
+                    System.out.println("Eseguo il refresh del bucket" + hashCode());
+                    boolean notDead = false;
+                    int randomIndex = (int) (Math.random() * size());
+                    KadNode randomNode = get(randomIndex);      //prendo un nodo random
+                    List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
+                    //devo controllare che current ci sia in lista
+                    for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
                     {
-                        notDead = true;
+                        if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
+                        {
+                            notDead = true;
+                        }
                     }
+                    //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
+                    if (!notDead)
+                    {
+                        removeFromBucket(randomNode);
+                    }
+                    System.out.println("Refresh del bucket" + hashCode() + " completato");
+                    lastUse.set(System.currentTimeMillis());
                 }
-                //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
-                if (!notDead)
-                {
-                    removeFromBucket(randomNode);
-                }
-                System.out.println("Refresh del bucket" + hashCode() + " completato");
             }
             System.out.println("Bucket Refresher Thread Morto");
         }
