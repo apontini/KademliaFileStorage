@@ -151,6 +151,11 @@ public class Bucket extends Node implements Iterable {
                 }
                 synchronized (Bucket.this)
                 {
+                    if(size()==0)
+                    {
+                        lastUse.set(System.currentTimeMillis());
+                        continue;
+                    }
                     System.out.println("Eseguo il refresh del bucket" + hashCode());
                     boolean notDead = false;
                     int randomIndex = (int) (Math.random() * size());
