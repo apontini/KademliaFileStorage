@@ -155,7 +155,7 @@ public class Bucket extends Node implements Iterable {
                     boolean notDead = false;
                     int randomIndex = (int) (Math.random() * size());
                     KadNode randomNode = get(randomIndex);      //prendo un nodo random
-                    List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
+                    /*List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
                     //devo controllare che current ci sia in lista
                     for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
                     {
@@ -166,6 +166,10 @@ public class Bucket extends Node implements Iterable {
                     }
                     //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
                     if (!notDead)
+                    {
+                        removeFromBucket(randomNode);
+                    }*/
+                    if (!thisKadNode.ping(randomNode))
                     {
                         removeFromBucket(randomNode);
                     }
