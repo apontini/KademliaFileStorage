@@ -124,7 +124,7 @@ public class Kademlia implements KademliaInterf {
 
     private boolean isUniqueID()
     {
-        List<KadNode> nodes = findNode(nodeID, true);       //richiamo il findnode utilizzando il mio ID
+        List<KadNode> nodes = findNode(nodeID, false);       //richiamo il findnode utilizzando il mio ID
         for (KadNode kn : nodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
         {
             if (kn.getNodeID().equals(nodeID))              //ho trovato un nodo con il mio stesso ID
@@ -259,7 +259,7 @@ public class Kademlia implements KademliaInterf {
     private void networkJoin()
     {
         //Faccio il findNode su me stesso
-        List<KadNode> nearestNodes = findNode(nodeID, false);
+        List<KadNode> nearestNodes = findNode(nodeID, true);
         for (KadNode kn : nearestNodes)
         {
             routingTree.add(kn);
@@ -640,7 +640,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (IOException ex)
                 {
-                    System.err.println("IOException " + ex.getMessage());
+                    System.err.println("IOException nel FindValue " + ex.getMessage());
                 }
             }
             queriedNode.addAll(alphaNode);
@@ -794,12 +794,12 @@ public class Kademlia implements KademliaInterf {
         return findNodeMethod(targetID, false);
     }
 
-    private List<KadNode> findNode(BigInteger targetID, boolean doNotTrack)
+    private List<KadNode> findNode(BigInteger targetID, boolean track)
     {
-        return findNodeMethod(targetID, doNotTrack);
+        return findNodeMethod(targetID, track);
     }
 
-    private List<KadNode> findNodeMethod(BigInteger targetID, boolean doNotTrack)
+    private List<KadNode> findNodeMethod(BigInteger targetID, boolean track)
     {
         Bucket bucket = routingTree.findNodesBucket(thisNode);
         KadNode targetKN = new KadNode("", (short) 0, targetID);
@@ -886,7 +886,7 @@ public class Kademlia implements KademliaInterf {
             for (int i = 0; i < alphaNode.size(); i++)
             {
                 KadNode kadNode = alphaNode.get(i);
-                FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode, doNotTrack);
+                FindNodeRequest fnr = new FindNodeRequest(targetID, thisNode, kadNode, track);
                 threads[i] = new Thread(() ->
                 {
                     try
@@ -981,7 +981,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("IOException " + ex.getMessage());
+                        System.err.println("IOException nel FindNode: " + ex.getMessage());
                     }
                 });
                 threads[i].start();
@@ -1226,7 +1226,7 @@ public class Kademlia implements KademliaInterf {
 
                     Packet p = (Packet) received;
                     //aggiungo il nodo sorgente all'albero di routing
-                    if (!(received instanceof FindNodeRequest && ((FindNodeRequest) received).toTrack()))
+                    if (received instanceof FindNodeRequest && ((FindNodeRequest) received).isTracked())
                     {
                         new Thread(() ->
                         {
@@ -1384,7 +1384,23 @@ public class Kademlia implements KademliaInterf {
                             if (v.isRedundant())
                             {
                                 System.out.println("++++Refresho " + v.getFileName());
-                                List<KadNode> temp = findNode(v.getFileID(), false);
+                                List<KadNode> temp = findNode(v.getFileID(), true);
+                                //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
+                                boolean state = true;
+                                for (KadNode n : temp)
+                                {
+                                    if (thisNode.getNodeID().equals(n.getNodeID()))
+                                    {
+                                        state = false;
+                                        break;
+                                    }
+                                }
+                                if(state)
+                                {
+                                    System.out.println("+++Non sono tra i nodi più vicini! Elimino il file");
+                                    toBeDeleted.add(v);
+                                    return;
+                                }
                                 for (KadNode n : temp)
                                 {
                                     System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ")");
@@ -1454,15 +1470,7 @@ public class Kademlia implements KademliaInterf {
                                         }
                                     }
                                 }
-                                //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
-                                for (KadNode i : temp)
-                                {
-                                    if (thisNode.getNodeID().equals(i.getNodeID()))
-                                    {
-                                        toBeDeleted.add(v);
-                                        break;
-                                    }
-                                }
+
                             }
                         });
                         //Elimino qua i file per evitare ConcurrentModificationExceptions

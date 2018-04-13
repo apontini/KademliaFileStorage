@@ -8,13 +8,13 @@ import java.math.BigInteger;
 public class FindNodeRequest extends Packet implements Serializable {
 
     private BigInteger targetID;
-    private boolean doNotTrack; //se è vera, il nodo che riceve la richiesta non aggiorna il bucket relativo all'ID
+    private boolean track; //se è falsa, il nodo che riceve la richiesta non aggiorna il bucket relativo all'ID
 
-    public FindNodeRequest(BigInteger targetID, KadNode sourceKN, KadNode destKN, boolean doNotTrack)
+    public FindNodeRequest(BigInteger targetID, KadNode sourceKN, KadNode destKN, boolean track)
     {
         super(sourceKN, destKN);
         this.targetID = targetID;
-        this.doNotTrack = doNotTrack;
+        this.track = track;
     }
 
     public BigInteger getTargetID()
@@ -22,8 +22,8 @@ public class FindNodeRequest extends Packet implements Serializable {
         return targetID;
     }
 
-    public boolean toTrack()
+    public boolean isTracked()
     {
-        return doNotTrack;
+        return track;
     }
 }
