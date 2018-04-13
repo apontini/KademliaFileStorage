@@ -169,9 +169,11 @@ public class Bucket extends Node implements Iterable {
                     {
                         removeFromBucket(randomNode);
                     }*/
-                    if (!thisKadNode.ping(randomNode))
+                    boolean isAlive=thisKadNode.ping(randomNode);
+                    removeFromBucket(randomNode);
+                    if (isAlive)                                        //lo aggiungo in coda ad indicare che l'ho visto vivo di recente
                     {
-                        removeFromBucket(randomNode);
+                        listaNodi.add(randomNode);
                     }
                     System.out.println("Refresh del bucket" + hashCode() + " completato");
                     lastUse.set(System.currentTimeMillis());
