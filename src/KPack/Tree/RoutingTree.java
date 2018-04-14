@@ -4,7 +4,6 @@ import KPack.KadNode;
 import KPack.Kademlia;
 import KPack.UserInterface.TreeUI;
 import java.awt.HeadlessException;
-import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -47,72 +46,87 @@ public class RoutingTree {
     public void add(KadNode nodo)
     {
         //System.out.println("Prendo il lock dell'add dell'albero");
-        writeLock.lock();
-        Bucket toSplitBucket;
-        long now = System.currentTimeMillis();
-        while (!((toSplitBucket = findNodesBucket(nodo)).add(nodo)))
+        Bucket toSplitBucket = findNodesBucket(nodo);
+        if (!toSplitBucket.isSplittable())
         {
-            //toSplitBucket.setTimeVisited(now);
-            toSplitBucket.refreshStop();
-            
-            TreeNode temp = new TreeNode();
-            Bucket bucketSx = new Bucket(thisNode, false);
-            Bucket bucketDx = new Bucket(thisNode, false);
-
-            temp.setLeft(bucketSx);
-            temp.setRight(bucketDx);
-            bucketSx.setParent(temp);
-            bucketDx.setParent(temp);
-
-            int tempDepth = toSplitBucket.getDepth();
-            synchronized (toSplitBucket)
-            {
-                for (int i = 0; i < toSplitBucket.size(); i++)
-                {
-                    BigInteger tempNodeID = toSplitBucket.get(i).getNodeID();
-                    if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
-                    {
-                        bucketSx.add(toSplitBucket.get(i));
-                    } else
-                    {
-                        bucketDx.add(toSplitBucket.get(i));
-                    }
-                }
-                Node tempBuckParent = toSplitBucket.getParent();
-                temp.setParent(tempBuckParent);
-                //SOLO ORA vado a modificare il nodo che dev'essere splittato
-                if (tempBuckParent == null)  //il genitore di toSplitBucket è null, quindi toSplitBucket è la radice
-                {
-                    root = temp;
-                }
-                else
-                {
-                    TreeNode tempBuckParentCast = (TreeNode) tempBuckParent;
-                    //Ora il nodo originale che devo sostituire
-                    //temp diventa nodo destro o sinistro di tempBuckParent?
-                    if (tempBuckParentCast.getLeft().equals(toSplitBucket))
-                    {
-                        tempBuckParentCast.setLeft(temp);
-                    } else
-                    {
-                        tempBuckParentCast.setRight(temp);
-                    }
-                }
-
-                //aggiorno il flag splittable
-                if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
-                {
-                    bucketSx.setSplittable(true);
-                } else
-                {
-                    bucketDx.setSplittable(true);
-                }
-                bucketSx.refreshStart();
-                bucketDx.refreshStart();
-            }
+            toSplitBucket.add(nodo);
+            return;
         }
-        //System.out.println("Rilascio il lock dell'add dell'albero");
-        writeLock.unlock();
+        
+        if (!writeLock.tryLock())
+        {
+            add(nodo);
+        }
+        else
+        {
+            //writeLock.lock();
+            while (!((toSplitBucket = findNodesBucket(nodo)).add(nodo)))
+            {
+                //toSplitBucket.setTimeVisited(now);
+                toSplitBucket.refreshStop();
+
+                TreeNode temp = new TreeNode();
+                Bucket bucketSx = new Bucket(thisNode, false);
+                Bucket bucketDx = new Bucket(thisNode, false);
+
+                temp.setLeft(bucketSx);
+                temp.setRight(bucketDx);
+                bucketSx.setParent(temp);
+                bucketDx.setParent(temp);
+
+                int tempDepth = toSplitBucket.getDepth();
+                synchronized (toSplitBucket)
+                {
+                    for (int i = 0; i < toSplitBucket.size(); i++)
+                    {
+                        BigInteger tempNodeID = toSplitBucket.get(i).getNodeID();
+                        if (tempNodeID.testBit(Kademlia.BITID - tempDepth - 1))
+                        {
+                            bucketSx.add(toSplitBucket.get(i));
+                        }
+                        else
+                        {
+                            bucketDx.add(toSplitBucket.get(i));
+                        }
+                    }
+                    Node tempBuckParent = toSplitBucket.getParent();
+                    temp.setParent(tempBuckParent);
+                    //SOLO ORA vado a modificare il nodo che dev'essere splittato
+                    if (tempBuckParent == null)  //il genitore di toSplitBucket è null, quindi toSplitBucket è la radice
+                    {
+                        root = temp;
+                    }
+                    else
+                    {
+                        TreeNode tempBuckParentCast = (TreeNode) tempBuckParent;
+                        //Ora il nodo originale che devo sostituire
+                        //temp diventa nodo destro o sinistro di tempBuckParent?
+                        if (tempBuckParentCast.getLeft().equals(toSplitBucket))
+                        {
+                            tempBuckParentCast.setLeft(temp);
+                        }
+                        else
+                        {
+                            tempBuckParentCast.setRight(temp);
+                        }
+                    }
+
+                    //aggiorno il flag splittable
+                    if (thisNode.getNodeID().testBit(Kademlia.BITID - tempDepth - 1))
+                    {
+                        bucketSx.setSplittable(true);
+                    }
+                    else
+                    {
+                        bucketDx.setSplittable(true);
+                    }
+                    bucketSx.refreshStart();
+                    bucketDx.refreshStart();
+                }
+            }
+            //System.out.println("Rilascio il lock dell'add dell'albero");
+            writeLock.unlock();
+        }
     }
 
     public Bucket findNodesBucket(KadNode node)
@@ -153,7 +167,7 @@ public class RoutingTree {
 
     }
 
-   /* private class RefreshThread implements Runnable
+    /* private class RefreshThread implements Runnable
     {
         @Override
         public void run()
@@ -180,7 +194,7 @@ public class RoutingTree {
             }
         }*/
 
-        /*private void refreshBucket(Node node)
+ /*private void refreshBucket(Node node)
         {
             if (node instanceof Bucket)
             {
@@ -200,8 +214,8 @@ public class RoutingTree {
                         else
                         {   }
                     }
-                    */
-                    /*if(nodeBucket.getTimeVisited()<= 5*60*1000)
+     */
+ /*if(nodeBucket.getTimeVisited()<= 5*60*1000)
                     {
                         return;
                     }
@@ -233,5 +247,5 @@ public class RoutingTree {
                 refreshBucket(intNode.getRight());
             }
         }*/
-   // }
+    // }
 }

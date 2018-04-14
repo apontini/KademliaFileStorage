@@ -9,8 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Bucket extends Node implements Iterable {
 
@@ -88,9 +86,14 @@ public class Bucket extends Node implements Iterable {
         return listaNodi.get(i);
     }
 
-    public synchronized void setSplittable(boolean splittable)
+    public void setSplittable(boolean splittable)
     {
         this.splittable = splittable;
+    }
+
+    public boolean isSplittable()
+    {
+        return splittable;
     }
 
     public synchronized Iterator<KadNode> iterator()
@@ -149,43 +152,44 @@ public class Bucket extends Node implements Iterable {
                         break;
                     }
                 }
+                KadNode randomNode;
+                boolean notDead;
                 synchronized (Bucket.this)
                 {
-                    if(size()==0)
+                    if (size() == 0)
                     {
                         lastUse.set(System.currentTimeMillis());
                         continue;
                     }
                     System.out.println("Eseguo il refresh del bucket" + hashCode());
-                    boolean notDead = false;
+                    notDead = false;
                     int randomIndex = (int) (Math.random() * size());
-                    KadNode randomNode = get(randomIndex);      //prendo un nodo random
-                    List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
-                    //devo controllare che current ci sia in lista
-                    for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                    randomNode = get(randomIndex);      //prendo un nodo random
+                }
+                List<KadNode> knowedNodes = thisKadNode.findNode(randomNode.getNodeID());    //faccio il findNode e mi restituisce una lista
+                //devo controllare che current ci sia in lista
+                for (KadNode kn : knowedNodes)                            //cerco tra i nodi se ce n'è qualcuno con il mio stesso ID
+                {
+                    if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
                     {
-                        if (kn.getNodeID().equals(randomNode.getNodeID()))              //ho trovato un nodo con il mio stesso ID
-                        {
-                            notDead = true;
-                        }
+                        notDead = true;
                     }
-                    //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
-                    if (!notDead)
-                    {
-                        removeFromBucket(randomNode);
-                    }
-                    /*boolean isAlive=thisKadNode.ping(randomNode);
+                }
+                //se nodo non torna sicuramente è morto (lo elimino), altrimenti non posso dire nulla
+                if (!notDead)
+                {
+                    removeFromBucket(randomNode);
+                }
+                /*boolean isAlive=thisKadNode.ping(randomNode);
                     removeFromBucket(randomNode);
                     if (isAlive)                                        //lo aggiungo in coda ad indicare che l'ho visto vivo di recente
                     {
                         listaNodi.add(randomNode);
                     }*/
-                    System.out.println("Refresh del bucket" + hashCode() + " completato");
-                    lastUse.set(System.currentTimeMillis());
-                }
+                System.out.println("Refresh del bucket" + hashCode() + " completato");
+                lastUse.set(System.currentTimeMillis());
             }
             System.out.println("Bucket Refresher Thread Morto");
         }
-
     }
 }
