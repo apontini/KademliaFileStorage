@@ -933,6 +933,7 @@ public class Kademlia implements KademliaInterf {
                                 {
                                     if (((FindNodeReply) fnreply).getSourceKadNode().equals(fnr.getDestKadNode()))
                                     {
+                                        routingTree.add(((FindNodeReply) fnreply).getSourceKadNode());
                                         Iterator<KadNode> it1 = ((FindNodeReply) fnreply).getList().iterator();
                                         while (it1.hasNext())
                                         {
