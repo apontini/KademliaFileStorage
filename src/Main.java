@@ -7,6 +7,7 @@ import KPack.Kademlia;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -78,9 +79,9 @@ public class Main {
                         {
                             myNode.store(split[1]);
                         }
-                        catch (IOException ioe)
+                        catch (IOException | InvalidParameterException ioe)
                         {
-                            ioe.printStackTrace();
+                            System.out.println("File specificato non valido");
                         }
                     }
                     else

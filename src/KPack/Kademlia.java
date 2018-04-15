@@ -8,6 +8,8 @@ import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import KPack.Exceptions.*;
+import KPack.UserInterface.TreeUI;
+import java.awt.HeadlessException;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -105,6 +107,14 @@ public class Kademlia implements KademliaInterf {
 
         routingTree.add(thisNode); //Mi aggiungo
 
+        try
+        {
+            new TreeUI(routingTree, this);
+        }
+        catch (HeadlessException he) //per dispositivi senza schermo
+        {
+        }
+
         new Thread(new ListenerThread(), "Listener").start();
 
         networkJoin();
@@ -115,7 +125,6 @@ public class Kademlia implements KademliaInterf {
         {
             if (routingTree.getRoot() instanceof Bucket)
             {
-
                 ((Bucket) routingTree.getRoot()).refreshStart();
             }
         }
@@ -1116,7 +1125,6 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-
                 System.err.println("Errore nell'eseguire lo store: " + ioe.getMessage());
             }
         }
@@ -1215,19 +1223,13 @@ public class Kademlia implements KademliaInterf {
                     //se non ho ricevuto un pacchetto o non sono io il destinatario, chiudo la connessione
                     if (!(received instanceof Packet) || !((Packet) received).getDestKadNode().equals(thisNode))
                     {
-                        System.out.println("@@@@@@@@@@@@@@ Pacchetto ricevuto non valito @@@@@@@@@@@@@@");
-                        if (received instanceof Packet)
-                        {
-                            System.out.println("@@@@@@@@@@@@@@ received: " + ((Packet) received).getDestKadNode() + " @@@@@@@@@@@@@@");
-                            System.out.println("@@@@@@@@@@@@@@ this: " + thisNode + " @@@@@@@@@@@@@@");
-                        }
                         connection.close();
                         continue;
                     }
 
                     Packet p = (Packet) received;
                     //aggiungo il nodo sorgente all'albero di routing
-                    if (received instanceof FindNodeRequest && ((FindNodeRequest) received).isTracked())
+                    if (!(received instanceof FindNodeRequest && !((FindNodeRequest) received).isTracked()))
                     {
                         new Thread(() ->
                         {
@@ -1280,16 +1282,14 @@ public class Kademlia implements KademliaInterf {
                             System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
 
                             StoreRequest rq = (StoreRequest) received;
-                            new Thread(() ->
-                            {
-                                routingTree.add(rq.getSourceKadNode());
-                            }).start();
+
                             //i file ridondanti vengono salvati con estensione .FILEID.kad
                             System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                            File toStore = new File(FILESPATH + rq.getFileName() + "." + rq.getFileID() + ".kad");
+                            String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
+                            File toStore = new File(FILESPATH + rq.getFileName() + extension);
                             toStore.createNewFile();
                             Files.write(toStore.toPath(), rq.getContent());
-                            fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + "." + rq.getFileID() + ".kad", FILESPATH));
+                            fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
                             System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         }
                     }
@@ -1301,10 +1301,7 @@ public class Kademlia implements KademliaInterf {
                             System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
 
                             DeleteRequest dr = (DeleteRequest) received;
-                            new Thread(() ->
-                            {
-                                routingTree.add(dr.getSourceKadNode());
-                            }).start();
+
                             System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " da  " + dr.getSourceKadNode().getIp());
                             fileMap.remove(dr.getFile());
                             System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
@@ -1396,7 +1393,7 @@ public class Kademlia implements KademliaInterf {
                                         break;
                                     }
                                 }
-                                if(state)
+                                if (state)
                                 {
                                     System.out.println("+++Non sono tra i nodi più vicini! Elimino il file");
                                     toBeDeleted.add(v);
@@ -1430,9 +1427,27 @@ public class Kademlia implements KademliaInterf {
                                                 if (resp instanceof FindNodeReply)
                                                 {
                                                     KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                    System.out.println("++++Il file completo è ");
-                                                    System.out.println("++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ")");
+                                                    System.out.println("\u001B[32m ++++Il file completo è \u001B[0m");
+                                                    System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ") \u001B[0m");
+
+                                                    try
+                                                    {
+                                                        tempS.close();
+                                                    }
+                                                    catch (IOException e)
+                                                    {
+                                                        e.printStackTrace();
+                                                    }
+
+                                                    tempS = new Socket();
+                                                    tempS.setSoTimeout(timeout);
+                                                    tempS.connect(new InetSocketAddress(n.getIp(), n.getUDPPort()), timeout);
+                                                    os = tempS.getOutputStream();
+                                                    outputStream = new ObjectOutputStream(os);
                                                     outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                                    outputStream.flush();
+
+                                                    System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getUDPPort() + ") completato \u001B[0m");
                                                 }
                                             }
                                         }

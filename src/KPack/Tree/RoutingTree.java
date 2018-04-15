@@ -33,14 +33,6 @@ public class RoutingTree {
         }
         root = new Bucket(thisNode, true);
         this.thisNode = thisNode;
-
-        try
-        {
-            new TreeUI(this, thisNode);
-        }
-        catch (HeadlessException he) //per dispositivi senza schermo
-        {
-        }
     }
 
     public void add(KadNode nodo)
