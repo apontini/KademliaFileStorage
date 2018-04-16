@@ -1350,7 +1350,14 @@ public class Kademlia implements KademliaInterf {
                     {
                         OutputStream os = connection.getOutputStream();
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                        System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " (" + ((Packet)responseObject).getDestKadNode().getNodeID() +") con una " + responseObject.getClass());
+                        try
+                        {
+                            System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " (" + ((Packet) responseObject).getDestKadNode().getNodeID() + ") con una " + responseObject.getClass());
+                        }
+                        catch (NullPointerException npe)
+                        {
+                            System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " con una " + responseObject.getClass());
+                        }
                         outputStream.writeObject(responseObject);
                         outputStream.flush();
                         os.close();
