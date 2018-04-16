@@ -64,7 +64,6 @@ public class Kademlia implements KademliaInterf {
         System.out.println("WorkingDir: " + System.getProperty("user.dir"));
 
         loadSettings();
-        System.out.println("Timeout socket: " + timeout);
         System.out.println("Refresh Time: " + fileRefreshWait);
 
         //Lo rieseguo, potrebbe non essere stato eseguito in seguito ad un crash della JVM
@@ -189,6 +188,7 @@ public class Kademlia implements KademliaInterf {
                                 try
                                 {
                                     bucketRefreshWait = Integer.parseInt(split[1]);
+                                    System.out.println("BucketRefreshWait: " + bucketRefreshWait);
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {
@@ -206,6 +206,7 @@ public class Kademlia implements KademliaInterf {
                                 try
                                 {
                                     fileRefreshWait = Integer.parseInt(split[1]);
+                                    System.out.println("FileRefreshWait: " + bucketRefreshWait);
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {
@@ -223,6 +224,7 @@ public class Kademlia implements KademliaInterf {
                                 try
                                 {
                                     timeout = Integer.parseInt(split[1]);
+                                    System.out.println("Timeout Socket: " + bucketRefreshWait);
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {

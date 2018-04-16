@@ -145,7 +145,7 @@ public class Bucket extends Node implements Iterable {
                 {
                     try
                     {
-                        sleep(20 * 1000 - (System.currentTimeMillis() - lastUse.get()) + 1);
+                        sleep(thisKadNode.bucketRefreshWait - (System.currentTimeMillis() - lastUse.get()) + 1);
                     }
                     catch (InterruptedException ex)
                     {
