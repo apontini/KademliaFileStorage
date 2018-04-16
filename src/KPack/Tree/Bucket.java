@@ -141,7 +141,7 @@ public class Bucket extends Node implements Iterable {
         {
             while (isActive.get())
             {
-                if (!(System.currentTimeMillis() - lastUse.get() >= 20 * 1000))
+                if (!(System.currentTimeMillis() - lastUse.get() >= thisKadNode.bucketRefreshWait))
                 {
                     try
                     {

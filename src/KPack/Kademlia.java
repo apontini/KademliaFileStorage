@@ -30,8 +30,9 @@ public class Kademlia implements KademliaInterf {
     private BigInteger nodeID;
     private RoutingTree routingTree;
     private KadNode thisNode;
-    private int port = 1337; // default 1337
-    private int fileRefreshWait = 10000;
+    public int port = 1337; // default 1337
+    public int fileRefreshWait = 10000;
+    public int bucketRefreshWait = 20000;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
     private int timeout = 10000;
 
@@ -182,6 +183,23 @@ public class Kademlia implements KademliaInterf {
                                 throw new InvalidSettingsException("Porta non valida");
                             }
                             break;
+                        case "bucketRefreshWait":
+                            if (!split[1].isEmpty())
+                            {
+                                try
+                                {
+                                    bucketRefreshWait = Integer.parseInt(split[1]);
+                                }
+                                catch (NumberFormatException | NullPointerException e)
+                                {
+                                    throw new InvalidSettingsException("Tempo di refresh dei bucket non valido");
+                                }
+                            }
+                            else
+                            {
+                                throw new InvalidSettingsException("Tempo di refresh dei bucket non valido");
+                            }
+                            break;
                         case "fileRefreshWait":
                             if (!split[1].isEmpty())
                             {
@@ -191,12 +209,12 @@ public class Kademlia implements KademliaInterf {
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {
-                                    throw new InvalidSettingsException("Tempo di refresh non valido");
+                                    throw new InvalidSettingsException("Tempo di refresh dei file non valido");
                                 }
                             }
                             else
                             {
-                                throw new InvalidSettingsException("Tempo di refresh non valido");
+                                throw new InvalidSettingsException("Tempo di refresh dei file non valido");
                             }
                             break;
                         case "socketTimeout":
