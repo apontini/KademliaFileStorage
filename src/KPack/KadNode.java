@@ -32,7 +32,7 @@ public class KadNode implements Serializable {
         return ip;
     }
 
-    public int getUDPPort()
+    public int getPort()
     {
         return port;
     }
@@ -62,7 +62,7 @@ public class KadNode implements Serializable {
     {
         return "KadNode{"
                 + "ip=" + ip
-                + ", UDPport=" + port
+                + ", port=" + port
                 + ", nodeID=" + nodeID
                 + '}';
     }

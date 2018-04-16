@@ -26,7 +26,7 @@ public class FixedKadNode extends KadNode {
         try
         {
             InetAddress inAddr = InetAddress.getByName(indirizzo);
-            return new KadNode(inAddr.getHostAddress(), super.getUDPPort(), super.getNodeID());
+            return new KadNode(inAddr.getHostAddress(), super.getPort(), super.getNodeID());
         }
         catch (UnknownHostException ex)
         {
