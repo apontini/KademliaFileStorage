@@ -191,7 +191,7 @@ public class Kademlia implements KademliaInterf {
                                 try
                                 {
                                     bucketRefreshWait = Integer.parseInt(split[1]);
-                                    System.out.println("BucketRefreshWait: " + bucketRefreshWait);
+                                    System.out.println("\u001B[31mBucketRefreshWait: " + bucketRefreshWait +"\u001B[0m");
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {
@@ -265,14 +265,14 @@ public class Kademlia implements KademliaInterf {
         }
         catch (InvalidSettingsException ise)
         {
-            System.err.println("Errore nelle impostazioni" + ise.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mErrore nelle impostazioni" + ise.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
         catch (IOException ioe)
         {
-            System.err.println("Errore nelle impostazioni" + ioe.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mErrore nelle impostazioni" + ioe.getMessage() + "\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
     }
@@ -298,8 +298,8 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
-            System.err.println("Errore isFixedNode: " + uhe.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mErrore isFixedNode: " + uhe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
 
@@ -335,7 +335,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
-            System.err.println("Errore nella scrittura dei nodi fissi: " + uhe.getMessage());
+            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + uhe.getMessage()+"\u001B[0m");
         }
         //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
         FileOutputStream fout = null;
@@ -348,7 +348,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ioe)
         {
-            System.err.println("Errore nella scrittura dei nodi fissi: " + ioe.getMessage());
+            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
         }
         finally
         {
@@ -365,7 +365,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-                System.err.println("Errore nella scrittura dei nodi fissi: " + ioe.getMessage());
+                System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
             }
         }
     }
@@ -391,8 +391,8 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException | ClassNotFoundException ioe)
         {
-            System.err.println("Errore nella lettura dei nodi fissi: " + ioe.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mErrore nella lettura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
         finally
@@ -426,14 +426,14 @@ public class Kademlia implements KademliaInterf {
         }
         catch (MalformedURLException mue)
         {
-            System.err.println("Errore nell'URL per l'IP: " + mue.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mErrore nell'URL per l'IP: " + mue.getMessage()+"\u001B[31m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
         catch (IOException ioe)
         {
-            System.err.println("Eccezione generale nel trovare l'IP del nodo: " + ioe.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mEccezione generale nel trovare l'IP del nodo: " + ioe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
         try
@@ -442,8 +442,8 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException e)
         {
-            System.err.println("Host sconosciuto nel trovare l'IP: " + e.getMessage());
-            System.err.println("ABORT! ABORT!");
+            System.err.println("\u001B[31mHost sconosciuto nel trovare l'IP: " + e.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
             return null;
         }
@@ -490,18 +490,18 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException e)
                 {
-                    System.err.println("Il nodo pingato mi ha risposto con qualcosa che non conosco");
+                    System.err.println("\u001B[31mIl nodo pingato mi ha risposto con qualcosa che non conosco\u001B[0m");
                 }
             }
         }
         catch (SocketTimeoutException soe)
         {
-            System.err.println("Timeout exception: " + soe.getMessage());
+            System.err.println("\u001B[31mTimeout exception: " + soe.getMessage()+"\u001B[0m");
             return false;
         }
         catch (ConnectException soe)
         {
-            System.err.println("Connect Exception: " + soe.getMessage());
+            System.err.println("\u001B[31mConnect Exception: " + soe.getMessage()+"\u001B[0m");
             return false;
         }
         catch (EOFException e)
@@ -672,7 +672,7 @@ public class Kademlia implements KademliaInterf {
                         }
                         catch (ClassNotFoundException e)
                         {
-                            System.err.println("Errore nella risposta ricevuta: " + e.getMessage());
+                            System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage()+"\u001B[0m");
                         }
                     }
                 }
@@ -690,7 +690,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (IOException ex)
                 {
-                    System.err.println("IOException nel FindValue " + ex.getMessage());
+                    System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage()+"\u001B[0m");
                 }
             }
             queriedNode.addAll(alphaNode);
@@ -1014,7 +1014,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             catch (ClassNotFoundException e)
                             {
-                                System.err.println("Errore nella risposta ricevuta: " + e.getMessage());
+                                System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage()+"\u001B[0m");
                             }
                         }
                     }
@@ -1032,7 +1032,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("IOException nel FindNode: " + ex.getMessage());
+                        System.err.println("\u001B[31mIOException nel FindNode: " + ex.getMessage()+"\u001B[0m");
                     }
                 });
                 threads[i].start();
@@ -1166,7 +1166,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-                System.err.println("Errore nell'eseguire lo store: " + ioe.getMessage());
+                System.err.println("\u001B[31mErrore nell'eseguire lo store: " + ioe.getMessage()+"\u001B[0m");
             }
         }
     }
@@ -1214,7 +1214,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (IOException ioe)
                 {
-                    System.err.println("Errore generale nell'eseguire il delete per " + k.getNodeID() + ": " + ioe.getMessage());
+                    System.err.println("\u001B[31mErrore generale nell'eseguire il delete per " + k.getNodeID() + ": " + ioe.getMessage()+"\u001B[0m");
                 }
             }
             fileMap.remove(temp);
@@ -1239,8 +1239,8 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ex)
             {
-                System.err.println("Errore nell'apertura del socket del Thread Server: " + ex.getMessage());
-                System.err.println("ABORT! ABORT!");
+                System.err.println("\u001B[31mErrore nell'apertura del socket del Thread Server: " + ex.getMessage()+"\u001B[0m");
+                System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
                 System.exit(1);
             }
 
@@ -1387,12 +1387,12 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException ex)
                 {
-                    System.err.println("ClassNotFound nel thread server: " + ex.getMessage());
+                    System.err.println("\u001B[31mClassNotFound nel thread server: " + ex.getMessage()+"\u001B[0m");
                     ex.printStackTrace();
                 }
                 catch(IOException ex)
                 {
-                    System.err.println("IOException nel thread server: " + ex.getMessage());
+                    System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage()+"\u001B[0m");
                 }
                 finally
                 {
@@ -1405,7 +1405,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("IOException nel thread server: " + ex.getMessage());
+                        System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage()+"\u001B[0m");
                         ex.printStackTrace();
                     }
                 }
@@ -1517,17 +1517,17 @@ public class Kademlia implements KademliaInterf {
                                                 //Aspettata, ignoro
                                             } catch (ClassNotFoundException cnfe)
                                             {
-                                                System.err.println("Errore nella risposta durante il refresh: " + cnfe.getMessage());
+                                                System.err.println("\u001B[31mErrore nella risposta durante il refresh: " + cnfe.getMessage()+"\u001B[0m");
                                                 //Gli invio comunque il file
                                                 KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
                                                 outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                             }
                                         } catch (SocketException se)
                                         {
-                                            System.err.println("Impossibile aprire il socket verso " + n.getIp().toString());
+                                            System.err.println("\u001B[31mImpossibile aprire il socket verso " + n.getIp().toString()+"\u001B[0m");
                                         } catch (IOException ioe)
                                         {
-                                            System.err.println("Errore nel refresh: " + ioe.getMessage());
+                                            System.err.println("\u001B[31mErrore nel refresh: " + ioe.getMessage()+"\u001B[0m");
                                         } finally
                                         {
                                             try
@@ -1538,7 +1538,7 @@ public class Kademlia implements KademliaInterf {
                                                 }
                                             } catch (IOException ioe)
                                             {
-                                                System.err.println("Errore generale nel chiudere il socket del refresh: " + ioe.getMessage());
+                                                System.err.println("\u001B[31mErrore generale nel chiudere il socket del refresh: " + ioe.getMessage()+"\u001B[0m");
                                             }
                                         }
                                     }
@@ -1556,7 +1556,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (InterruptedException ie)
                 {
-                    System.err.println("Thread di refresh dei file interrotto");
+                    System.err.println("\u001B[31mThread di refresh dei file interrotto\u001B[0m");
                 }
             }
         }
