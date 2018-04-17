@@ -18,6 +18,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -39,6 +44,9 @@ public class Kademlia implements KademliaInterf {
     public int bucketRefreshWait = 20000;
     private int timeout = 10000;
 
+    private final ReadWriteLock fileReadWriteLock;
+    private final Lock fileReadLock;
+    private final Lock fileWriteLock;
 
     public Kademlia() throws AlreadyInstancedException
     {
@@ -81,6 +89,10 @@ public class Kademlia implements KademliaInterf {
                 }
             }
         }
+
+        fileReadWriteLock = new ReentrantReadWriteLock(true);
+        fileReadLock = fileReadWriteLock.readLock();
+        fileWriteLock = fileReadWriteLock.writeLock();
 
         fileMap = new KadFileMap(this);
         String myIP = getIP().getHostAddress().toString();
@@ -191,7 +203,7 @@ public class Kademlia implements KademliaInterf {
                                 try
                                 {
                                     bucketRefreshWait = Integer.parseInt(split[1]);
-                                    System.out.println("\u001B[31mBucketRefreshWait: " + bucketRefreshWait +"\u001B[0m");
+                                    System.out.println("\u001B[31mBucketRefreshWait: " + bucketRefreshWait + "\u001B[0m");
                                 }
                                 catch (NumberFormatException | NullPointerException e)
                                 {
@@ -265,7 +277,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (InvalidSettingsException ise)
         {
-            System.err.println("\u001B[31mErrore nelle impostazioni" + ise.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mErrore nelle impostazioni" + ise.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
@@ -298,7 +310,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
-            System.err.println("\u001B[31mErrore isFixedNode: " + uhe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mErrore isFixedNode: " + uhe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
@@ -335,7 +347,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException uhe)
         {
-            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + uhe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + uhe.getMessage() + "\u001B[0m");
         }
         //Scrive file "nodes", inserendoci la lista fixNodes e serializza il file
         FileOutputStream fout = null;
@@ -348,7 +360,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ioe)
         {
-            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
         }
         finally
         {
@@ -365,7 +377,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ioe)
             {
-                System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
+                System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
             }
         }
     }
@@ -391,7 +403,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException | ClassNotFoundException ioe)
         {
-            System.err.println("\u001B[31mErrore nella lettura dei nodi fissi: " + ioe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mErrore nella lettura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
@@ -426,13 +438,13 @@ public class Kademlia implements KademliaInterf {
         }
         catch (MalformedURLException mue)
         {
-            System.err.println("\u001B[31mErrore nell'URL per l'IP: " + mue.getMessage()+"\u001B[31m");
+            System.err.println("\u001B[31mErrore nell'URL per l'IP: " + mue.getMessage() + "\u001B[31m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
         catch (IOException ioe)
         {
-            System.err.println("\u001B[31mEccezione generale nel trovare l'IP del nodo: " + ioe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mEccezione generale nel trovare l'IP del nodo: " + ioe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
         }
@@ -442,7 +454,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (UnknownHostException e)
         {
-            System.err.println("\u001B[31mHost sconosciuto nel trovare l'IP: " + e.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mHost sconosciuto nel trovare l'IP: " + e.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
             System.exit(1);
             return null;
@@ -496,12 +508,12 @@ public class Kademlia implements KademliaInterf {
         }
         catch (SocketTimeoutException soe)
         {
-            System.err.println("\u001B[31mTimeout exception: " + soe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mTimeout exception: " + soe.getMessage() + "\u001B[0m");
             return false;
         }
         catch (ConnectException soe)
         {
-            System.err.println("\u001B[31mConnect Exception: " + soe.getMessage()+"\u001B[0m");
+            System.err.println("\u001B[31mConnect Exception: " + soe.getMessage() + "\u001B[0m");
             return false;
         }
         catch (EOFException e)
@@ -672,7 +684,7 @@ public class Kademlia implements KademliaInterf {
                         }
                         catch (ClassNotFoundException e)
                         {
-                            System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage()+"\u001B[0m");
+                            System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage() + "\u001B[0m");
                         }
                     }
                 }
@@ -690,7 +702,7 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (IOException ex)
                 {
-                    System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage()+"\u001B[0m");
+                    System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage() + "\u001B[0m");
                 }
             }
             queriedNode.addAll(alphaNode);
@@ -1014,7 +1026,7 @@ public class Kademlia implements KademliaInterf {
                             }
                             catch (ClassNotFoundException e)
                             {
-                                System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage()+"\u001B[0m");
+                                System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage() + "\u001B[0m");
                             }
                         }
                     }
@@ -1032,7 +1044,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("\u001B[31mIOException nel FindNode: " + ex.getMessage()+"\u001B[0m");
+                        System.err.println("\u001B[31mIOException nel FindNode: " + ex.getMessage() + "\u001B[0m");
                     }
                 });
                 threads[i].start();
@@ -1099,12 +1111,11 @@ public class Kademlia implements KademliaInterf {
     {
         List<KadFile> temp = new ArrayList<>();
         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-        synchronized (fileMap)
-        {
-            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-            fileMap.forEach((k, v) -> temp.add(v));
-            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-        }
+        fileReadLock.lock();
+        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+        fileMap.forEach((k, v) -> temp.add(v));
+        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+        fileReadLock.unlock();
         return temp;
     }
 
@@ -1139,12 +1150,13 @@ public class Kademlia implements KademliaInterf {
         }
         while ((findValue(fileID, false)) instanceof byte[]);
 
+        fileWriteLock.lock();
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileMap.add(tempfile);
+        fileWriteLock.unlock();
 
-        StoreRequest sr = null;
-
+        fileReadLock.lock();
         List<KadNode> closestK = findNode_lookup(fileID);
         System.out.println("Invio il file a: ");
         for (KadNode i : closestK)
@@ -1156,51 +1168,65 @@ public class Kademlia implements KademliaInterf {
         {
             try
             {
-                sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
-                System.out.println("Contatto " + i.getNodeID() + "(" + i.getIp() + ") per lo store");
-                Socket s = new Socket(i.getIp(), i.getPort());
-                OutputStream os = s.getOutputStream();
-                ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                outputStream.writeObject(sr);
-                outputStream.flush();
+                StoreRequest sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
+                new Thread(() ->
+                {
+                    try
+                    {
+                        System.out.println("Contatto " + i.getNodeID() + "(" + i.getIp() + ") per lo store");
+                        Socket s = new Socket(i.getIp(), i.getPort());
+                        OutputStream os = s.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(sr);
+                        outputStream.flush();
+                    }
+                    catch (IOException ex)
+                    {
+                        System.err.println("\u001B[31mErrore nell'invio dello store: " + ex.getMessage() + "\u001B[0m");
+                    }
+                }).start();
+
             }
             catch (IOException ioe)
             {
-                System.err.println("\u001B[31mErrore nell'eseguire lo store: " + ioe.getMessage()+"\u001B[0m");
+                System.err.println("\u001B[31mErrore nell'eseguire lo store: " + ioe.getMessage() + "\u001B[0m");
             }
         }
+        fileReadLock.unlock();
     }
 
     public void delete(BigInteger id) throws FileNotKnownException
     {
-
+        fileWriteLock.lock();
         KadFile temp = fileMap.get(id);
 
         if (temp != null && !(temp.isRedundant()))
         {
-            DeleteRequest dr = null;
+
             List<KadNode> closestK = findNode_lookup(temp.getFileID());
-            System.out.println("Elimino il file " + temp.getFileName() + " ("  + temp.getFileID() + ") da: ");
+            System.out.println("Elimino il file " + temp.getFileName() + " (" + temp.getFileID() + ") da: ");
             for (KadNode i : closestK)
             {
                 System.out.println(i.getNodeID() + " (Distanza: " + distanza(thisNode, i) + ")");
             }
             for (KadNode k : closestK)
             {
-                dr = new DeleteRequest(temp, thisNode, k);
-                try
+                DeleteRequest dr = new DeleteRequest(temp, thisNode, k);
+                new Thread(() ->
                 {
-                    System.out.println("Contatto " + k.getNodeID() + "(" + k.getIp() + ") per il delete");
-                    Socket s = new Socket();
-                    s.setSoTimeout(timeout);
-                    s.connect(new InetSocketAddress(k.getIp(), k.getPort()), timeout);
+                    try
+                    {
+                        System.out.println("Contatto " + k.getNodeID() + "(" + k.getIp() + ") per il delete");
+                        Socket s = new Socket();
+                        s.setSoTimeout(timeout);
+                        s.connect(new InetSocketAddress(k.getIp(), k.getPort()), timeout);
 
-                    OutputStream os = s.getOutputStream();
-                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                    outputStream.writeObject(dr);
-                    outputStream.flush();
+                        OutputStream os = s.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        outputStream.writeObject(dr);
+                        outputStream.flush();
 
-                    /*DatagramSocket ds=new DatagramSocket();
+                        /*DatagramSocket ds=new DatagramSocket();
                     ds.setSoTimeout(timeout);
                     ds.connect(new InetSocketAddress(k.getIp(), k.getPort()));
 
@@ -1211,11 +1237,13 @@ public class Kademlia implements KademliaInterf {
                     byte[] buffer=baos.toByteArray();
                     DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getPort());
                     ds.send(packet);*/
-                }
-                catch (IOException ioe)
-                {
-                    System.err.println("\u001B[31mErrore generale nell'eseguire il delete per " + k.getNodeID() + ": " + ioe.getMessage()+"\u001B[0m");
-                }
+                    }
+                    catch (IOException ioe)
+                    {
+                        System.err.println("\u001B[31mErrore generale nell'eseguire il delete per " + k.getNodeID() + ": " + ioe.getMessage() + "\u001B[0m");
+                    }
+                }).start();
+
             }
             fileMap.remove(temp);
         }
@@ -1223,6 +1251,7 @@ public class Kademlia implements KademliaInterf {
         {
             throw new FileNotKnownException();
         }
+        fileWriteLock.unlock();
     }
 
     private class ListenerThread implements Runnable {
@@ -1239,7 +1268,7 @@ public class Kademlia implements KademliaInterf {
             }
             catch (IOException ex)
             {
-                System.err.println("\u001B[31mErrore nell'apertura del socket del Thread Server: " + ex.getMessage()+"\u001B[0m");
+                System.err.println("\u001B[31mErrore nell'apertura del socket del Thread Server: " + ex.getMessage() + "\u001B[0m");
                 System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
                 System.exit(1);
             }
@@ -1295,7 +1324,10 @@ public class Kademlia implements KademliaInterf {
                     {
                         FindValueRequest fvr = (FindValueRequest) received;
 
+                        fileReadLock.lock();
                         Object value = findValue_lookup(fvr.getFileID());
+                        fileReadLock.unlock();
+                        
                         FindValueReply fvrep = null;
                         if (value instanceof KadFile)
                         {
@@ -1318,12 +1350,15 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof StoreRequest)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                        synchronized (fileMap)
+                        fileWriteLock.lock();
+
+                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
+                        StoreRequest rq = (StoreRequest) received;
+                        Object value = findValue_lookup(rq.getFileID());
+
+                        if (!(value instanceof KadFile))
                         {
-                            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-
-                            StoreRequest rq = (StoreRequest) received;
-
                             //i file ridondanti vengono salvati con estensione .FILEID.kad
                             System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
                             String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
@@ -1331,29 +1366,29 @@ public class Kademlia implements KademliaInterf {
                             toStore.createNewFile();
                             Files.write(toStore.toPath(), rq.getContent());
                             fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
-                            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         }
+                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                        fileWriteLock.unlock();
                     }
                     else if (received instanceof DeleteRequest)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                        synchronized (fileMap)
+                        fileWriteLock.lock();
+                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
+                        DeleteRequest dr = (DeleteRequest) received;
+
+                        System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
+                        try
                         {
-                            System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-
-                            DeleteRequest dr = (DeleteRequest) received;
-
-                            System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName()  + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
-                            try
-                            {
-                                fileMap.remove(dr.getFile().getFileID());
-                            }
-                            catch(NullPointerException npe)
-                            {
-                                System.out.println("..Ma non ce l'ho!");
-                            }
-                            System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                            fileMap.remove(dr.getFile().getFileID());
                         }
+                        catch (NullPointerException npe)
+                        {
+                            System.out.println("..Ma non ce l'ho!");
+                        }
+                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                        fileWriteLock.unlock();
                     }
                     else if (received instanceof PingRequest)
                     {
@@ -1387,12 +1422,12 @@ public class Kademlia implements KademliaInterf {
                 }
                 catch (ClassNotFoundException ex)
                 {
-                    System.err.println("\u001B[31mClassNotFound nel thread server: " + ex.getMessage()+"\u001B[0m");
+                    System.err.println("\u001B[31mClassNotFound nel thread server: " + ex.getMessage() + "\u001B[0m");
                     ex.printStackTrace();
                 }
-                catch(IOException ex)
+                catch (IOException ex)
                 {
-                    System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage()+"\u001B[0m");
+                    System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
                 }
                 finally
                 {
@@ -1405,7 +1440,7 @@ public class Kademlia implements KademliaInterf {
                     }
                     catch (IOException ex)
                     {
-                        System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage()+"\u001B[0m");
+                        System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
                         ex.printStackTrace();
                     }
                 }
@@ -1434,124 +1469,133 @@ public class Kademlia implements KademliaInterf {
                     Thread.sleep(refreshThreadSleep);
                     System.out.println("Inizio il refresh dei file..");
                     System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                    synchronized (fileMap)
+
+                    System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+                    List<KadFile> toBeDeleted = new ArrayList<>();
+                    fileReadLock.lock();
+                    fileMap.forEach((k, v) ->
                     {
-                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-                        List<KadFile> toBeDeleted = new ArrayList<>();
-                        fileMap.forEach((k, v) ->
+                        if (v.isRedundant())
                         {
-                            if (v.isRedundant())
+                            if ((System.currentTimeMillis() - v.getLastRefresh()) >= refreshWait)
                             {
-                                if((System.currentTimeMillis() - v.getLastRefresh()) >= refreshWait)
+                                System.out.println("++++Refresho " + v.getFileName());
+                                List<KadNode> temp = findNode(v.getFileID(), true);
+                                //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
+                                boolean state = true;
+                                for (KadNode n : temp)
                                 {
-                                    System.out.println("++++Refresho " + v.getFileName());
-                                    List<KadNode> temp = findNode(v.getFileID(), true);
-                                    //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
-                                    boolean state = true;
-                                    for (KadNode n : temp)
+                                    if (thisNode.getNodeID().equals(n.getNodeID()))
                                     {
-                                        if (thisNode.getNodeID().equals(n.getNodeID()))
-                                        {
-                                            state = false;
-                                            break;
-                                        }
+                                        state = false;
+                                        break;
                                     }
-                                    if (state)
+                                }
+                                if (state)
+                                {
+                                    System.out.println("+++Non sono tra i nodi più vicini! Elimino il file");
+                                    toBeDeleted.add(v);
+                                    return;
+                                }
+                                for (KadNode n : temp)
+                                {
+                                    System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ")");
+                                    if (n.getNodeID().equals(thisNode.getNodeID()))
                                     {
-                                        System.out.println("+++Non sono tra i nodi più vicini! Elimino il file");
-                                        toBeDeleted.add(v);
-                                        return;
+                                        continue;
                                     }
-                                    for (KadNode n : temp)
+                                    Socket tempS = null;
+                                    try
                                     {
-                                        System.out.println("++++Tento di contattare " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ")");
-                                        if (n.getNodeID().equals(thisNode.getNodeID()))
-                                        {
-                                            continue;
-                                        }
-                                        Socket tempS = null;
+                                        tempS = new Socket();
+                                        tempS.setSoTimeout(timeout);
+                                        tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
+                                        OutputStream os = tempS.getOutputStream();
+                                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                        outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
+                                        outputStream.flush();
+
+                                        InputStream is = tempS.getInputStream();
+                                        ObjectInputStream ois = new ObjectInputStream(is);
                                         try
                                         {
-                                            tempS = new Socket();
-                                            tempS.setSoTimeout(timeout);
-                                            tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
-                                            OutputStream os = tempS.getOutputStream();
-                                            ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                            outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
-                                            outputStream.flush();
-
-                                            InputStream is = tempS.getInputStream();
-                                            ObjectInputStream ois = new ObjectInputStream(is);
-                                            try
+                                            while (true)
                                             {
-                                                while (true)
+                                                Object resp = ois.readObject();
+                                                if (resp instanceof FindNodeReply)
                                                 {
-                                                    Object resp = ois.readObject();
-                                                    if (resp instanceof FindNodeReply)
+                                                    KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                                    System.out.println("\u001B[32m ++++Il file completo è \u001B[0m");
+                                                    System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
+
+                                                    try
                                                     {
-                                                        KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                        System.out.println("\u001B[32m ++++Il file completo è \u001B[0m");
-                                                        System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
-
-                                                        try
-                                                        {
-                                                            tempS.close();
-                                                        } catch (IOException e)
-                                                        {
-                                                            e.printStackTrace();
-                                                        }
-
-                                                        tempS = new Socket();
-                                                        tempS.setSoTimeout(timeout);
-                                                        tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
-                                                        os = tempS.getOutputStream();
-                                                        outputStream = new ObjectOutputStream(os);
-                                                        outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
-                                                        outputStream.flush();
-
-                                                        System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") completato \u001B[0m");
+                                                        tempS.close();
                                                     }
+                                                    catch (IOException e)
+                                                    {
+                                                        e.printStackTrace();
+                                                    }
+
+                                                    tempS = new Socket();
+                                                    tempS.setSoTimeout(timeout);
+                                                    tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
+                                                    os = tempS.getOutputStream();
+                                                    outputStream = new ObjectOutputStream(os);
+                                                    outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                                    outputStream.flush();
+
+                                                    System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") completato \u001B[0m");
                                                 }
-                                            } catch (EOFException eofe)
-                                            {
-                                                //Aspettata, ignoro
-                                            } catch (ClassNotFoundException cnfe)
-                                            {
-                                                System.err.println("\u001B[31mErrore nella risposta durante il refresh: " + cnfe.getMessage()+"\u001B[0m");
-                                                //Gli invio comunque il file
-                                                KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                             }
-                                        } catch (SocketException se)
+                                        }
+                                        catch (EOFException eofe)
                                         {
-                                            System.err.println("\u001B[31mImpossibile aprire il socket verso " + n.getIp().toString()+"\u001B[0m");
-                                        } catch (IOException ioe)
+                                            //Aspettata, ignoro
+                                        }
+                                        catch (ClassNotFoundException cnfe)
                                         {
-                                            System.err.println("\u001B[31mErrore nel refresh: " + ioe.getMessage()+"\u001B[0m");
-                                        } finally
+                                            System.err.println("\u001B[31mErrore nella risposta durante il refresh: " + cnfe.getMessage() + "\u001B[0m");
+                                            //Gli invio comunque il file
+                                            KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                            outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                        }
+                                    }
+                                    catch (SocketException se)
+                                    {
+                                        System.err.println("\u001B[31mImpossibile aprire il socket verso " + n.getIp().toString() + "\u001B[0m");
+                                    }
+                                    catch (IOException ioe)
+                                    {
+                                        System.err.println("\u001B[31mErrore nel refresh: " + ioe.getMessage() + "\u001B[0m");
+                                    }
+                                    finally
+                                    {
+                                        try
                                         {
-                                            try
+                                            if (tempS != null)
                                             {
-                                                if (tempS != null)
-                                                {
-                                                    tempS.close();
-                                                }
-                                            } catch (IOException ioe)
-                                            {
-                                                System.err.println("\u001B[31mErrore generale nel chiudere il socket del refresh: " + ioe.getMessage()+"\u001B[0m");
+                                                tempS.close();
                                             }
+                                        }
+                                        catch (IOException ioe)
+                                        {
+                                            System.err.println("\u001B[31mErrore generale nel chiudere il socket del refresh: " + ioe.getMessage() + "\u001B[0m");
                                         }
                                     }
                                 }
                             }
-                        });
-                        //Elimino qua i file per evitare ConcurrentModificationExceptions
-                        for (KadFile i : toBeDeleted)
-                        {
-                            fileMap.remove(i.getFileID());
                         }
-                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                    });
+                    fileReadLock.unlock();
+                    fileWriteLock.lock();
+                    //Elimino qua i file per evitare ConcurrentModificationExceptions
+                    for (KadFile i : toBeDeleted)
+                    {
+                        fileMap.remove(i.getFileID());
                     }
+                    System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                    fileWriteLock.unlock();
                     System.out.println("Refresh dei file finito");
                 }
                 catch (InterruptedException ie)
