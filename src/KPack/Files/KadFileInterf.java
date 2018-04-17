@@ -11,4 +11,6 @@ public interface KadFileInterf {
     String getFileName();
 
     String getPath();
+
+    long getLastRefresh();
 }

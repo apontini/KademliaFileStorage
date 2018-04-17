@@ -10,6 +10,7 @@ public class KadFile implements KadFileInterf, Serializable {
     private boolean redundant; //false se il file è mio o true se mi è stato dato grazie al protocollo della rete Kademlia
     private String fileName;
     private String path;
+    private long lastRefresh;
 
     public KadFile(BigInteger fileID, boolean redundant, String fileName, String path)
     {
@@ -17,6 +18,7 @@ public class KadFile implements KadFileInterf, Serializable {
         this.redundant = redundant;
         this.fileName = fileName;
         this.path = path;
+        if(redundant) lastRefresh = System.currentTimeMillis();
     }
 
     public BigInteger getFileID()
@@ -38,6 +40,8 @@ public class KadFile implements KadFileInterf, Serializable {
     {
         return path;
     }
+
+    public long getLastRefresh() { return lastRefresh; }
 
     @Override
     public String toString()
