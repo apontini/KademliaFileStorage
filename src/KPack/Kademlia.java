@@ -21,8 +21,6 @@ import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -1150,14 +1148,13 @@ public class Kademlia implements KademliaInterf {
         }
         while ((findValue(fileID, false)) instanceof byte[]);
 
+        List<KadNode> closestK = findNode(fileID);
+        
         fileWriteLock.lock();
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileMap.add(tempfile);
-        fileWriteLock.unlock();
-
-        fileReadLock.lock();
-        List<KadNode> closestK = findNode_lookup(fileID);
+        
         System.out.println("Invio il file a: ");
         for (KadNode i : closestK)
         {
@@ -1192,7 +1189,7 @@ public class Kademlia implements KademliaInterf {
                 System.err.println("\u001B[31mErrore nell'eseguire lo store: " + ioe.getMessage() + "\u001B[0m");
             }
         }
-        fileReadLock.unlock();
+        fileWriteLock.unlock();
     }
 
     public void delete(BigInteger id) throws FileNotKnownException
@@ -1202,8 +1199,7 @@ public class Kademlia implements KademliaInterf {
 
         if (temp != null && !(temp.isRedundant()))
         {
-
-            List<KadNode> closestK = findNode_lookup(temp.getFileID());
+            List<KadNode> closestK = findNode(temp.getFileID());
             System.out.println("Elimino il file " + temp.getFileName() + " (" + temp.getFileID() + ") da: ");
             for (KadNode i : closestK)
             {
