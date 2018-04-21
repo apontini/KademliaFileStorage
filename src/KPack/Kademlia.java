@@ -1,5 +1,8 @@
 package KPack;
 
+import KPack.Exceptions.AlreadyInstancedException;
+import KPack.Exceptions.FileNotKnownException;
+import KPack.Exceptions.InvalidSettingsException;
 import KPack.Files.KadFile;
 import KPack.Files.KadFileMap;
 import KPack.Packets.*;
@@ -7,10 +10,10 @@ import KPack.Tree.Bucket;
 import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
-import KPack.Exceptions.*;
 import KPack.UserInterface.TreeUI;
-import java.awt.HeadlessException;
+import javafx.util.Pair;
 
+import java.awt.*;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.*;
@@ -18,6 +21,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.*;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -616,93 +621,118 @@ public class Kademlia implements KademliaInterf {
             alphaNode = lkn;
         }
         //chiedo anche a me stesso
+        //uso una coppia boolean,byte[] perchè se returnContent è false allora anche se il file è stato trovato comunque il contentuo sarà null,
+        // boolean mi permette di capire se qualche thread ha trovato il file o meno.
+        AtomicReference<Pair<Boolean,byte[]>> content=new AtomicReference<>();
+        content.set(new Pair<>(false,null));
         while (true)
         {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
             //ad ognuno degli alpha node vado a inviargli un findNode
             // for (int i = 0; i < alphaNode.size(); i++)
-            for (KadNode akn : alphaNode)
-            {
-                KadNode kadNode = akn;
+            Thread[] threads=new Thread[alphaNode.size()];
+            for (int i=0;i<alphaNode.size();i++) {
+                if(content.get().getKey())
+                    return content.get().getValue();
+                KadNode kadNode = alphaNode.get(i);
                 FindValueRequest fvr = new FindValueRequest(fileID, thisNode, kadNode, returnContent);
-                try
-                {
-                    Socket s = new Socket();
-                    s.setSoTimeout(timeout);
-                    s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getPort()), timeout);
+                threads[i] = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Socket s = new Socket();
+                            s.setSoTimeout(timeout);
+                            s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getPort()), timeout);
 
-                    OutputStream os = s.getOutputStream();
-                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                    outputStream.writeObject(fvr);
-                    outputStream.flush();
+                            OutputStream os = s.getOutputStream();
+                            ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                            outputStream.writeObject(fvr);
+                            outputStream.flush();
 
-                    InputStream is = s.getInputStream();
-                    ObjectInputStream inputStream = new ObjectInputStream(is);
+                            InputStream is = s.getInputStream();
+                            ObjectInputStream inputStream = new ObjectInputStream(is);
 
-                    long timeInit = System.currentTimeMillis();
-                    boolean state = true;
-                    while (state)
-                    {
-                        try
-                        {
-                            Object fvreply = inputStream.readObject();
-                            if (fvreply instanceof FindValueReply)
-                            {
-                                if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
+                            long timeInit = System.currentTimeMillis();
+                            boolean state = true;
+                            while (state) {
+                                if(content.get().getKey())
                                 {
-                                    //restituisco il contenuto
                                     is.close();
                                     s.close();
-                                    return ((FindValueReply) fvreply).getContent();
+                                    return;
                                 }
-                            }
-                            else
-                            {
-                                if ((fvreply instanceof FindNodeReply) && ((FindNodeReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
-                                {
-                                    it = ((FindNodeReply) fvreply).getList().iterator();
-                                    while (it.hasNext())
-                                    {
-                                        KadNode k = it.next();
-                                        if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
-                                        {
-                                            lkn.add(k);
+                                try {
+                                    Object fvreply = inputStream.readObject();
+                                    if (fvreply instanceof FindValueReply) {
+                                        if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode())) {
+                                            //termino
+                                            is.close();
+                                            s.close();
+                                            content.set(new Pair<>(true,((FindValueReply) fvreply).getContent()));
+                                            return;
                                         }
                                     }
-                                    is.close();
-                                    s.close();
-                                    state = false;
+                                    else {
+                                        if ((fvreply instanceof FindNodeReply) && ((FindNodeReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode())) {
+                                            routingTree.add(((FindNodeReply) fvreply).getSourceKadNode());
+                                            Iterator<KadNode> it1 = ((FindNodeReply) fvreply).getList().iterator();
+                                            while (it1.hasNext())
+                                            {
+                                                KadNode k = it1.next();
+                                                //System.out.println("****Prendo il lock nella lista del findNode ");
+                                                synchronized ((lkn))
+                                                {
+                                                    if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                                        lkn.add(k);
+                                                    //System.out.println("<<<<Lascio il lock nella lista del findNode ");
+                                                }
+                                            }
+                                            is.close();
+                                            s.close();
+                                            //inputStream.close();
+                                            //ds.close();
+                                            state = false;
+                                        }
+                                    }
+                                    if (state) {
+                                        System.out.println("******Aggiorno il timeout");
+                                        s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
+                                    }
+                                } catch (ClassNotFoundException e) {
+                                    System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage() + "\u001B[0m");
                                 }
                             }
-                            if (state)
-                            {
-                                System.out.println("******Aggiorno il timeout");
-                                s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
-                            }
-                        }
-                        catch (ClassNotFoundException e)
-                        {
-                            System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage() + "\u001B[0m");
+                        } catch (SocketTimeoutException soe) {
+                            //Un nodo interrogato non ha risposto in tempo pazienza
+                        } catch (ConnectException soe) {
+                            //System.err.println("Connect Exception: " + soe.getMessage());
+                        } catch (EOFException e) {
+                            //impossibile
+                        } catch (IOException ex) {
+                            System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage() + "\u001B[0m");
                         }
                     }
-                }
-                catch (SocketTimeoutException soe)
+                });
+                threads[i].start();
+            }
+            boolean state = true;
+            while (state)
+            {
+                int i = 0;
+                state = false;
+                if(content.get().getKey())
+                    return content.get().getValue();
+                while (!state && i < alphaNode.size())
                 {
-                    //Un nodo interrogato non ha risposto in tempo pazienza
-                }
-                catch (ConnectException soe)
-                {
-                    //System.err.println("Connect Exception: " + soe.getMessage());
-                }
-                catch (EOFException e)
-                {
-                    //impossibile
-                }
-                catch (IOException ex)
-                {
-                    System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage() + "\u001B[0m");
+                    if (!(threads[i].getState().equals(threads[i].getState().TERMINATED)))
+                    {
+                        state = true;
+                    }
+                    i++;
                 }
             }
+            if(content.get().getKey())
+                return content.get().getValue();
             queriedNode.addAll(alphaNode);
             lkn.sort((o1, o2)
                     -> distanza(o1, target).compareTo(distanza(o2, target)));
@@ -963,18 +993,6 @@ public class Kademlia implements KademliaInterf {
                         InputStream is = s.getInputStream();
                         ObjectInputStream inputStream = new ObjectInputStream(is);
 
-                        /*DatagramSocket ds=new DatagramSocket();
-                        ds.setSoTimeout(timeout);
-                        ds.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getPort()));
-
-                        ByteArrayOutputStream baos=new ByteArrayOutputStream();
-                        ObjectOutputStream outputStream = new ObjectOutputStream(baos);
-                        outputStream.writeObject(fnr);
-                        outputStream.flush();
-                        byte[] buffer=baos.toByteArray();
-                        DatagramPacket packet=new DatagramPacket(buffer,buffer.length,kadNode.getIp(), kadNode.getPort());
-                        ds.send(packet);
-                         */
                         long timeInit = System.currentTimeMillis();
                         boolean state = true;
                         while (state)
@@ -982,13 +1000,6 @@ public class Kademlia implements KademliaInterf {
                             try
                             {
                                 Object fnreply = inputStream.readObject();
-                                /*buffer=new byte[65536];
-                                DatagramPacket recv = new DatagramPacket(buffer, buffer.length);
-                                ds.receive(recv);
-
-                                ByteArrayInputStream bais=new ByteArrayInputStream(buffer);
-                                ObjectInputStream inputStream=new ObjectInputStream(bais);
-                                Object fnreply = inputStream.readObject();*/
                                 if (fnreply instanceof FindNodeReply)
                                 {
                                     if (((FindNodeReply) fnreply).getSourceKadNode().equals(fnr.getDestKadNode()))
@@ -1221,18 +1232,6 @@ public class Kademlia implements KademliaInterf {
                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
                         outputStream.writeObject(dr);
                         outputStream.flush();
-
-                        /*DatagramSocket ds=new DatagramSocket();
-                    ds.setSoTimeout(timeout);
-                    ds.connect(new InetSocketAddress(k.getIp(), k.getPort()));
-
-                    ByteArrayOutputStream baos=new ByteArrayOutputStream();
-                    ObjectOutputStream outputStream = new ObjectOutputStream(baos);
-                    outputStream.writeObject(dr);
-                    outputStream.flush();
-                    byte[] buffer=baos.toByteArray();
-                    DatagramPacket packet=new DatagramPacket(buffer,buffer.length,k.getIp(), k.getPort());
-                    ds.send(packet);*/
                     }
                     catch (IOException ioe)
                     {
