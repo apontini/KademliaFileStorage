@@ -532,7 +532,7 @@ public class Kademlia implements KademliaInterf {
     {
         //verifico se il file richiesto è contenuto nel nodo
         KadFile temp = fileMap.get(fileID);
-        if (temp != null && temp.isRedundant())
+        if (temp != null)
         {
             return temp;
         }
@@ -622,23 +622,28 @@ public class Kademlia implements KademliaInterf {
         //chiedo anche a me stesso
         //uso una coppia boolean,byte[] perchè se returnContent è false allora anche se il file è stato trovato comunque il contentuo sarà null,
         // boolean mi permette di capire se qualche thread ha trovato il file o meno.
-        AtomicReference<Tupla> content=new AtomicReference<>();
-        content.set(new Tupla(false,null));
+        AtomicReference<Tupla> content = new AtomicReference<>();
+        content.set(new Tupla(false, null));
         while (true)
         {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
             //ad ognuno degli alpha node vado a inviargli un findNode
             // for (int i = 0; i < alphaNode.size(); i++)
-            Thread[] threads=new Thread[alphaNode.size()];
-            for (int i=0;i<alphaNode.size();i++) {
-                if(content.get().getKey())
+            Thread[] threads = new Thread[alphaNode.size()];
+            for (int i = 0; i < alphaNode.size(); i++)
+            {
+                if (content.get().getKey())
+                {
                     return content.get().getValue();
+                }
                 KadNode kadNode = alphaNode.get(i);
                 FindValueRequest fvr = new FindValueRequest(fileID, thisNode, kadNode, returnContent);
                 threads[i] = new Thread(new Runnable() {
                     @Override
-                    public void run() {
-                        try {
+                    public void run()
+                    {
+                        try
+                        {
                             Socket s = new Socket();
                             s.setSoTimeout(timeout);
                             s.connect(new InetSocketAddress(kadNode.getIp(), kadNode.getPort()), timeout);
@@ -653,26 +658,32 @@ public class Kademlia implements KademliaInterf {
 
                             long timeInit = System.currentTimeMillis();
                             boolean state = true;
-                            while (state) {
-                                if(content.get().getKey())
+                            while (state)
+                            {
+                                if (content.get().getKey())
                                 {
                                     is.close();
                                     s.close();
                                     return;
                                 }
-                                try {
+                                try
+                                {
                                     Object fvreply = inputStream.readObject();
-                                    if (fvreply instanceof FindValueReply) {
-                                        if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode())) {
+                                    if (fvreply instanceof FindValueReply)
+                                    {
+                                        if (((FindValueReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
+                                        {
                                             //termino
                                             is.close();
                                             s.close();
-                                            content.set(new Tupla(true,((FindValueReply) fvreply).getContent()));
+                                            content.set(new Tupla(true, ((FindValueReply) fvreply).getContent()));
                                             return;
                                         }
                                     }
-                                    else {
-                                        if ((fvreply instanceof FindNodeReply) && ((FindNodeReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode())) {
+                                    else
+                                    {
+                                        if ((fvreply instanceof FindNodeReply) && ((FindNodeReply) fvreply).getSourceKadNode().equals(fvr.getDestKadNode()))
+                                        {
                                             routingTree.add(((FindNodeReply) fvreply).getSourceKadNode());
                                             Iterator<KadNode> it1 = ((FindNodeReply) fvreply).getList().iterator();
                                             while (it1.hasNext())
@@ -682,7 +693,9 @@ public class Kademlia implements KademliaInterf {
                                                 synchronized ((lkn))
                                                 {
                                                     if (!(lkn.contains(k)))  // se mi da un nodo che conosco gia, non lo inserisco
+                                                    {
                                                         lkn.add(k);
+                                                    }
                                                     //System.out.println("<<<<Lascio il lock nella lista del findNode ");
                                                 }
                                             }
@@ -693,21 +706,32 @@ public class Kademlia implements KademliaInterf {
                                             state = false;
                                         }
                                     }
-                                    if (state) {
+                                    if (state)
+                                    {
                                         System.out.println("******Aggiorno il timeout");
                                         s.setSoTimeout(((int) (timeout - (System.currentTimeMillis() - timeInit))));
                                     }
-                                } catch (ClassNotFoundException e) {
+                                }
+                                catch (ClassNotFoundException e)
+                                {
                                     System.err.println("\u001B[31mErrore nella risposta ricevuta: " + e.getMessage() + "\u001B[0m");
                                 }
                             }
-                        } catch (SocketTimeoutException soe) {
+                        }
+                        catch (SocketTimeoutException soe)
+                        {
                             //Un nodo interrogato non ha risposto in tempo pazienza
-                        } catch (ConnectException soe) {
+                        }
+                        catch (ConnectException soe)
+                        {
                             //System.err.println("Connect Exception: " + soe.getMessage());
-                        } catch (EOFException e) {
+                        }
+                        catch (EOFException e)
+                        {
                             //impossibile
-                        } catch (IOException ex) {
+                        }
+                        catch (IOException ex)
+                        {
                             System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage() + "\u001B[0m");
                         }
                     }
@@ -719,8 +743,10 @@ public class Kademlia implements KademliaInterf {
             {
                 int i = 0;
                 state = false;
-                if(content.get().getKey())
+                if (content.get().getKey())
+                {
                     return content.get().getValue();
+                }
                 while (!state && i < alphaNode.size())
                 {
                     if (!(threads[i].getState().equals(threads[i].getState().TERMINATED)))
@@ -730,8 +756,10 @@ public class Kademlia implements KademliaInterf {
                     i++;
                 }
             }
-            if(content.get().getKey())
+            if (content.get().getKey())
+            {
                 return content.get().getValue();
+            }
             queriedNode.addAll(alphaNode);
             lkn.sort((o1, o2)
                     -> distanza(o1, target).compareTo(distanza(o2, target)));
@@ -1159,12 +1187,12 @@ public class Kademlia implements KademliaInterf {
         while ((findValue(fileID, false)) instanceof byte[]);
 
         List<KadNode> closestK = findNode(fileID);
-        
+
         fileWriteLock.lock();
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         fileMap.add(tempfile);
-        
+
         System.out.println("Invio il file a: ");
         for (KadNode i : closestK)
         {
@@ -1321,7 +1349,7 @@ public class Kademlia implements KademliaInterf {
                         fileReadLock.lock();
                         Object value = findValue_lookup(fvr.getFileID());
                         fileReadLock.unlock();
-                        
+
                         FindValueReply fvrep = null;
                         if (value instanceof KadFile)
                         {
