@@ -880,7 +880,7 @@ public class Kademlia implements KademliaInterf {
 
     public List<KadNode> findNode(BigInteger targetID)
     {
-        return findNodeMethod(targetID, false);
+        return findNodeMethod(targetID, true);
     }
 
     private List<KadNode> findNode(BigInteger targetID, boolean track)
