@@ -37,6 +37,7 @@ public class KadFileMap implements KadFileMapInterf {
 
         if (temp.isRedundant())
         {
+            System.out.println("ELIMINO: " + temp.getPath() + File.pathSeparator + temp.getFileName());
             new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
         }
         serializeMap();
@@ -48,6 +49,7 @@ public class KadFileMap implements KadFileMapInterf {
         KadFile temp = fileMap.remove(ID);
         if (temp.isRedundant())
         {
+            System.out.println("ELIMINO: " + temp.getPath() + File.pathSeparator + temp.getFileName());
             new File(temp.getPath() + File.pathSeparator + temp.getFileName()).delete();
         }
         serializeMap();
