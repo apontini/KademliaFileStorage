@@ -20,6 +20,10 @@ public class KadFileMap implements KadFileMapInterf {
 
     synchronized public void add(KadFile file)
     {
+        if(fileMap.containsKey(file.getFileID()) && !(fileMap.get(file.getFileID()).isRedundant()))
+        {
+            return;
+        }
         fileMap.put(file.getFileID(),file);
         if (!file.isRedundant())
         {

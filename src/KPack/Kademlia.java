@@ -1349,18 +1349,16 @@ public class Kademlia implements KademliaInterf {
                         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
 
                         StoreRequest rq = (StoreRequest) received;
-                        Object value = findValue_lookup(rq.getFileID());
 
-                        if (!(value instanceof KadFile))
-                        {
-                            //i file ridondanti vengono salvati con estensione .FILEID.kad
-                            System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                            String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
-                            File toStore = new File(FILESPATH + rq.getFileName() + extension);
-                            toStore.createNewFile();
-                            Files.write(toStore.toPath(), rq.getContent());
-                            fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
-                        }
+                        //i file ridondanti vengono salvati con estensione .FILEID.kad
+                        System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
+                        String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
+                        File toStore = new File(FILESPATH + rq.getFileName() + extension);
+                        toStore.delete();
+                        toStore.createNewFile();
+                        Files.write(toStore.toPath(), rq.getContent());
+                        fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
+
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         fileWriteLock.unlock();
                     }
