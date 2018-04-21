@@ -34,7 +34,7 @@ public class KadFileMap implements KadFileMapInterf {
     synchronized public void remove(KadFile file)
     {
         KadFile temp = fileMap.remove(file.getFileID());
-        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName();
+        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName());
         if (temp.isRedundant())
         {
             new File(temp.getPath() + File.separator + temp.getFileName()).delete();
@@ -46,7 +46,7 @@ public class KadFileMap implements KadFileMapInterf {
     {
 
         KadFile temp = fileMap.remove(ID);
-        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName();
+        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName());
         if (temp.isRedundant())
         {
             new File(temp.getPath() + File.separator + temp.getFileName()).delete();
