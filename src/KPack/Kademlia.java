@@ -11,7 +11,6 @@ import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import KPack.UserInterface.TreeUI;
-import javafx.util.Pair;
 
 import java.awt.*;
 import java.io.*;
@@ -623,8 +622,8 @@ public class Kademlia implements KademliaInterf {
         //chiedo anche a me stesso
         //uso una coppia boolean,byte[] perchè se returnContent è false allora anche se il file è stato trovato comunque il contentuo sarà null,
         // boolean mi permette di capire se qualche thread ha trovato il file o meno.
-        AtomicReference<Pair<Boolean,byte[]>> content=new AtomicReference<>();
-        content.set(new Pair<>(false,null));
+        AtomicReference<Tupla> content=new AtomicReference<>();
+        content.set(new Tupla(false,null));
         while (true)
         {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
@@ -668,7 +667,7 @@ public class Kademlia implements KademliaInterf {
                                             //termino
                                             is.close();
                                             s.close();
-                                            content.set(new Pair<>(true,((FindValueReply) fvreply).getContent()));
+                                            content.set(new Tupla(true,((FindValueReply) fvreply).getContent()));
                                             return;
                                         }
                                     }
