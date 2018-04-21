@@ -1519,7 +1519,6 @@ public class Kademlia implements KademliaInterf {
                                                 if (resp instanceof FindNodeReply)
                                                 {
                                                     KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                    System.out.println("\u001B[32m ++++Il file completo è \u001B[0m");
                                                     System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
 
                                                     try
@@ -1578,6 +1577,7 @@ public class Kademlia implements KademliaInterf {
                                         }
                                     }
                                 }
+                                v.setLastRefresh(System.currentTimeMillis());
                             }
                         }
                     });

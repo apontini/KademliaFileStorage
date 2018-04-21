@@ -43,6 +43,8 @@ public class KadFile implements KadFileInterf, Serializable {
 
     public long getLastRefresh() { return lastRefresh; }
 
+    public void setLastRefresh(long lastRefresh) { this.lastRefresh = lastRefresh;}
+
     @Override
     public String toString()
     {
