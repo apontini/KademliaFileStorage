@@ -33,13 +33,7 @@ public class KadFileMap implements KadFileMapInterf {
 
     synchronized public void remove(KadFile file)
     {
-        KadFile temp = fileMap.remove(file.getFileID());
-        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName());
-        if (temp.isRedundant())
-        {
-            new File(temp.getPath() + File.separator + temp.getFileName()).delete();
-        }
-        serializeMap();
+        remove(file.getFileID());
     }
 
     synchronized public void remove(BigInteger ID)
@@ -47,9 +41,16 @@ public class KadFileMap implements KadFileMapInterf {
 
         KadFile temp = fileMap.remove(ID);
         System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName());
+        System.out.println();
         if (temp.isRedundant())
         {
             new File(temp.getPath() + File.separator + temp.getFileName()).delete();
+        }
+        else
+        {
+            File myRedundantCopy=new File(Kademlia.FILESPATH+temp.getFileName()+"."+ID.intValue()+".kad");
+            if(myRedundantCopy.exists())
+                myRedundantCopy.delete();
         }
         serializeMap();
     }

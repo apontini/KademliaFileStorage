@@ -1495,7 +1495,7 @@ public class Kademlia implements KademliaInterf {
                     fileReadLock.lock();
                     fileMap.forEach((k, v) ->
                     {
-                        if (v.isRedundant())
+                        if (v.isRedundant() || (!v.isRedundant() && new File(Kademlia.FILESPATH+v.getFileName()+"."+k+".kad").exists()))
                         {
                             if ((System.currentTimeMillis() - v.getLastRefresh()) >= refreshWait)
                             {
