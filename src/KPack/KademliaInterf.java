@@ -1,6 +1,5 @@
 package KPack;
 
-import KPack.Exceptions.AlreadyInstancedException;
 import KPack.Exceptions.FileNotKnownException;
 import KPack.Files.KadFile;
 

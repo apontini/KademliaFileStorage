@@ -3,14 +3,17 @@ package KPack.Files;
 import java.math.BigInteger;
 import java.util.Iterator;
 
-public interface KadFileMapInterf
-{
+public interface KadFileMapInterf {
 
     void add(KadFile file);
 
     void remove(KadFile file);
 
-    KadFile get(BigInteger i);
+    void remove(BigInteger ID, boolean redundant);
+    
+    void remove(BigInteger ID);
+
+    KadFile get(BigInteger i, boolean redundant);
 
     void clearRedundants();
 

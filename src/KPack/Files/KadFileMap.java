@@ -1,15 +1,17 @@
 package KPack.Files;
 
 import KPack.Kademlia;
+import KPack.Tupla;
 
 import java.io.*;
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public class KadFileMap implements KadFileMapInterf {
 
-    private HashMap<BigInteger,KadFile> fileMap;
+    private HashMap<Tupla<BigInteger, Boolean>, KadFile> fileMap;
     private Kademlia thisNode;
 
     public KadFileMap(Kademlia thisNode)
@@ -20,15 +22,13 @@ public class KadFileMap implements KadFileMapInterf {
 
     synchronized public void add(KadFile file)
     {
-        if(fileMap.containsKey(file.getFileID()) && !(fileMap.get(file.getFileID()).isRedundant()))
+        if (fileMap.containsKey(new Tupla<BigInteger, Boolean>(file.getFileID(), file.isRedundant())))
         {
             return;
         }
-        fileMap.put(file.getFileID(),file);
-        if (!file.isRedundant())
-        {
-            serializeMap();
-        }
+        fileMap.put(new Tupla<BigInteger, Boolean>(file.getFileID(), file.isRedundant()), file);
+
+        serializeMap();
     }
 
     synchronized public void remove(KadFile file)
@@ -36,26 +36,29 @@ public class KadFileMap implements KadFileMapInterf {
         remove(file.getFileID());
     }
 
-    synchronized public void remove(BigInteger ID)
+    synchronized public void remove(BigInteger ID, boolean redundant)
     {
-
-        KadFile temp = fileMap.remove(ID);
-        System.out.println("ELIMINO: "+temp.getPath() + File.separator + temp.getFileName());
-        System.out.println();
-        if (temp.isRedundant())
+        KadFile temp = fileMap.remove(new Tupla<BigInteger, Boolean>(ID, true));
+        if (temp != null)
         {
+            System.out.println("ELIMINO: " + temp.getPath() + File.separator + temp.getFileName());
+            System.out.println();
             new File(temp.getPath() + File.separator + temp.getFileName()).delete();
         }
-        else
+        if (!redundant)
         {
-            File myRedundantCopy=new File(Kademlia.FILESPATH+temp.getFileName()+"."+ID.intValue()+".kad");
-            if(myRedundantCopy.exists())
-                myRedundantCopy.delete();
+            fileMap.remove(new Tupla<BigInteger, Boolean>(ID, false));
         }
+
         serializeMap();
     }
 
-    public void forEach(BiConsumer<BigInteger, KadFile> function) //Prendere il lock per usare questo metodo!
+    public void remove(BigInteger ID)
+    {
+        remove(ID, false);
+    }
+
+    public void forEach(BiConsumer<Tupla<BigInteger, Boolean>, KadFile> function) //Prendere il lock per usare questo metodo!
     {
         fileMap.forEach(function);
     }
@@ -67,19 +70,19 @@ public class KadFileMap implements KadFileMapInterf {
 
     synchronized public void clearRedundants()
     {
-        fileMap.forEach((k,v)->
-                {
-                    if (v.isRedundant())
-                    {
-                        this.remove(k);
-                    }
-                }
+        fileMap.forEach((k, v) ->
+        {
+            if (k.getValue())
+            {
+                fileMap.remove(k);
+            }
+        }
         );
     }
 
-    synchronized public KadFile get(BigInteger i)
+    synchronized public KadFile get(BigInteger i, boolean redundant)
     {
-        return fileMap.get(i);
+        return fileMap.get(new Tupla<BigInteger, Boolean>(i, redundant));
     }
 
     synchronized public int size()
@@ -91,6 +94,15 @@ public class KadFileMap implements KadFileMapInterf {
     {
         FileOutputStream fout = null;
         ObjectOutputStream oos = null;
+
+        HashMap<Tupla<BigInteger, Boolean>, KadFile> toSave = new HashMap<>();
+        fileMap.forEach((t, u) ->
+        {
+            if (!t.getValue())
+            {
+                toSave.put(t, u);
+            }
+        });
         try
         {
             File temp = new File(thisNode.FILESPATH);
@@ -106,7 +118,7 @@ public class KadFileMap implements KadFileMapInterf {
 
             fout = new FileOutputStream(thisNode.FILESPATH + "index");
             oos = new ObjectOutputStream(fout);
-            oos.writeObject(fileMap);
+            oos.writeObject(toSave);
         }
         catch (IOException e)
         {
@@ -132,10 +144,10 @@ public class KadFileMap implements KadFileMapInterf {
         }
     }
 
-    private HashMap<BigInteger, KadFile> loadListFromFile()
+    private HashMap<Tupla<BigInteger, Boolean>, KadFile> loadListFromFile()
     {
 
-        HashMap<BigInteger, KadFile> ret = new HashMap<>();
+        HashMap<Tupla<BigInteger, Boolean>, KadFile> ret = new HashMap<Tupla<BigInteger, Boolean>, KadFile>();
         File temp = new File(thisNode.FILESPATH);
         if (!(temp.exists()))
         {
@@ -152,7 +164,7 @@ public class KadFileMap implements KadFileMapInterf {
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 while (true)
                 {
-                    ret = ((HashMap<BigInteger, KadFile>) ois.readObject());
+                    ret = ((HashMap<Tupla<BigInteger, Boolean>, KadFile>) ois.readObject());
                 }
             }
             catch (EOFException | FileNotFoundException | ClassNotFoundException e)

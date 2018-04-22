@@ -531,7 +531,7 @@ public class Kademlia implements KademliaInterf {
     private Object findValue_lookup(BigInteger fileID)    //Object può essere o una List<KadNode> oppure di tipo KadFile
     {
         //verifico se il file richiesto è contenuto nel nodo
-        KadFile temp = fileMap.get(fileID);
+        KadFile temp = fileMap.get(fileID,true);
         if (temp != null)
         {
             return temp;
@@ -622,8 +622,8 @@ public class Kademlia implements KademliaInterf {
         //chiedo anche a me stesso
         //uso una coppia boolean,byte[] perchè se returnContent è false allora anche se il file è stato trovato comunque il contentuo sarà null,
         // boolean mi permette di capire se qualche thread ha trovato il file o meno.
-        AtomicReference<Tupla> content = new AtomicReference<>();
-        content.set(new Tupla(false, null));
+        AtomicReference<Tupla<Boolean, byte[]>> content = new AtomicReference<>();
+        content.set(new Tupla<Boolean, byte[]>(false, null));
         while (true)
         {
             int size = lkn.size(); // per capire se il round di find nodes è fallito o meno
@@ -1203,7 +1203,7 @@ public class Kademlia implements KademliaInterf {
         {
             try
             {
-                StoreRequest sr = new StoreRequest(new KadFile(fileID, false, temp.getName(), temp.getParent()), thisNode, i);
+                StoreRequest sr = new StoreRequest(new KadFile(fileID, true, temp.getName(), temp.getParent()), thisNode, i);
                 new Thread(() ->
                 {
                     try
@@ -1233,9 +1233,9 @@ public class Kademlia implements KademliaInterf {
     public void delete(BigInteger id) throws FileNotKnownException
     {
         fileWriteLock.lock();
-        KadFile temp = fileMap.get(id);
+        KadFile temp = fileMap.get(id, false);
 
-        if (temp != null && !(temp.isRedundant()))
+        if (temp != null)
         {
             List<KadNode> closestK = findNode(temp.getFileID());
             System.out.println("Elimino il file " + temp.getFileName() + " (" + temp.getFileID() + ") da: ");
@@ -1401,7 +1401,7 @@ public class Kademlia implements KademliaInterf {
                         System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
                         try
                         {
-                            fileMap.remove(dr.getFile().getFileID());
+                            fileMap.remove(dr.getFile().getFileID(),true);
                         }
                         catch (NullPointerException npe)
                         {
@@ -1495,12 +1495,12 @@ public class Kademlia implements KademliaInterf {
                     fileReadLock.lock();
                     fileMap.forEach((k, v) ->
                     {
-                        if (v.isRedundant() || (!v.isRedundant() && new File(Kademlia.FILESPATH+v.getFileName()+"."+k+".kad").exists()))
+                        if (k.getValue())
                         {
                             if ((System.currentTimeMillis() - v.getLastRefresh()) >= refreshWait)
                             {
                                 System.out.println("++++Refresho " + v.getFileName());
-                                List<KadNode> temp = findNode(v.getFileID(), true);
+                                List<KadNode> temp = findNode(k.getKey(), true);
                                 //Se non sono tra i K nodi più vicini a quell'ID, elimino il file da me
                                 boolean state = true;
                                 for (KadNode n : temp)
@@ -1532,7 +1532,7 @@ public class Kademlia implements KademliaInterf {
                                         tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
                                         OutputStream os = tempS.getOutputStream();
                                         ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                        outputStream.writeObject(new FindValueRequest(k, thisNode, n, false));
+                                        outputStream.writeObject(new FindValueRequest(k.getKey(), thisNode, n, false));
                                         outputStream.flush();
 
                                         InputStream is = tempS.getInputStream();
@@ -1544,7 +1544,7 @@ public class Kademlia implements KademliaInterf {
                                                 Object resp = ois.readObject();
                                                 if (resp instanceof FindNodeReply)
                                                 {
-                                                    KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                                    KadFile toSend = new KadFile(k.getKey(), true, v.getFileName(), v.getPath());
                                                     System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
 
                                                     try
@@ -1576,7 +1576,7 @@ public class Kademlia implements KademliaInterf {
                                         {
                                             System.err.println("\u001B[31mErrore nella risposta durante il refresh: " + cnfe.getMessage() + "\u001B[0m");
                                             //Gli invio comunque il file
-                                            KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                            KadFile toSend = new KadFile(k.getKey(), true, v.getFileName(), v.getPath());
                                             outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
                                         }
                                     }
@@ -1612,7 +1612,7 @@ public class Kademlia implements KademliaInterf {
                     //Elimino qua i file per evitare ConcurrentModificationExceptions
                     for (KadFile i : toBeDeleted)
                     {
-                        fileMap.remove(i.getFileID());
+                        fileMap.remove(i.getFileID(),true);
                     }
                     System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                     fileWriteLock.unlock();
