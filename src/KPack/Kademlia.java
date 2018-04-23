@@ -1557,33 +1557,29 @@ public class Kademlia implements KademliaInterf {
                                     ObjectInputStream ois = new ObjectInputStream(is);
                                     try
                                     {
-                                        while (true)
+                                        Object resp = ois.readObject();
+                                        if (resp instanceof FindNodeReply)
                                         {
-                                            Object resp = ois.readObject();
-                                            if (resp instanceof FindNodeReply)
+                                            KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
+                                            System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
+
+                                            try
                                             {
-                                                KadFile toSend = new KadFile(k, true, v.getFileName(), v.getPath());
-                                                System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") \u001B[0m");
-
-                                                try
-                                                {
-                                                    tempS.close();
-                                                }
-                                                catch (IOException e)
-                                                {
-                                                    e.printStackTrace();
-                                                }
-
-                                                tempS = new Socket();
-                                                tempS.setSoTimeout(timeout);
-                                                tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
-                                                os = tempS.getOutputStream();
-                                                outputStream = new ObjectOutputStream(os);
-                                                outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
-                                                outputStream.flush();
-
-                                                System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") completato \u001B[0m");
+                                                tempS.close();
                                             }
+                                            catch (IOException e)
+                                            {
+                                                e.printStackTrace();
+                                            }
+                                            tempS = new Socket();
+                                            tempS.setSoTimeout(timeout);
+                                            tempS.connect(new InetSocketAddress(n.getIp(), n.getPort()), timeout);
+                                            os = tempS.getOutputStream();
+                                            outputStream = new ObjectOutputStream(os);
+                                            outputStream.writeObject(new StoreRequest(toSend, thisNode, n));
+                                            outputStream.flush();
+
+                                            System.out.println("\u001B[32m ++++Invio a " + n.getNodeID() + "(" + n.getIp() + ":" + n.getPort() + ") completato \u001B[0m");
                                         }
                                     }
                                     catch (EOFException eofe)
