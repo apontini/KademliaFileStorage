@@ -15,6 +15,7 @@ public class KadFileMap implements KadFileMapInterf {
 
     public KadFileMap(Kademlia thisNode, boolean serialized)
     {
+        fileMap = new HashMap<>();
         if(serialized) fileMap = loadListFromFile();
         this.thisNode = thisNode;
         this.serialized = serialized;
