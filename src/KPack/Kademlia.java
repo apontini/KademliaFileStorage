@@ -1162,7 +1162,9 @@ public class Kademlia implements KademliaInterf {
         fileReadLock.lock();
         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
         fileMap.forEach((k, v) -> temp.add(v));
+        System.out.println(fileMap.size());
         localFileMap.forEach((k,v)-> temp.add(v));
+        System.out.println(localFileMap.size());
         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
         fileReadLock.unlock();
         return temp;
