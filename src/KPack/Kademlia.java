@@ -11,6 +11,7 @@ import KPack.Tree.Node;
 import KPack.Tree.RoutingTree;
 import KPack.Tree.TreeNode;
 import KPack.UserInterface.TreeUI;
+import KPack.UserInterface.UserInterface;
 
 import java.awt.*;
 import java.io.*;
@@ -129,6 +130,7 @@ public class Kademlia implements KademliaInterf {
         try
         {
             new TreeUI(routingTree, this);
+            new UserInterface(this,fileMap,localFileMap);
         }
         catch (HeadlessException he) //per dispositivi senza schermo
         {
