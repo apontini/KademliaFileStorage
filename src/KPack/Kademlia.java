@@ -1600,6 +1600,10 @@ public class Kademlia implements KademliaInterf {
                                 {
                                     System.err.println("\u001B[31mImpossibile aprire il socket verso " + n.getIp().toString() + ": " + se.getMessage()+"\u001B[0m");
                                 }
+                                catch(EOFException eofe)
+                                {
+                                    System.err.println("\u001B[31mEOF di: " + eofe.getCause() + "\u001B[0m");
+                                }
                                 catch (IOException ioe)
                                 {
                                     System.err.println("\u001B[31mErrore nel refresh: " + ioe.getMessage() + "\u001B[0m");
