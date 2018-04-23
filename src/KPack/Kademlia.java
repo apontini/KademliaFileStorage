@@ -289,6 +289,7 @@ public class Kademlia implements KademliaInterf {
         {
             System.err.println("\u001B[31mErrore nelle impostazioni" + ioe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
+            ioe.printStackTrace();
             System.exit(1);
         }
     }
@@ -365,6 +366,7 @@ public class Kademlia implements KademliaInterf {
         catch (IOException ioe)
         {
             System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
+            ioe.printStackTrace();
         }
         finally
         {
@@ -382,6 +384,7 @@ public class Kademlia implements KademliaInterf {
             catch (IOException ioe)
             {
                 System.err.println("\u001B[31mErrore nella scrittura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
+                ioe.printStackTrace();
             }
         }
     }
@@ -409,6 +412,7 @@ public class Kademlia implements KademliaInterf {
         {
             System.err.println("\u001B[31mErrore nella lettura dei nodi fissi: " + ioe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
+            ioe.printStackTrace();
             System.exit(1);
         }
         finally
@@ -450,6 +454,7 @@ public class Kademlia implements KademliaInterf {
         {
             System.err.println("\u001B[31mEccezione generale nel trovare l'IP del nodo: " + ioe.getMessage() + "\u001B[0m");
             System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
+            ioe.printStackTrace();
             System.exit(1);
         }
         try
@@ -526,6 +531,7 @@ public class Kademlia implements KademliaInterf {
         }
         catch (IOException ex)
         {
+            ex.printStackTrace();
             return false;
         }
     }
@@ -737,6 +743,7 @@ public class Kademlia implements KademliaInterf {
                         catch (IOException ex)
                         {
                             System.err.println("\u001B[31mIOException nel FindValue " + ex.getMessage() + "\u001B[0m");
+                            ex.printStackTrace();
                         }
                     }
                 });
@@ -1085,6 +1092,7 @@ public class Kademlia implements KademliaInterf {
                     catch (IOException ex)
                     {
                         System.err.println("\u001B[31mIOException nel FindNode: " + ex.getMessage() + "\u001B[0m");
+                        ex.printStackTrace();
                     }
                 });
                 threads[i].start();
@@ -1223,6 +1231,7 @@ public class Kademlia implements KademliaInterf {
                     catch (IOException ex)
                     {
                         System.err.println("\u001B[31mErrore nell'invio dello store: " + ex.getMessage() + "\u001B[0m");
+                        ex.printStackTrace();
                     }
                 }).start();
 
@@ -1230,6 +1239,7 @@ public class Kademlia implements KademliaInterf {
             catch (IOException ioe)
             {
                 System.err.println("\u001B[31mErrore nell'eseguire lo store: " + ioe.getMessage() + "\u001B[0m");
+                ioe.printStackTrace();
             }
         }
         fileWriteLock.unlock();
@@ -1268,6 +1278,7 @@ public class Kademlia implements KademliaInterf {
                     catch (IOException ioe)
                     {
                         System.err.println("\u001B[31mErrore generale nell'eseguire il delete per " + k.getNodeID() + ": " + ioe.getMessage() + "\u001B[0m");
+                        ioe.printStackTrace();
                     }
                 }).start();
 
@@ -1297,6 +1308,7 @@ public class Kademlia implements KademliaInterf {
             {
                 System.err.println("\u001B[31mErrore nell'apertura del socket del Thread Server: " + ex.getMessage() + "\u001B[0m");
                 System.err.println("\u001B[31mABORT! ABORT!\u001B[0m");
+                ex.printStackTrace();
                 System.exit(1);
             }
 
@@ -1453,6 +1465,7 @@ public class Kademlia implements KademliaInterf {
                 catch (IOException ex)
                 {
                     System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
+                    ex.printStackTrace();
                 }
                 finally
                 {
@@ -1592,6 +1605,7 @@ public class Kademlia implements KademliaInterf {
                                 catch (IOException ioe)
                                 {
                                     System.err.println("\u001B[31mErrore nel refresh: " + ioe.getMessage() + "\u001B[0m");
+                                    ioe.printStackTrace();
                                 }
                                 finally
                                 {
@@ -1605,6 +1619,7 @@ public class Kademlia implements KademliaInterf {
                                     catch (IOException ioe)
                                     {
                                         System.err.println("\u001B[31mErrore generale nel chiudere il socket del refresh: " + ioe.getMessage() + "\u001B[0m");
+                                        ioe.printStackTrace();
                                     }
                                 }
                             }
