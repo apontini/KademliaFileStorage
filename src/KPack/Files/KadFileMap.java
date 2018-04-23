@@ -1,7 +1,6 @@
 package KPack.Files;
 
 import KPack.Kademlia;
-import KPack.Tupla;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -85,7 +84,7 @@ public class KadFileMap implements KadFileMapInterf {
 
             fout = new FileOutputStream(thisNode.FILESPATH + "index");
             oos = new ObjectOutputStream(fout);
-            oos.writeObject(this);
+            oos.writeObject(fileMap);
         }
         catch (IOException e)
         {
