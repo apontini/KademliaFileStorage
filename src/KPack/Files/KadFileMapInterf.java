@@ -9,13 +9,9 @@ public interface KadFileMapInterf {
 
     void remove(KadFile file);
 
-    void remove(BigInteger ID, boolean redundant);
-    
     void remove(BigInteger ID);
 
-    KadFile get(BigInteger i, boolean redundant);
-
-    void clearRedundants();
+    KadFile get(BigInteger i);
 
     void clearAll();
 
