@@ -32,7 +32,7 @@ public class FindValueReply extends Packet implements Serializable {
         {
             this.fileName = kf.getFileName();
 
-            Path path = Paths.get(kf.getPath());
+            Path path = Paths.get(kf.getPath()+kf.getFileName());
             try
             {
                 content = Files.readAllBytes(path);

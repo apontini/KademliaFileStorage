@@ -1235,7 +1235,7 @@ public class Kademlia implements KademliaInterf {
                     catch (IOException ex)
                     {
                         System.err.println("\u001B[31mErrore nell'invio dello store: " + ex.getMessage() + "\u001B[0m");
-                        ex.printStackTrace();
+                        //ex.printStackTrace();
                     }
                 }).start();
 
