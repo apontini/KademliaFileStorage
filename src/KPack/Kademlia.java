@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
@@ -1320,198 +1319,176 @@ public class Kademlia implements KademliaInterf {
 
             while (true)
             {
-                Socket connect = null;
+                Socket connection = null;
                 try
                 {
-                    connect = listener.accept();
-                    final Socket connection = connect;
+                    connection = listener.accept();
 
-                    new Thread(() ->
+                    connection.setSoTimeout(timeout);
+
+                    Object responseObject = null;
+
+                    //Analizzo la richiesta ricevuta
+                    InputStream is = connection.getInputStream();
+                    ObjectInputStream inStream = new ObjectInputStream(is);
+
+                    Object received = inStream.readObject();
+                    System.out.println(received.getClass() + " received from " + connection.getInetAddress().getHostAddress());
+
+                    //se non ho ricevuto un pacchetto o non sono io il destinatario, chiudo la connessione
+                    if (!(received instanceof Packet) || !((Packet) received).getDestKadNode().equals(thisNode))
                     {
+                        connection.close();
+                        return;
+                    }
+
+                    Packet p = (Packet) received;
+                    //aggiungo il nodo sorgente all'albero di routing
+                    if (!(received instanceof FindNodeRequest && !((FindNodeRequest) received).isTracked()))
+                    {
+                        new Thread(() ->
+                        {
+                            routingTree.add(p.getSourceKadNode());
+                        }).start();
+                    }
+
+                    //Elaboro la risposta
+                    if (received instanceof FindNodeRequest)
+                    {
+                        FindNodeRequest fnr = (FindNodeRequest) received;
+
+                        System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode());
+
+                        List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
+
+                        FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
+
+                        responseObject = fnrep;
+                    }
+                    else if (received instanceof FindValueRequest)
+                    {
+                        FindValueRequest fvr = (FindValueRequest) received;
+
+                        fileReadLock.lock();
+                        Object value = findValue_lookup(fvr.getFileID());
+                        fileReadLock.unlock();
+
+                        FindValueReply fvrep = null;
+                        if (value instanceof KadFile)
+                        {
+                            if (fvr.isContentRequested())
+                            {
+                                fvrep = new FindValueReply(fvr.getFileID(), (KadFile) value, thisNode, fvr.getSourceKadNode());
+                            }
+                            else
+                            {
+                                fvrep = new FindValueReply(fvr.getFileID(), null, thisNode, fvr.getSourceKadNode());
+                            }
+                            responseObject = fvrep;
+                        }
+                        else        //È una lista di KadNode tornata da findnode_lookup
+                        {
+                            responseObject = new FindNodeReply(fvr.getFileID(), thisNode, fvr.getSourceKadNode(), (List<KadNode>) value);
+                        }
+
+                    }
+                    else if (received instanceof StoreRequest)
+                    {
+                        System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
+                        fileWriteLock.lock();
+
+                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
+                        StoreRequest rq = (StoreRequest) received;
+
+                        //i file ridondanti vengono salvati con estensione .FILEID.kad
+                        System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
+                        String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
+                        File toStore = new File(FILESPATH + rq.getFileName() + extension);
+                        toStore.delete();
+                        toStore.createNewFile();
+                        Files.write(toStore.toPath(), rq.getContent());
+                        fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
+
+                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                        fileWriteLock.unlock();
+                    }
+                    else if (received instanceof DeleteRequest)
+                    {
+                        System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
+                        fileWriteLock.lock();
+                        System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
+
+                        DeleteRequest dr = (DeleteRequest) received;
+
+                        System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
                         try
                         {
-                            connection.setSoTimeout(timeout);
-
-                            Object responseObject = null;
-
-                            //Analizzo la richiesta ricevuta
-                            InputStream is = connection.getInputStream();
-                            ObjectInputStream inStream = new ObjectInputStream(is);
-
-                            Object received = inStream.readObject();
-                            System.out.println(received.getClass() + " received from " + connection.getInetAddress().getHostAddress());
-
-                            //se non ho ricevuto un pacchetto o non sono io il destinatario, chiudo la connessione
-                            if (!(received instanceof Packet) || !((Packet) received).getDestKadNode().equals(thisNode))
-                            {
-                                connection.close();
-                                return;
-                            }
-
-                            Packet p = (Packet) received;
-                            //aggiungo il nodo sorgente all'albero di routing
-                            if (!(received instanceof FindNodeRequest && !((FindNodeRequest) received).isTracked()))
-                            {
-                                new Thread(() ->
-                                {
-                                    routingTree.add(p.getSourceKadNode());
-                                }).start();
-                            }
-
-                            //Elaboro la risposta
-                            if (received instanceof FindNodeRequest)
-                            {
-                                FindNodeRequest fnr = (FindNodeRequest) received;
-
-                                System.out.println("Received FindNodeRequest from: " + fnr.getSourceKadNode());
-
-                                List<KadNode> lkn = findNode_lookup(fnr.getTargetID());
-
-                                FindNodeReply fnrep = new FindNodeReply(fnr.getTargetID(), thisNode, fnr.getSourceKadNode(), lkn);
-
-                                responseObject = fnrep;
-                            }
-                            else if (received instanceof FindValueRequest)
-                            {
-                                FindValueRequest fvr = (FindValueRequest) received;
-
-                                fileReadLock.lock();
-                                Object value = findValue_lookup(fvr.getFileID());
-                                fileReadLock.unlock();
-
-                                FindValueReply fvrep = null;
-                                if (value instanceof KadFile)
-                                {
-                                    if (fvr.isContentRequested())
-                                    {
-                                        fvrep = new FindValueReply(fvr.getFileID(), (KadFile) value, thisNode, fvr.getSourceKadNode());
-                                    }
-                                    else
-                                    {
-                                        fvrep = new FindValueReply(fvr.getFileID(), null, thisNode, fvr.getSourceKadNode());
-                                    }
-                                    responseObject = fvrep;
-                                }
-                                else        //È una lista di KadNode tornata da findnode_lookup
-                                {
-                                    responseObject = new FindNodeReply(fvr.getFileID(), thisNode, fvr.getSourceKadNode(), (List<KadNode>) value);
-                                }
-
-                            }
-                            else if (received instanceof StoreRequest)
-                            {
-                                System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                                fileWriteLock.lock();
-
-                                System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-
-                                StoreRequest rq = (StoreRequest) received;
-
-                                //i file ridondanti vengono salvati con estensione .FILEID.kad
-                                System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                                String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
-                                File toStore = new File(FILESPATH + rq.getFileName() + extension);
-                                toStore.delete();
-                                toStore.createNewFile();
-                                Files.write(toStore.toPath(), rq.getContent());
-                                fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
-
-                                System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                                fileWriteLock.unlock();
-                            }
-                            else if (received instanceof DeleteRequest)
-                            {
-                                System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                                fileWriteLock.lock();
-                                System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
-
-                                DeleteRequest dr = (DeleteRequest) received;
-
-                                System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
-                                try
-                                {
-                                    fileMap.remove(dr.getFile().getFileID());
-                                }
-                                catch (NullPointerException npe)
-                                {
-                                    System.out.println("..Ma non ce l'ho!");
-                                }
-                                System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                                fileWriteLock.unlock();
-                            }
-                            else if (received instanceof PingRequest)
-                            {
-                                PingRequest pr = (PingRequest) received;
-
-                                KadNode sourceKadNode = pr.getSourceKadNode();
-
-                                System.out.println("Received PingRequest from: " + pr.getSourceKadNode().toString());
-
-                                PingReply reply = new PingReply(thisNode, sourceKadNode);
-
-                                responseObject = reply;
-                            }
-
-                            if (responseObject != null)
-                            {
-                                OutputStream os = connection.getOutputStream();
-                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                try
-                                {
-                                    System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " (" + ((Packet) responseObject).getDestKadNode().getNodeID() + ") con una " + responseObject.getClass());
-                                }
-                                catch (NullPointerException npe)
-                                {
-                                    System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " con una " + responseObject.getClass());
-                                }
-                                outputStream.writeObject(responseObject);
-                                outputStream.flush();
-                                os.close();
-                            }
+                            fileMap.remove(dr.getFile().getFileID());
                         }
-                        catch (ClassNotFoundException ex)
+                        catch (NullPointerException npe)
                         {
-                            System.err.println("\u001B[31mClassNotFound nel thread server: " + ex.getMessage() + "\u001B[0m");
-                            ex.printStackTrace();
+                            System.out.println("..Ma non ce l'ho!");
                         }
-                        catch (IOException ex)
+                        System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
+                        fileWriteLock.unlock();
+                    }
+                    else if (received instanceof PingRequest)
+                    {
+                        PingRequest pr = (PingRequest) received;
+
+                        KadNode sourceKadNode = pr.getSourceKadNode();
+
+                        System.out.println("Received PingRequest from: " + pr.getSourceKadNode().toString());
+
+                        PingReply reply = new PingReply(thisNode, sourceKadNode);
+
+                        responseObject = reply;
+                    }
+
+                    if (responseObject != null)
+                    {
+                        OutputStream os = connection.getOutputStream();
+                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                        try
                         {
-                            System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
-                            ex.printStackTrace();
+                            System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " (" + ((Packet) responseObject).getDestKadNode().getNodeID() + ") con una " + responseObject.getClass());
                         }
-                        finally
+                        catch (NullPointerException npe)
                         {
-                            try
-                            {
-                                if (connection != null)
-                                {
-                                    connection.close();
-                                }
-                            }
-                            catch (IOException ex)
-                            {
-                                System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
-                                ex.printStackTrace();
-                            }
+                            System.out.println("Rispondo a " + connection.getInetAddress().getHostAddress() + " con una " + responseObject.getClass());
                         }
-                        System.out.println("Connessione conclusa");
-                    }).start();
+                        outputStream.writeObject(responseObject);
+                        outputStream.flush();
+                        os.close();
+                    }
+                }
+                catch (ClassNotFoundException ex)
+                {
+                    System.err.println("\u001B[31mClassNotFound nel thread server: " + ex.getMessage() + "\u001B[0m");
+                    ex.printStackTrace();
                 }
                 catch (IOException ex)
                 {
+                    System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
+                    ex.printStackTrace();
+                }
+                finally
+                {
                     try
                     {
-                        if (connect != null)
+                        if (connection != null)
                         {
-                            connect.close();
+                            connection.close();
                         }
                     }
-                    catch (IOException e)
+                    catch (IOException ex)
                     {
-                        System.err.println("\u001B[31mIOException nel thread server: " + e.getMessage() + "\u001B[0m");
-                        e.printStackTrace();
+                        System.err.println("\u001B[31mIOException nel thread server: " + ex.getMessage() + "\u001B[0m");
+                        ex.printStackTrace();
                     }
                 }
+                System.out.println("Connessione conclusa");
             }
         }
     }
