@@ -26,7 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -49,9 +48,13 @@ public class Kademlia implements KademliaInterf {
     public int bucketRefreshWait = 20000;
     private int timeout = 10000;
 
-    private final ReadWriteLock fileReadWriteLock;
-    private final Lock fileReadLock;
-    private final Lock fileWriteLock;
+    private final ReadWriteLock localFileReadWriteLock;
+    private final Lock localFileReadLock;
+    private final Lock localFileWriteLock;
+
+    private final ReadWriteLock globalFileReadWriteLock;
+    private final Lock globalFileReadLock;
+    private final Lock globalFileWriteLock;
 
     public Kademlia() throws AlreadyInstancedException
     {
@@ -95,9 +98,13 @@ public class Kademlia implements KademliaInterf {
             }
         }
 
-        fileReadWriteLock = new ReentrantReadWriteLock(true);
-        fileReadLock = fileReadWriteLock.readLock();
-        fileWriteLock = fileReadWriteLock.writeLock();
+        localFileReadWriteLock = new ReentrantReadWriteLock(true);
+        localFileReadLock = localFileReadWriteLock.readLock();
+        localFileWriteLock = localFileReadWriteLock.writeLock();
+
+        globalFileReadWriteLock = new ReentrantReadWriteLock(true);
+        globalFileReadLock = globalFileReadWriteLock.readLock();
+        globalFileWriteLock = globalFileReadWriteLock.writeLock();
 
         fileMap = new KadFileMap(this, false);
         localFileMap = new KadFileMap(this, true);
@@ -150,7 +157,6 @@ public class Kademlia implements KademliaInterf {
                 ((Bucket) routingTree.getRoot()).refreshStart();
             }
         }
-
     }
 
     private boolean isUniqueID()
@@ -1162,14 +1168,16 @@ public class Kademlia implements KademliaInterf {
     {
         List<KadFile> temp = new ArrayList<>();
         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-        fileReadLock.lock();
+        globalFileReadLock.lock();
+        localFileReadLock.lock();
         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
         fileMap.forEach((k, v) -> temp.add(v));
         System.out.println(fileMap.size());
         localFileMap.forEach((k, v) -> temp.add(v));
         System.out.println(localFileMap.size());
+        localFileReadLock.unlock();
+        globalFileReadLock.unlock();
         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-        fileReadLock.unlock();
         return temp;
     }
 
@@ -1206,11 +1214,11 @@ public class Kademlia implements KademliaInterf {
 
         List<KadNode> closestK = findNode(fileID);
 
-        fileWriteLock.lock();
+        localFileWriteLock.lock();
+        globalFileReadLock.lock();
         System.out.println("Il file avrà ID: " + fileID);
         KadFile tempfile = new KadFile(fileID, false, temp.getName(), temp.getParent());
         localFileMap.add(tempfile);
-
         System.out.println("Invio il file a: ");
         for (KadNode i : closestK)
         {
@@ -1247,12 +1255,15 @@ public class Kademlia implements KademliaInterf {
                 ioe.printStackTrace();
             }
         }
-        fileWriteLock.unlock();
+        globalFileReadLock.unlock();
+        localFileWriteLock.unlock();
+
     }
 
     public void delete(BigInteger id) throws FileNotKnownException
     {
-        fileWriteLock.lock();
+        localFileWriteLock.lock();
+        globalFileReadLock.lock();
         KadFile temp = localFileMap.get(id); //Non si possono eliminare file ridondanti dalla rete, solo il proprietario può
 
         if (temp != null)
@@ -1294,7 +1305,8 @@ public class Kademlia implements KademliaInterf {
         {
             throw new FileNotKnownException();
         }
-        fileWriteLock.unlock();
+        globalFileReadLock.unlock();
+        localFileWriteLock.unlock();
     }
 
     private class ListenerThread implements Runnable {
@@ -1369,9 +1381,9 @@ public class Kademlia implements KademliaInterf {
                     {
                         FindValueRequest fvr = (FindValueRequest) received;
 
-                        fileReadLock.lock();
+                        globalFileReadLock.lock();
                         Object value = findValue_lookup(fvr.getFileID());
-                        fileReadLock.unlock();
+                        globalFileReadLock.unlock();
 
                         FindValueReply fvrep = null;
                         if (value instanceof KadFile)
@@ -1395,7 +1407,7 @@ public class Kademlia implements KademliaInterf {
                     else if (received instanceof StoreRequest)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                        fileWriteLock.lock();
+                        globalFileWriteLock.lock();
 
                         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
 
@@ -1411,12 +1423,12 @@ public class Kademlia implements KademliaInterf {
                         fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
 
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                        fileWriteLock.unlock();
+                        globalFileWriteLock.unlock();
                     }
                     else if (received instanceof DeleteRequest)
                     {
                         System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                        fileWriteLock.lock();
+                        globalFileWriteLock.lock();
                         System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
 
                         DeleteRequest dr = (DeleteRequest) received;
@@ -1431,7 +1443,7 @@ public class Kademlia implements KademliaInterf {
                             System.out.println("..Ma non ce l'ho!");
                         }
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                        fileWriteLock.unlock();
+                        globalFileWriteLock.unlock();
                     }
                     else if (received instanceof PingRequest)
                     {
@@ -1514,11 +1526,17 @@ public class Kademlia implements KademliaInterf {
                     System.out.println("Inizio il refresh dei file..");
                     System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
                     List<KadFile> toBeDeleted = new ArrayList<>();
-                    fileReadLock.lock();
+
                     System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
                     //si refreshano solo i file ridondanti
+                    localFileReadLock.lock();
                     fileMap.forEach((k, v) ->
                     {
+                        if (fileMap.get(k) != null)
+                        {
+                            return;
+                        }
+
                         if ((System.currentTimeMillis() - v.getLastRefresh()) >= refreshWait)
                         {
                             System.out.println("++++Refresho " + v.getFileName());
@@ -1632,10 +1650,11 @@ public class Kademlia implements KademliaInterf {
                             v.setLastRefresh(System.currentTimeMillis());
                         }
                     });
+                    globalFileReadLock.unlock();
+
                     System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                    fileReadLock.unlock();
                     System.out.println("[" + Thread.currentThread().getName() + "] Chiedo il lock della mappa");
-                    fileWriteLock.lock();
+                    globalFileWriteLock.lock();
                     System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
                     //Elimino qua i file per evitare ConcurrentModificationExceptions
                     for (KadFile i : toBeDeleted)
@@ -1643,7 +1662,7 @@ public class Kademlia implements KademliaInterf {
                         fileMap.remove(i.getFileID());
                     }
                     System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
-                    fileWriteLock.unlock();
+                    globalFileWriteLock.unlock();
                     System.out.println("Refresh dei file finito");
                 }
                 catch (InterruptedException ie)
