@@ -516,6 +516,7 @@ public class UserInterface extends javax.swing.JFrame {
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt)//GEN-FIRST:event_jButton5ActionPerformed
     {//GEN-HEADEREND:event_jButton5ActionPerformed
         jButton5.setEnabled(false);
+        findNodeResult.setText("");
         String idFile = fileID.getText();
         try
         {
@@ -571,7 +572,7 @@ public class UserInterface extends javax.swing.JFrame {
             {
                 try
                 {
-                    sleep(750);
+                    sleep(1000);
                 }
                 catch (InterruptedException ex)
                 {

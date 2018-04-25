@@ -4,9 +4,11 @@ import KPack.Exceptions.FileNotKnownException;
 import KPack.Files.KadFile;
 import KPack.KadNode;
 import KPack.Kademlia;
+import java.io.File;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.Files;
 import java.security.InvalidParameterException;
 import java.util.List;
 import java.util.Scanner;
@@ -47,16 +49,46 @@ public class Main {
                         //Cerca di ottenere un file di cui conosce l'esistenza, se è possibile
                         if (split.length > 1)
                         {
-                            synchronized (myNode.getFileList())
+                            try
                             {
-                                for (KadFile i : myNode.getFileList())
+                                final Kademlia myNodeCopy=myNode;
+                                BigInteger id = new BigInteger(split[1]);
+                                new Thread(() ->
                                 {
-                                    if (i.getFileName().equals(split[1]))
+                                    KadFile kf=null;
+                                    for(KadFile fil:myNodeCopy.getFileList())
                                     {
-                                        myNode.findValue(i.getFileID(), true);
-                                        break;
+                                        if(fil.getFileID().equals(id))
+                                        {
+                                            kf=fil;
+                                            break;
+                                        }
                                     }
-                                }
+                                    if (kf != null)
+                                    {
+                                        Object result = myNodeCopy.findValue(id, true);
+                                        if (result instanceof byte[])
+                                        {
+                                            try
+                                            {
+                                                String path = "." + File.separator + "myDownloadedFile" + File.separator;
+                                                File directory = new File(path);
+                                                if (!directory.exists())
+                                                {
+                                                    directory.mkdir();
+                                                }
+                                                Files.write(new File(path + kf.getFileName()).toPath(), (byte[]) result);
+                                            }
+                                            catch (IOException ex)
+                                            {
+                                            }
+                                        }
+                                    }
+                                }).start();
+                            }
+                            catch (Exception e)
+                            {
+                                System.out.println("ID non valido");
                             }
                         }
                         else

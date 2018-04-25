@@ -2,6 +2,7 @@ package KPack.Files;
 
 import java.io.Serializable;
 import java.math.BigInteger;
+import java.util.Objects;
 
 public class KadFile implements KadFileInterf, Serializable {
 
@@ -55,4 +56,33 @@ public class KadFile implements KadFileInterf, Serializable {
                 + ", path='" + path + '\''
                 + '}';
     }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final KadFile other = (KadFile) obj;
+        if (!Objects.equals(this.fileName, other.fileName))
+        {
+            return false;
+        }
+        if (!Objects.equals(this.fileID, other.fileID))
+        {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }
