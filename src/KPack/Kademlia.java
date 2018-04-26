@@ -42,7 +42,7 @@ public class Kademlia implements KademliaInterf {
     private KadNode thisNode;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
 
-    //Variabili lette da impostazioni
+    //Variabili lette dalle impostazioni
     public int port = 1337;
     public int fileRefreshWait = 100000;
     public int fileRefreshThreadSleep = 20000;
