@@ -27,6 +27,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -1453,13 +1455,24 @@ public class Kademlia implements KademliaInterf {
                             for (KadNode i : temp)
                             {
                                 //DA PARALLELIZZARE
-                                Socket tempS = new Socket();
-                                tempS.setSoTimeout(timeout);
-                                tempS.connect(new InetSocketAddress(i.getIp(), i.getPort()), timeout);
-                                OutputStream os = tempS.getOutputStream();
-                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                                outputStream.writeObject(new DeleteRequest(dr.getFile(), thisNode, i));
-                                outputStream.flush();
+                                new Thread(() ->
+                                {
+                                    try
+                                    {
+                                        Socket tempS = new Socket();
+                                        tempS.setSoTimeout(timeout);
+                                        tempS.connect(new InetSocketAddress(i.getIp(), i.getPort()), timeout);
+                                        OutputStream os = tempS.getOutputStream();
+                                        ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                        outputStream.writeObject(new DeleteRequest(dr.getFile(), thisNode, i));
+                                        outputStream.flush();
+                                    }
+                                    catch (IOException ex)
+                                    {
+                                        Logger.getLogger(Kademlia.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }).start();
+                                recentlyRefreshed.remove(new Tupla<>(dr.getFile().getFileID(), dr.getFile().getFileName()));
                             }
                         }
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
