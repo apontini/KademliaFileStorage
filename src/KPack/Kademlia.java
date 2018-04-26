@@ -27,8 +27,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Kademlia implements KademliaInterf {
 
@@ -43,7 +41,6 @@ public class Kademlia implements KademliaInterf {
     private RoutingTree routingTree;
     private KadNode thisNode;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
-    private List<KadFile> deletedFile;
 
     //Variabili lette da impostazioni
     public int port = 1337;
@@ -112,7 +109,6 @@ public class Kademlia implements KademliaInterf {
 
         fileMap = new KadFileMap(this, false);
         localFileMap = new KadFileMap(this, true);
-        deletedFile = new ArrayList<>();
         String myIP = getIP().getHostAddress().toString();
 
         routingTree = new RoutingTree(this);
@@ -1414,33 +1410,14 @@ public class Kademlia implements KademliaInterf {
 
                         StoreRequest rq = (StoreRequest) received;
 
-                        boolean isDeleted = false;
-                        //synchronized (deletedFile)
-                        //{
-                        for (KadFile t : deletedFile)  //controllo se il file si trova nella lista dei già cancellati
-                        {
-                            if (t.getFileID().equals(rq.getFileID()) && (t.getFileName().equals(rq.getFileName()) || t.getFileName().equals(rq.getFileName() + "." + rq.getFileID() + ".kad")))
-                            {
-                                isDeleted = true;
-                                break;
-                            }
-                        }
-                        //}
-                        if (!isDeleted)
-                        {
-                            //i file ridondanti vengono salvati con estensione .FILEID.kad
-                            System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
-                            String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
-                            File toStore = new File(FILESPATH + rq.getFileName() + extension);
-                            toStore.delete();
-                            toStore.createNewFile();
-                            Files.write(toStore.toPath(), rq.getContent());
-                            fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
-                        }
-                        else
-                        {
-                            System.out.println("##############   HO RICEVUTO UN FILE CHE è STATO ELIMINATO   ##############");
-                        }
+                        //i file ridondanti vengono salvati con estensione .FILEID.kad
+                        System.out.println("Ho ricevuto uno store di " + rq.getFileName() + " da  " + rq.getSourceKadNode().getIp());
+                        String extension = rq.getFileName().contains("." + rq.getFileID() + ".kad") ? "" : "." + rq.getFileID() + ".kad";
+                        File toStore = new File(FILESPATH + rq.getFileName() + extension);
+                        toStore.delete();
+                        toStore.createNewFile();
+                        Files.write(toStore.toPath(), rq.getContent());
+                        fileMap.add(new KadFile(rq.getFileID(), true, rq.getFileName() + extension, FILESPATH));
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         globalFileWriteLock.unlock();
                     }
@@ -1453,10 +1430,6 @@ public class Kademlia implements KademliaInterf {
                         DeleteRequest dr = (DeleteRequest) received;
 
                         System.out.println("Ho ricevuto un delete di " + dr.getFile().getFileName() + " (" + dr.getFile().getFileID() + ") da " + dr.getSourceKadNode().getIp());
-                        // synchronized (deletedFile)
-                        //{
-                        deletedFile.add(dr.getFile());
-                        // }
 
                         try
                         {
