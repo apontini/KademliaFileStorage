@@ -41,6 +41,7 @@ public class Kademlia implements KademliaInterf {
     private RoutingTree routingTree;
     private KadNode thisNode;
     private ArrayList<FixedKadNode> fixedNodesList = new ArrayList<>();
+    private Set<Tupla<BigInteger, String>> recentlyRefreshed;
 
     //Variabili lette dalle impostazioni
     public int port = 1337;
@@ -114,6 +115,7 @@ public class Kademlia implements KademliaInterf {
         routingTree = new RoutingTree(this);
 
         fixedNodesList = loadFixedNodesFromFile();
+        recentlyRefreshed = new HashSet<>();
 
         //Aggiungo all'alberto i nodi noti
         for (FixedKadNode fkn : fixedNodesList)
@@ -286,6 +288,11 @@ public class Kademlia implements KademliaInterf {
                         default:
                             throw new InvalidSettingsException("Parametro non valido: " + split[0]);
                     }
+                }
+                //Check di altri vincoli
+                if (fileRefreshThreadSleep >= fileRefreshWait)
+                {
+                    throw new InvalidSettingsException("Il tempo di sleep del thread dev'essere minore del tempo di refresh dei file");
                 }
             }
         }
@@ -1439,6 +1446,22 @@ public class Kademlia implements KademliaInterf {
                         {
                             System.out.println("..Ma non ce l'ho!");
                         }
+                        //Controllo di non averlo refreshato di recente
+                        if (recentlyRefreshed.contains(new Tupla<>(dr.getFile().getFileID(), dr.getFile().getFileName())))
+                        {
+                            List<KadNode> temp = findNode(dr.getFile().getFileID(), true);
+                            for (KadNode i : temp)
+                            {
+                                //DA PARALLELIZZARE
+                                Socket tempS = new Socket();
+                                tempS.setSoTimeout(timeout);
+                                tempS.connect(new InetSocketAddress(i.getIp(), i.getPort()), timeout);
+                                OutputStream os = tempS.getOutputStream();
+                                ObjectOutputStream outputStream = new ObjectOutputStream(os);
+                                outputStream.writeObject(new DeleteRequest(dr.getFile(), thisNode, i));
+                                outputStream.flush();
+                            }
+                        }
                         System.out.println("[" + Thread.currentThread().getName() + "] Lascio il lock della mappa");
                         globalFileWriteLock.unlock();
                     }
@@ -1527,6 +1550,7 @@ public class Kademlia implements KademliaInterf {
                     System.out.println("[" + Thread.currentThread().getName() + "] Prendo il lock della mappa");
                     //si refreshano solo i file ridondanti
                     globalFileReadLock.lock();
+                    recentlyRefreshed.clear();
                     List<KadFile> copyList = new ArrayList<>();
                     fileMap.forEach((k, v) ->
                     {
@@ -1570,6 +1594,7 @@ public class Kademlia implements KademliaInterf {
                                 return;
                             }
 
+                            recentlyRefreshed.add(new Tupla<>(v.getFileID(), v.getFileName()));
                             //Ora passo al refresh vero e proprio
                             for (KadNode n : temp)
                             {
