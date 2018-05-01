@@ -206,8 +206,21 @@ public class Main {
                     case "exit":
                         System.exit(0);
                         break;
+                    case "help":
+                        System.out.println("I possibili comandi da inserire sono i seguenti:");
+                        System.out.println("get: per ottenere uno specifico file");
+                        System.out.println("ls: per ottenere la lista di file di cui si è proprietari presenti nella rete");
+                        System.out.println("store: per memorizzare un file nella rete");
+                        System.out.println("delete: per eliminare un file dalla rete");
+                        System.out.println("ip: per conoscere il proprio ip");
+                        System.out.println("ping: per controllare che un nodo sia attivo o meno nella rete");
+                        System.out.println("findvalue: per ottenere il contenuto del file");
+                        System.out.println("findnode: per restituire una lista contenente fino a K nodi della rete più vicini all’ID specificato.");
+                        System.out.println("printtree: per visualizzare l'albero di routing");
+                        System.out.println("exit: per uscire");
+                        break;
                     default:
-                        System.out.println("Say what?");
+                        System.out.println("Say what? Digitare \"help\" per visualizzare lista di comandi");
                         break;
                 }
             }
