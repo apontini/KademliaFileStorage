@@ -28,7 +28,7 @@ For testing purposes, we added some settings inside the `settings.properties` fi
 - **port**: the port address which will be used (MUST be forwarded if behind a NAT).
 - **fileRefreshThreadSleep**: amount of time (in milliseconds) between one file refresh sequence and another.
 - **fileRefreshWait**: amount of time (in milliseconds) to wait before a file can be refreshed.
-- **bucketRefreshWait**: amount of tume (in milliseconds) between one bucket refresh and another.
+- **bucketRefreshWait**: amount of time (in milliseconds) between one bucket refresh and another.
 - **socketTimeout**: self-explainatory (in milliseconds).
 
 Based on [Petar Maymounkov and David Mazières paper](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf).
