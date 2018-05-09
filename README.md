@@ -25,11 +25,11 @@ This will build all Java classes needed and will run `Main.java`.
 
 #### Settings
 For testing purposes, we added some settings inside the `settings.properties` file. These are:
-- port: the port address which will be used (MUST be forwarded if behind a NAT).
-- fileRefreshThreadSleep: amount of time (in milliseconds) between one file refresh sequence and another.
-- fileRefreshWait: amount of time (in milliseconds) to wait before a file can be refreshed.
-- bucketRefreshWait: amount of tume (in milliseconds) between one bucket refresh and another.
-- socketTimeout: self-explainatory (in milliseconds).
+- **port**: the port address which will be used (MUST be forwarded if behind a NAT).
+- **fileRefreshThreadSleep**: amount of time (in milliseconds) between one file refresh sequence and another.
+- **fileRefreshWait**: amount of time (in milliseconds) to wait before a file can be refreshed.
+- **bucketRefreshWait**: amount of tume (in milliseconds) between one bucket refresh and another.
+- **socketTimeout**: self-explainatory (in milliseconds).
 
 Based on [Petar Maymounkov and David Mazières paper](https://pdos.csail.mit.edu/~petar/papers/maymounkov-kademlia-lncs.pdf).
 Clarifications were found in a [presentation](https://docs.google.com/presentation/d/11qGZlPWu6vEAhA7p3qsQaQtWH7KofEC9dMeBFZ1gYeA/edit#slide=id.g1718cc2bc_08645) made by Tristan Slominski (@tristanls)
